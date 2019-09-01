@@ -15,7 +15,6 @@ def ecg_from_file(ecg, filename):
     for x in f:
         ecg.append(float(x[x.index(',') + 1:x.index('\n')]))
     f.close()
-    return ecg
 
 def PT_from_file(PT,filename):
     f = open(filename,'r')
@@ -23,12 +22,11 @@ def PT_from_file(PT,filename):
     for x in f:
         PT.append(int(x[:x.index('\n')]))
     f.close()
-    return PT
 
 def signal_from_file(signal, filename):
     f = open(filename,'r')
     for x in f:
-        signal.append(int(x))
+        signal.append(float(x))
     f.close()
     return signal
 
@@ -82,8 +80,11 @@ def plot_y_n(x_train,model):
 
 ecg = []
 signal = []
-ecg = ecg_from_file(ecg,"Sample 1.ascii")
-signal = signal_from_file(signal,"Sample1Corrected.txt")
+ecg2 = []
+ecg_from_file(ecg,"Sample 7.ascii")
+signal_from_file(signal, "Signal.txt")
+#signal_from_file(ecg2,"ECG.txt")
+""" signal = signal_from_file(signal,"Sample1Corrected.txt")
 ecg = ecg_from_file(ecg,"Sample 2.ascii")
 signal = signal_from_file(signal, "Sample2Corrected.txt")
 ecg = ecg_from_file(ecg,"Sample 3.ascii")
@@ -95,4 +96,9 @@ ecg = np.append(ecg,-ecg)
 signal = np.asarray(signal)
 signal = np.append(signal,signal)
 ecg = ecg.reshape(ecg.shape[0],1)
-signal = signal.reshape(signal.shape[0],1)
+signal = signal.reshape(signal.shape[0],1) """
+plt.plot(range(len(signal)),signal)
+plt.plot(range(len(ecg)),ecg)
+#plt.plot(range(len(ecg2)),ecg2)
+#plt.plot(range(len(ecg)),ecg)
+plt.show()

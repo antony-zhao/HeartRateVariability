@@ -153,13 +153,12 @@
 #define NOSAMPLE -32000 // An indicator that there are no more samples to read. Use an impossible value for a sample.
 #define FS 360         // Sampling frequency.
 #define BUFFSIZE 600    // The size of the buffers (in samples). Must fit more than 1.66 times an RR interval, which typically could be around 1 second.
-#define RRBUFFER 100
+#define RRBUFFER 300
 
 #define DELAY 22		// Delay introduced by the filters. Filter only output samples after this one.
 						// Set to 0 if you want to keep the delay. Fixing the delay results in DELAY less samples
 						// in the final end result.
 #define NPEAKS 2
-#define SAMPLEFORMAT "\t%*d/%*d/%*d %*d:%*d:%*lf %*s,%lf\n"
 #include <stdio.h>      // Remove if not using the standard file functions.
 #include <stdbool.h>
 #include <string.h>
@@ -172,16 +171,18 @@ using namespace std;
 
 int scaleData(double);
 void merge(int, int, int);
-int aveBase();
+double aveBase();
 void init(char[], char[]);
 int inverted();
 int input(char[]);
 void linSearch(double[], double[]);
 void panTompkins(char[]);
 void output(int);
+void output(double);
 
 double nums[RRBUFFER] = {0};
 FILE *finPT,*foutPT;
+int first = 1;
 
 
 int scaleData(double value){
@@ -194,11 +195,16 @@ void init(char file_in[], char file_out[])
 	foutPT = fopen(file_out, "w+");
 }
 
-int aveBase() {
-	int sum = 0;
-	for (int i = 0; i < RRBUFFER; i++)
-		sum += nums[i];
-	return sum / RRBUFFER;
+double aveBase() {
+	double sum = 0;
+	int vals = 0;
+	for (double val:nums){
+		if(val!=NOSAMPLE){
+			sum += val;
+			vals++;
+		}
+	}
+	return sum / vals;
 }
 
 void linSearch(double min[], double max[]){
@@ -229,8 +235,8 @@ void linSearch(double min[], double max[]){
 
 int inverted() {
     double min[NPEAKS],max[NPEAKS];
-	int aveMax = 0;
-	int aveMin = 0;
+	double aveMax = 0;
+	double aveMin = 0;
     linSearch(min,max);
 	for (int i = 0; i < NPEAKS; i++) {
 		aveMax += max[i];
@@ -248,13 +254,13 @@ int inverted() {
 
 int input(char format[])
 {
-    static int iter;
-	int input, index;
-	static int first = -1;
+    static int iter = 0;
+	int index;
+	double input;
 	static int pointer = 0;
     static int endFile = 0;
     int endFilePointer;
-	if (first == -1) {
+	if (first == 1) {
 		for (int i = 0; i < RRBUFFER; i++)
 			fscanf(finPT, format, &nums[i]);
 		first = 0;
@@ -270,11 +276,10 @@ int input(char format[])
     
 	if (!feof(finPT))
 		fscanf(finPT, format, &nums[pointer]);
-    if(feof(finPT)){
+    if(feof(finPT))
         nums[pointer] = NOSAMPLE;
-    }
 	pointer = (pointer + 1) % RRBUFFER;
-    cout << iter++ << endl;
+    //cout << iter++ << endl;
 	return scaleData(input);
 }
 
@@ -291,11 +296,9 @@ void output(int out)
 {
 	fprintf(foutPT, "%d\n", out);
 }
+
 void panTompkins(char format[])
 {
-	char header[100];
-	fgets(header,100,finPT);
-
     // The signal array is where the most recent samples are kept. The other arrays are the outputs of each
     // filtering module: DC Block, low pass, high pass, integral etc.
 	// The output is a buffer where we can change a previous result (using a back search) before outputting.

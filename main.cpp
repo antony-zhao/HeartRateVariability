@@ -1,23 +1,37 @@
 #include <stdio.h>
 #include <string.h>
-#define SAMPLEFORMAT "\t%*d/%*d/%*d %*d:%*d:%*lf %*s,%lf\n"
+#include <iostream>
+#define SAMPLEFORMAT "\t%*d/%*d/%*d %*d:%*d:%*lf %*c%*c,%lf\n"
 #define FORMAT ""
 extern int scaleData(double);
 extern void merge(int, int, int);
-extern int aveBase();
+extern double aveBase();
 extern void init(char[], char[]);
 extern int inverted();
 extern int input(char[]);
 extern void linSearch(double[], double[]);
 extern void panTompkins(char[]);
 extern void output(int);
+extern void output(double);
+extern FILE* finPT;
+extern FILE* foutPT;
+extern int first; 
 
 using namespace std;
 
 int main(void){
-    char format[] = SAMPLEFORMAT;
-    char inFile[] = "Sample 1.ascii";
-    char outFile[] = "Data.txt";
+    char inFile[] = "Sample 7.ascii";
+    char outFile[] = "Signal.txt";
+    char outFile2[] = "ECG.txt";
     init(inFile, outFile);
-    panTompkins(format);
+    panTompkins(SAMPLEFORMAT);
+    /*
+    init(inFile, outFile2);
+    first = 1;
+    while(!feof(finPT))
+        output(input(SAMPLEFORMAT));
+    fclose(finPT);
+    fclose(foutPT);
+    return 0;
+    */
 }
