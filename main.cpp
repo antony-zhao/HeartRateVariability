@@ -20,7 +20,7 @@ extern int first;
 using namespace std;
 
 int main(void){
-    char inFile[] = "Sample 7.ascii";
+    char inFile[] = "T21_transition example1_180s.ascii";
     char outFile[] = "Signal.txt";
     char outFile2[] = "ECG.txt";
     init(inFile, outFile);
