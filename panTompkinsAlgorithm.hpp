@@ -153,7 +153,7 @@
 #define NOSAMPLE -32000 // An indicator that there are no more samples to read. Use an impossible value for a sample.
 #define FS 360         // Sampling frequency.
 #define BUFFSIZE 600    // The size of the buffers (in samples). Must fit more than 1.66 times an RR interval, which typically could be around 1 second.
-#define RRBUFFER 300
+#define RRBUFFER 200
 
 #define DELAY 22		// Delay introduced by the filters. Filter only output samples after this one.
 						// Set to 0 if you want to keep the delay. Fixing the delay results in DELAY less samples
@@ -162,7 +162,7 @@
 #include <stdio.h>      // Remove if not using the standard file functions.
 #include <stdbool.h>
 #include <string.h>
-#include <string>
+#include <string> 
 #include <vector>
 #include <limits>
 #include <iostream>
@@ -181,18 +181,18 @@ void output(int);
 void output(double);
 
 double nums[RRBUFFER] = {0};
-FILE *finPT,*foutPT;
+FILE *fin,*fout;
 int first = 1;
 
 
 int scaleData(double value){
-    return (int)(value*1000+1000);
+    return (int)(value*2000+1000);
 }   
 
 void init(char file_in[], char file_out[])
 {
-	finPT = fopen(file_in, "r");
-	foutPT = fopen(file_out, "w+");
+	fin = fopen(file_in, "r");
+	fout = fopen(file_out, "w+");
 }
 
 double aveBase() {
@@ -262,7 +262,7 @@ int input(char format[])
     int endFilePointer;
 	if (first == 1) {
 		for (int i = 0; i < RRBUFFER; i++)
-			fscanf(finPT, format, &nums[i]);
+			fscanf(fin, format, &nums[i]);
 		first = 0;
 	}
     if(nums[pointer] != NOSAMPLE)
@@ -274,9 +274,9 @@ int input(char format[])
         return NOSAMPLE; 
     }
     
-	if (!feof(finPT))
-		fscanf(finPT, format, &nums[pointer]);
-    if(feof(finPT))
+	if (!feof(fin))
+		fscanf(fin, format, &nums[pointer]);
+    if(feof(fin))
         nums[pointer] = NOSAMPLE;
 	pointer = (pointer + 1) % RRBUFFER;
     //cout << iter++ << endl;
@@ -294,7 +294,7 @@ int input(char format[])
 */
 void output(int out)
 {
-	fprintf(foutPT, "%d\n", out);
+	fprintf(fout, "%d\n", out);
 }
 
 void panTompkins(char format[])
@@ -667,10 +667,10 @@ void panTompkins(char format[])
 	for (i = 1; i < BUFFSIZE; i++)
 		output(outputSignal[i]);
 	for(int i = 0; i <= DELAY; i++)
-		fprintf(foutPT,"0\n");
+		fprintf(fout,"0\n");
 
 	// These last two lines must be deleted if you are not working with files.
-	fclose(finPT);
-	fclose(foutPT);
+	fclose(fin);
+	fclose(fout);
 }
 
