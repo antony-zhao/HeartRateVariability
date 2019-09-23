@@ -13,7 +13,12 @@ int main(void){
     //init(inFile, outFile);
     //panTompkins(format);
     init(outFile, outFile2);
-    PTCorrections();
+    clearSignalArray();
+    readData();
+    calcAverageInterval();
+    markSignals();
+    signals;
+    markedSignals;
     //fout = fopen(outFile2,"w+");
     //fprintf(fout,"%d\n",1);
     /*
@@ -24,5 +29,5 @@ int main(void){
     fclose(finPT);
     fclose(foutPT);
     return 0;
-    */
+    */ 
 }
