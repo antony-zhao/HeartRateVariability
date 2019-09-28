@@ -8,18 +8,20 @@ int markedSignals[BUFFER];
 int numPeaks;
 int averageInterval = 400;
 
-void clearSignalArray();
+//void clearSignalArray();
 void readData();
 void markSignals();
 void writeToFile();
 void calcAverageInterval();
 void PTCorrections();
 
+/*
 void clearSignalArray(){
     //resets the arrays
     memset(signals, 0, sizeof(signals));
     memset(markedSignals,0,sizeof(markedSignals));
 }
+*/
 
 void readData(){
     //reads from the file into the signals array
@@ -30,7 +32,6 @@ void readData(){
         else
             signals[i] = 0;
     }
-    signals[1] = 1;
 }
 
 void markSignals(){
@@ -45,9 +46,9 @@ void markSignals(){
             break;          
         }
     }
-    while(anchor + (int)(averageInterval*0.2) < BUFFER){
+    while(anchor + (int)(averageInterval*0.1) < BUFFER){
     //while the anchor and the range of search does not reach the end of the buffer
-        for(int i = 0; i < (int)(averageInterval * 0.2); i++){
+        for(int i = 0; i < (int)(averageInterval * 0.1); i++){
             //limits the search to a range of +- averageInterval*0.2. If there is no signal found, then it just marks at the predicted location of
             //anchor + averageInterval. Otherwise mark the closest signal to anchor+averageInterval and set that as the new anchor
             if(signals[anchor + i + averageInterval] == 1){
@@ -81,6 +82,7 @@ void writeToFile(){
     //for now it just writes the markedSignals. Eventually it will write from signals whenever signals is corrected even further
     for(int i = 0; i < BUFFER; i++){
         fprintf(fout,"%d\n",markedSignals[i]);
+        //fprintf(fout,"%d\n",signals[i]);
     }
 }
 /*
@@ -92,8 +94,8 @@ void writeToTerminal(){
 */
 void calcAverageInterval(){
     //calculates the average rr interval in the array
-    averageInterval = 0;
     //first index of signal
+    int newAverageInterval;
     int first = -1;
     //last index of signal
     int last = -1;
@@ -109,16 +111,29 @@ void calcAverageInterval(){
         }
     }
     //total range that still has peaks/number of peaks in that time
-    averageInterval = (last - first) / numPeaks;
+    try{
+        newAverageInterval = (last - first) / numPeaks;
+        if(newAverageInterval > averageInterval*0.99 && newAverageInterval < averageInterval*1.01){
+           averageInterval = newAverageInterval;
+        }
+    } catch(...){
+        return;
+    }
 }
 
 void PTCorrections(){
     //skips the initialization
-    for(int i = 0; i < SKIP; i++)
-        fscanf(fin,"%*d\n");
+    int placeholder;
+    for(int i = 0; i < SKIP; i++){
+        fscanf(fin,"%d\n", &placeholder);
+        fprintf(fout,"0\n");
+    }
+    readData();
+    markSignals();
+    writeToFile();
     while(!feof(fin)){
-        calcAverageInterval();
-        clearSignalArray();
+        //calcAverageInterval();
+        //clearSignalArray();
         readData();
         markSignals();
         writeToFile();

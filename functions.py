@@ -80,9 +80,10 @@ def plot_y_n(x_train,model):
 
 ecg = []
 signal = []
-ecg2 = []
+signal2 = []
 ecg_from_file(ecg,"T21_transition example1_180s.ascii")
-signal_from_file(signal, "Signal.txt")
+signal_from_file(signal, "Test.txt")
+#signal_from_file(signal2,"Signal.txt")
 #signal_from_file(ecg2,"ECG.txt")
 """ signal = signal_from_file(signal,"Sample1Corrected.txt")
 ecg = ecg_from_file(ecg,"Sample 2.ascii")
@@ -98,6 +99,7 @@ signal = np.append(signal,signal)
 ecg = ecg.reshape(ecg.shape[0],1)
 signal = signal.reshape(signal.shape[0],1) """
 plt.plot(range(len(signal)),signal)
+#plt.plot(range(len(signal2)),signal2)
 plt.plot(range(len(ecg)),ecg)
 #plt.plot(range(len(ecg2)),ecg2)
 plt.show()
