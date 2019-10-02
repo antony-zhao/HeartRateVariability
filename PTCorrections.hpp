@@ -1,6 +1,6 @@
 #include "panTompkinsAlgorithm.hpp"
 
-#define BUFFER 1200
+#define BUFFER 48000
 #define SKIP 600
 
 int signals[BUFFER];
