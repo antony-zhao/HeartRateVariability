@@ -1,57 +1,23 @@
 ﻿  PanTompkins.cpp
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(182,1): error C4996:  'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(208): message :  see declaration of 'fopen'
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(183,1): error C4996:  'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(208): message :  see declaration of 'fopen'
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(253,1): error C4996:  'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message :  see declaration of 'fscanf'
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(266,1): error C4996:  'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message :  see declaration of 'fscanf'
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(250,9): warning C4101:  'endFilePointer': unreferenced local variable
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(246,6): warning C4101:  'index': unreferenced local variable
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(372,59): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(455,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(456,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(457,43): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(459,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(460,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(461,43): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(472,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(473,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(474,43): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(476,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(477,46): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(478,43): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(489,26): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(490,26): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(491,23): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(493,26): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(494,26): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(495,35): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(518,19): warning C4244:  '*=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(532,20): warning C4244:  '*=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(533,17): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(534,18): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(535,18): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(561,43): warning C4244:  '=': conversion from 'double' to 'unsigned long', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(567,26): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(568,27): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(569,28): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(570,25): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(572,28): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(573,25): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(587,22): warning C4244:  '*=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(600,23): warning C4244:  '*=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(601,20): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(602,21): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(603,21): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(632,27): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(633,27): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(634,24): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(636,27): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(637,27): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(638,24): warning C4244:  '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\PTCorrections.hpp(31,1): error C4996:  'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message :  see declaration of 'fscanf'
-C:\Users\Antony Zhao\Desktop\HeartRateVariability\PanTompkins\PTCorrections.hpp(128,1): error C4996:  'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message :  see declaration of 'fscanf'
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(253,9): warning C4101: 'endFilePointer': unreferenced local variable
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(249,6): warning C4101: 'index': unreferenced local variable
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(465,31): warning C4018: '<=': signed/unsigned mismatch
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(467,32): warning C4244: '=': conversion from 'double' to 'unsigned long', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(492,31): warning C4018: '<=': signed/unsigned mismatch
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(494,32): warning C4244: '=': conversion from 'double' to 'unsigned long', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(522,27): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(541,19): warning C4244: '*=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(555,20): warning C4244: '*=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(556,18): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(557,19): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(558,19): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(591,33): warning C4244: '=': conversion from 'double' to 'unsigned long', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(621,23): warning C4244: '*=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(634,24): warning C4244: '*=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(635,22): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(636,23): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(637,23): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(665,28): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(696,25): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\panTompkinsAlgorithm.hpp(701,24): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  PanTompkins.vcxproj -> C:\Users\tonyz\Documents\HeartRateVariability\PanTompkins\Debug\PanTompkins.exe

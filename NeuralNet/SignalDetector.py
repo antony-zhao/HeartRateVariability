@@ -1,21 +1,15 @@
-from keras.layers import Conv1D, Recurrent, AveragePooling1D, Dense, Activation, Dropout, Flatten
-from keras.activations import sigmoid, relu
+import tensorflow as tf
 from keras.models import Sequential
+from keras.layers import Dense, Recurrent, Dropout, Conv1D
+from keras.activations import relu, sigmoid
 
+tf.config.experimental.list_physical_devices('GPU')
+tf.debugging.set_log_device_placement(True)
 
-layers_dims = [256, 400, 300, 256]
+# Place tensors on the CPU
+#with tf.device('/CPU:0'):
+a = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
 
-model = Sequential()
-model.add(Conv1D(layers_dims[0]))
-model.add(AveragePooling1D())
-model.add(Flatten())
-model.add(Recurrent(layers_dims[1]))
-model.add(Activation(relu))
-model.add(Dropout(0.5))
-model.add(Dense(layers_dims[2]))
-model.add(Activation(relu))
-model.add(Dropout(0.5))
-model.add(Dense(layers_dims[3]))
-model.add(Activation(sigmoid))
-
-print("hi")
+c = tf.matmul(a, b)
+print(c)

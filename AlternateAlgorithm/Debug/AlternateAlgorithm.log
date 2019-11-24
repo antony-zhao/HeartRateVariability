@@ -1,0 +1,4 @@
+﻿  AlternateAlgorithm.cpp
+  The contents of <filesystem> are only available with C++17 or later.
+C:\Users\tonyz\Documents\HeartRateVariability\AlternateAlgorithm\Algorithm.hpp(66,9): warning C4101: 'base': unreferenced local variable
+  AlternateAlgorithm.vcxproj -> C:\Users\tonyz\Documents\HeartRateVariability\AlternateAlgorithm\Debug\AlternateAlgorithm.exe

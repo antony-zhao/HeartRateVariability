@@ -1,40 +1,58 @@
-#include "panTompkinsAlgorithm.hpp"
+#include <stdio.h>     
+#include <stdbool.h>
+#include <string.h>
+#include <string> 
+#include <vector>
+#include <limits>
+#include <iostream>
+#include <fstream>
 
-#define BUFFER 1200
-#define SKIP 600
+using namespace std;
+
+#define BUFFER 12000
+#define SKIP 1200
 
 int signals[BUFFER];
 int markedSignals[BUFFER];
 int numPeaks;
 int averageInterval = 400;
+fstream inFile, outFile;
 
-void clearSignalArray();
-void readData();
-void markSignals();
-void writeToFile();
-void calcAverageInterval();
+void ClearSignalArray();
+void ReadData();
+void MarkSignals();
+void WriteToFile();
+void CalcAverageInterval();
 void PTCorrections();
+void InitFiles(string, string);
+
+void InitFiles(string file_in, string file_out) {
+	inFile.open(file_in, fstream::in);
+	outFile.open(file_out, fstream::out);
+}
 
 
-void clearSignalArray(){
+void ClearSignalArray(){
     //resets the arrays
     memset(signals, 0, sizeof(signals));
     memset(markedSignals,0,sizeof(markedSignals));
 }
 
 
-void readData(){
+void ReadData(){
     //reads from the file into the signals array
     for(int i = 0; i < BUFFER; i++){
         //if not end of file, read what's next in the file into the array, otherwise just put 0
-        if(!feof(fin))
-            fscanf(fin,"%d\n",&signals[i]);
+		if (!inFile.eof()) {
+			inFile >> signals[i];
+			inFile.ignore(100, '\n');
+		}
         else
             signals[i] = 0;
     }
 }
 
-void markSignals(){
+void MarkSignals(){
     //marks signals to be used as an anchor
     int anchor;
     bool found = false;
@@ -78,11 +96,10 @@ void markSignals(){
     }
 }
 
-void writeToFile(){
+void WriteToFile(){
     //for now it just writes the markedSignals. Eventually it will write from signals whenever signals is corrected even further
     for(int i = 0; i < BUFFER; i++){
-        fprintf(fout,"%d\n",markedSignals[i]);
-        //fprintf(fout,"%d\n",signals[i]);
+		outFile << markedSignals[i] << endl;
     }
 }
 /*
@@ -92,7 +109,7 @@ void writeToTerminal(){
     }
 }
 */
-void calcAverageInterval(){
+void CalcAverageInterval(){
     //calculates the average rr interval in the array
     //first index of signal
     int newAverageInterval;
@@ -125,19 +142,19 @@ void PTCorrections(){
     //skips the initialization
     int placeholder;
     for(int i = 0; i < SKIP; i++){
-        fscanf(fin,"%d\n", &placeholder);
-        fprintf(fout,"0\n");
+		inFile.ignore(100, '\n');
+		outFile << "0\n";
     }
-    readData();
-    markSignals();
-    writeToFile();
-    while(!feof(fin)){
+    ReadData();
+    MarkSignals();
+    WriteToFile();
+    while(inFile.eof()){
         //calcAverageInterval();
         //clearSignalArray();
-        readData();
-        markSignals();
-        writeToFile();
+        ReadData();
+        MarkSignals();
+        WriteToFile();
     }
-    fclose(fin);
-    fclose(fout);
+	inFile.close();
+	outFile.close();
 }
