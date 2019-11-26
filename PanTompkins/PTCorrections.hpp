@@ -148,7 +148,7 @@ void PTCorrections(){
     ReadData();
     MarkSignals();
     WriteToFile();
-    while(inFile.eof()){
+    while(!inFile.eof()){
         //calcAverageInterval();
         //clearSignalArray();
         ReadData();

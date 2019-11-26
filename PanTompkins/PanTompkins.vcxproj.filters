@@ -23,7 +23,10 @@
     <ClInclude Include="PTCorrections.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="panTompkinsAlgorithm.hpp">
+    <ClInclude Include="PanTompkinsCleanOnly.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PanTompkinsAlgorithm.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,26 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Application.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Application.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ECG_Data/T21_transition example1_180s.ascii" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../NeuralNet/.idea/NeuralNet.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../NeuralNet/.idea/NeuralNet.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../NeuralNet/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../NeuralNet/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../NeuralNet/SignalDetector.py" beforeDir="false" afterPath="$PROJECT_DIR$/../NeuralNet/SignalDetector.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/.suo" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/.suo" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/Browse.VC.db" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/Browse.VC.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.log" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.tlog/CL.command.1.tlog" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.tlog/CL.command.1.tlog" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.tlog/PanTompkins.lastbuildstate" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.tlog/PanTompkins.lastbuildstate" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/PanTompkins.tlog/unsuccessfulbuild" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/vc142.idb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Debug/vc142.idb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/Debug/vc142.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Debug/vc142.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/ipch/AutoPCH/799af0cc4d452c0/PANTOMPKINS.ipch" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/.vs/PanTompkins/v16/ipch/AutoPCH/799af0cc4d452c0/PANTOMPKINS.ipch" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../PanTompkins/PTCorrections.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/PTCorrections.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/PanTompkins.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/PanTompkins.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/panTompkinsAlgorithm.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/panTompkinsAlgorithm.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Signal/Signal.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/Signal.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.iobj" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.iobj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.ipdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.ipdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.log" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.obj" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/PanTompkins.write.1u.tlog" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/PanTompkins.write.1u.tlog" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/link.delete.1.tlog" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/link.delete.1.tlog" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/link.read.1.tlog" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/PanTompkins.tlog/link.read.1.tlog" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/Release/vc142.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/Release/vc142.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Signal/SignalCorrected.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/SignalCorrected.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />

@@ -154,7 +154,8 @@
     <ClCompile Include="PanTompkins.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="panTompkinsAlgorithm.hpp" />
+    <ClInclude Include="PanTompkinsAlgorithm.hpp" />
+    <ClInclude Include="PanTompkinsCleanOnly.hpp" />
     <ClInclude Include="PTCorrections.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

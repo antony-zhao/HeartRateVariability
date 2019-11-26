@@ -149,9 +149,7 @@
 						// Set to 0 if you want to keep the delay. Fixing the delay results in DELAY less samples
 						// in the final end result.
 #define NPEAKS 2
-#include <stdio.h>      // Remove if not using the standard file functions.
-#include <stdbool.h>
-#include <string.h>
+#include <iomanip>
 #include <string> 
 #include <vector>
 #include <limits>
@@ -170,6 +168,7 @@ int Input();
 void LinSearch(double[], double[]);
 void PanTompkins();
 void Output(int);
+int FileLength(string in);
 
 double nums[RRBUFFER] = {0};
 fstream inFilePT, outFilePT;
@@ -257,6 +256,7 @@ int Input()
 			inFilePT.ignore(100, ' ');
 			inFilePT.ignore(100, ' ');
 			inFilePT.ignore(100, ',');
+			//inFilePT.ignore(100, ',');
 			inFilePT >> nums[i];
 		}	
 		first = 0;
@@ -298,8 +298,24 @@ void Output(int out)
 	outFilePT << out << endl;
 }
 
-void PanTompkins()
+int FileLength(string in)
 {
+	int length = 0;
+	while (!inFilePT.eof()) {
+		length++;
+		inFilePT.ignore(1000, '\n');
+	}
+	inFilePT.close();
+	inFilePT.open(in, fstream::in);
+	return length;
+}
+
+void PanTompkins(string in, string out)
+{
+	InitPT(in, out);
+	int fileLength = FileLength(in);
+	int iter = 0;
+	double progress = 0;
 	// The signal array is where the most recent samples are kept. The other arrays are the outputs of each
 	// filtering module: DC Block, low pass, high pass, integral etc.
 	// The output is a buffer where we can change a previous result (using a back search) before outputting.
@@ -346,9 +362,16 @@ void PanTompkins()
 		rr1[i] = 0;
 		rr2[i] = 0;
 	}
+	cout << setprecision(2);
 
 	// The main loop where everything proposed in the paper happens. Ends when there are no more signal samples.
 	do {
+		if (iter % 100000 == 0) {
+			system("cls");
+			progress = iter / (double)fileLength;
+			cout << progress << endl;
+		}
+		iter++;
 		// Test if the buffers are full.
 		// If they are, shift them, discarding the oldest sample and adding the new one at the end.
 		// Else, just put the newest sample in the next free position.

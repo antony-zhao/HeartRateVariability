@@ -25,8 +25,8 @@ def plot(ecg, signal):
 ecg = []
 signal = []
 signal2 = []
-ecg_from_file(ecg,"../ECG_Data/T21.ascii")
-signal_from_file(signal, "../Signal/SignalCorrected.txt")
+ecg_from_file(ecg,"../ECG_Data/T22 - 2 hour data.ascii")
+signal_from_file(signal, "../Signal/Signal.txt")
 '''
 signal_from_file(signal2,"Signal.txt")
 signal_from_file(ecg2,"ECG.txt")
@@ -46,6 +46,6 @@ signal = signal.reshape(signal.shape[0],1)
 #plt.plot(range(len(signal2)),signal2)
 #plt.plot(range(len(ecg2)),ecg2)
 '''
-plt.plot(range(len(signal)),signal)
-plt.plot(range(len(ecg)),ecg)
+plt.plot(range(len(signal[0:1000000])),signal[0:1000000])
+plt.plot(range(len(ecg[0:1000000])),ecg[0:1000000])
 plt.show()
