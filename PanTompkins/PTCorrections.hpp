@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define BUFFER 12000
+#define BUFFER 30000
 #define SKIP 1200
 
 int signals[BUFFER];

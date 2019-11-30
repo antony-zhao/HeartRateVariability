@@ -41,16 +41,23 @@ int CleanSignals(string in, string out, string ecg) {
 		int numSignals = 0;
 		for (int i = 0; i < INTERVAL; i++) {
 			int placeholder = 0;
+			double ecgplaceholder = 0;
 			if (!inFileSignal.eof()) {
 				inFileSignal >> placeholder;
+				inFileSignal.ignore(100, '\n');
+				inFileECG.ignore(100, ' ');
+				inFileECG.ignore(100, ' ');
+				inFileECG.ignore(100, ',');
+				inFileECG >> ecgplaceholder;
+				inFileECG.ignore(100, '\n');
 			}
 			SignalBuffer[i] = placeholder;
-			inFileECG >> ECGBuffer[i];
+			ECGBuffer[i] = ecgplaceholder;
 			if (placeholder == 1) {
 				numSignals++;
 			}
 		}
-		if (numSignals > averageSignals* (1 + LEEWAY) || numSignals < averageSignals * (1 - LEEWAY)) {
+		if (INTERVAL/numSignals > averageSignals* (1 + LEEWAY) || INTERVAL/numSignals < averageSignals * (1 - LEEWAY)) {
 			continue;
 		}
 		else {

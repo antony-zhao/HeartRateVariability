@@ -312,6 +312,7 @@ int FileLength(string in)
 
 void PanTompkins(string in, string out)
 {
+    cout << "PanTompkins Algorithm starting";
 	InitPT(in, out);
 	int fileLength = FileLength(in);
 	int iter = 0;
@@ -365,9 +366,10 @@ void PanTompkins(string in, string out)
 	cout << setprecision(2);
 
 	// The main loop where everything proposed in the paper happens. Ends when there are no more signal samples.
+	cout << endl << "Before main loop";
 	do {
 		if (iter % 100000 == 0) {
-			system("cls");
+			//system("cls");
 			progress = iter / (double)fileLength;
 			cout << progress << endl;
 		}

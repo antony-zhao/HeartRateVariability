@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PTCorrections.hpp
+stdio.h
+-
+stdbool.h
+-
+string.h
+-
+string
+-
+vector
+-
+limits
+-
+iostream
+-
+fstream
+-
+
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PanTompkinsAlgorithm.hpp
+iomanip
+-
+string
+-
+vector
+-
+limits
+-
+iostream
+-
+fstream
+-
+
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/main.cpp
+PanTompkinsAlgorithm.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PanTompkinsAlgorithm.hpp
+PTCorrections.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PTCorrections.hpp
+

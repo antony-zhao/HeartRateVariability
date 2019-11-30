@@ -16,6 +16,14 @@ def signal_from_file(signal, filename):
     f.close()
     return signal
 
+def ecg_signal_from_file(ecg,signal,filename):
+    f = open(filename, 'r')
+    for x in f:
+        ecg.append(float(x[0:x.index('\t')]))
+        ecg.append(int(x[x.index('\t') + 1:x.index('\n')]))
+    f.close()
+
+
 def plot(ecg, signal):
     x = range(ecg.shape[0])
     plt.plot(x, ecg)
@@ -25,8 +33,9 @@ def plot(ecg, signal):
 ecg = []
 signal = []
 signal2 = []
-ecg_from_file(ecg,"../ECG_Data/T22 - 2 hour data.ascii")
-signal_from_file(signal, "../Signal/Signal.txt")
+ecg_from_file(ecg,"../ECG_Data/T21.ascii")
+signal_from_file(signal, "../Signal/SignalCorrected.txt")
+#ecg_signal_from_file(ecg,signal,"../Signal/SignalCorrected.txt")
 '''
 signal_from_file(signal2,"Signal.txt")
 signal_from_file(ecg2,"ECG.txt")
