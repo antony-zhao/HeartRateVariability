@@ -1,8 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/PanTompkins.dir/main.cpp.obj"
-  "PanTompkins.exe"
-  "PanTompkins.exe.manifest"
-  "PanTompkins.lib"
+  "CMakeFiles/PanTompkins.dir/main.cpp.o"
+  "PanTompkins"
   "PanTompkins.pdb"
 )
 

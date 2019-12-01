@@ -183,6 +183,21 @@ void InitPT(string file_in, string file_out)
 {
 	inFilePT.open(file_in, fstream::in);
 	outFilePT.open(file_out, fstream::out);
+    if(!inFilePT.is_open() && !outFilePT.is_open()){
+        cout << "Neither file opened" << endl;
+        throw 2;
+    }
+    else if(!inFilePT.is_open()){
+        cout << "Did not open inFile" << endl;
+        throw 1;
+    }
+    else if(!outFilePT.is_open()){
+        cout << "Did not open outFile" << endl;
+        throw 1;
+    }
+    else{
+        cout << "Opened" << endl;
+    }
 }
 
 double AveBase() {
