@@ -22,7 +22,7 @@ def ecg_signal_from_file(ecg,signal,filename):
 
 
 def plot(ecg, signal):
-    x = range(ecg.shape[0])
-    plt.plot(x, ecg)
-    plt.plot(x, signal)
+    plt.plot(range(len(ecg)), ecg)
+    plt.plot(range(len(signal)), signal)
+    plt.axis([0, 6000, -1, 1])
     plt.show()
