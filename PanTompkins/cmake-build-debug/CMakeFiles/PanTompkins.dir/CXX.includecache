@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/Users/tony/Documents/GitHub/HeartRateVariability/PanTompkins/PTCorrections.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PTCorrections.hpp
 stdio.h
 -
 stdbool.h
@@ -24,13 +24,13 @@ iostream
 fstream
 -
 
-/Users/tony/Documents/GitHub/HeartRateVariability/PanTompkins/main.cpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/main.cpp
 panTompkinsAlgorithm.hpp
-/Users/tony/Documents/GitHub/HeartRateVariability/PanTompkins/panTompkinsAlgorithm.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/panTompkinsAlgorithm.hpp
 PTCorrections.hpp
-/Users/tony/Documents/GitHub/HeartRateVariability/PanTompkins/PTCorrections.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PTCorrections.hpp
 
-/Users/tony/Documents/GitHub/HeartRateVariability/PanTompkins/panTompkinsAlgorithm.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/panTompkinsAlgorithm.hpp
 iomanip
 -
 string

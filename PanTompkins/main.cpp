@@ -8,11 +8,11 @@
 using namespace std;
 
 int main(void) {
-	string file1 = "../ECG_Data/T21.ascii";
-	string file2 = "../Signal/Signal.txt";
-	string file3 = "../Signal/SignalCorrected.txt";
+	string file1 = "../../ECG_Data/T21.ascii";
+	string file2 = "../../Signal/Signal.txt";
+	string file3 = "../../Signal/SignalCorrected.txt";
+    //inFilePT.open(file1,fstream::in);
+    //cout << (bool)inFilePT.is_open();
 
-	InitPT(file1,file2);
-
-	PanTompkins(file1,file2);
+    PanTompkins(file1,file2);
 }
