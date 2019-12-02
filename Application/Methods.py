@@ -19,10 +19,3 @@ def ecg_signal_from_file(ecg,signal,filename):
         ecg.append(float(x[0:x.index('\t')]))
         ecg.append(int(x[x.index('\t') + 1:x.index('\n')]))
     f.close()
-
-
-def plot(ecg, signal):
-    plt.plot(range(len(ecg)), ecg)
-    plt.plot(range(len(signal)), signal)
-    plt.axis([0, 6000, -1, 1])
-    plt.show()
