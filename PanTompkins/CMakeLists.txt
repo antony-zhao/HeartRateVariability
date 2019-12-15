@@ -3,4 +3,4 @@ project(PanTompkins)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(PanTompkins main.cpp)
+add_executable(PanTompkins main.cpp FileInput.hpp)

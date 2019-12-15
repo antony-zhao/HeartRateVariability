@@ -10,9 +10,14 @@ using namespace std;
 int main(void) {
 	string file1 = "../../ECG_Data/T21.ascii";
 	string file2 = "../../Signal/Signal.txt";
-	string file3 = "../../Signal/SignalCorrected.txt";
-    //inFilePT.open(file1,fstream::in);
-    //cout << (bool)inFilePT.is_open();
+	string averaged = "../../Signal/Averaged.txt";
+	string variance = "../../Signal/Variance.txt";
+	string test = "../../Signal/Test.txt";
+	string inverted = "../../Signal/Inverted.txt";
 
-    PanTompkins(file1,file2);
+	FileInput f(file1, test);
+    TestScalings(f);
+    f.SetInFile(file1);
+    f.SetOutFile(inverted);
+    TestInverted(f);
 }
