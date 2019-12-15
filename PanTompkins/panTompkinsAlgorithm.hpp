@@ -143,73 +143,35 @@
 #define NOSAMPLE -32000 // An indicator that there are no more samples to read. Use an impossible value for a sample.
 #define FS 360         // Sampling frequency.
 #define BUFFSIZE 600    // The size of the buffers (in samples). Must fit more than 1.66 times an RR interval, which typically could be around 1 second.
-#define RRBUFFER 200
+#define RRBUFFER 800
 
 #define DELAY 22		// Delay introduced by the filters. Filter only output samples after this one.
 						// Set to 0 if you want to keep the delay. Fixing the delay results in DELAY less samples
 						// in the final end result.
-#define NPEAKS 2
+#define NPEAKS 1
 #include <iomanip>
 #include <string> 
 #include <vector>
 #include <limits>
 #include <iostream>
 #include <fstream>
+#include "FileInput.hpp"
 
 using namespace std;
 
-
-
-int ScaleData(double);
-double AveBase();
-void InitPT(string, string);
-int Inverted();
-int Input();
-void LinSearch(double[], double[]);
-void PanTompkins();
-void Output(int);
-int FileLength(string in);
-
-double nums[RRBUFFER] = {0};
-fstream inFilePT, outFilePT;
+double ECG[RRBUFFER] = {0};
 int first = 1;
 
-
-int ScaleData(double value){
-    return (int)(value*2000+1000);
-}   
-
-void InitPT(string file_in, string file_out)
-{
-	inFilePT.open(file_in, fstream::in);
-	outFilePT.open(file_out, fstream::out);
-    if(!inFilePT.is_open() && !outFilePT.is_open()){
-        cout << "Neither file opened" << endl;
-        throw 2;
+double Sum(){
+    double sum = 0;
+    for(int i = 0; i < RRBUFFER; i++){
+        sum += ECG[i];
     }
-    else if(!inFilePT.is_open()){
-        cout << "Did not open inFile" << endl;
-        throw 1;
-    }
-    else if(!outFilePT.is_open()){
-        cout << "Did not open outFile" << endl;
-        throw 1;
-    }
-    else{
-        cout << "Opened" << endl;
-    }
+    return sum;
 }
 
 double AveBase() {
-	double sum = 0;
-	int vals = 0;
-	for (double val:nums){
-		if(val!=NOSAMPLE){
-			sum += val;
-			vals++;
-		}
-	}
-	return sum / vals;
+	return Sum() / RRBUFFER;
 }
 
 void LinSearch(double min[], double max[]){
@@ -220,7 +182,7 @@ void LinSearch(double min[], double max[]){
         min[i] = numeric_limits<double>::max();
         max[i] = numeric_limits<double>::min();
     }
-    for(double x:nums){
+    for(double x:ECG){
         for(int i = 0; i < NPEAKS; i++){
             if(x < min[i]){
                 for(int j = i+1; j < NPEAKS; j++){
@@ -257,46 +219,147 @@ int Inverted() {
 		return -1;
 }
 
-int Input()
+int Scale(){
+    double max = INT_MIN;;
+    for(int i = 0; i < RRBUFFER; i++){
+        if(ECG[i] > max){
+            max = ECG[i];
+        }
+    }
+    return 200/max;
+}
+
+int ScaleData(double value){
+    return (int)(value*Scale()+1000);
+}
+
+int Preprocessing(FileInput &f)
 {
-    static int iter = 0;
-	int index;
 	double input;
 	static int pointer = 0;
-    static int endFile = 0;
-    int endFilePointer;
 	if (first == 1) {
 		for (int i = 0; i < RRBUFFER; i++) {
-			//"\t%*d/%*d/%*d %*d:%*d:%*lf %*c%*c,%lf\n"
-			inFilePT.ignore(100, ' ');
-			inFilePT.ignore(100, ' ');
-			inFilePT.ignore(100, ',');
-			//inFilePT.ignore(100, ',');
-			inFilePT >> nums[i];
+            ECG[i] = f.InputFromSample();
 		}	
 		first = 0;
 	}
-    if(nums[pointer] != NOSAMPLE)
+    if(ECG[pointer] != NOSAMPLE)
     {
-    	input = nums[pointer] * Inverted();
+    	input = ECG[pointer] * Inverted();
     }
     else
     {
         return NOSAMPLE; 
     }
     
-	if (!inFilePT.eof()) {
-		inFilePT.ignore(100, ' ');
-		inFilePT.ignore(100, ' ');
-		inFilePT.ignore(100, ',');
-		inFilePT >> nums[pointer];
-		inFilePT.ignore(100, '\n');
+	if (!f.Eof()) {
+        ECG[pointer] = f.InputFromSample();
 	}
 	else
-        nums[pointer] = NOSAMPLE;
+        ECG[pointer] = NOSAMPLE;
 	pointer = (pointer + 1) % RRBUFFER;
-    //cout << iter++ << endl;
 	return ScaleData(input);
+}
+
+double Variance(){
+    double ave = AveBase();
+    double variance = 0;
+    for(int i = 0; i < RRBUFFER; i++){
+        variance += pow(ECG[i],2);
+    }
+    return (variance / RRBUFFER) - pow(ave,2);
+}
+
+void TestAverage(FileInput& f){
+    double ave;
+    while(!f.Eof()){
+        for(int i = 0; i < RRBUFFER; i++){
+            if(!f.Eof()) {
+                ECG[i] = f.InputFromSample();
+            }
+            else{
+                ECG[i] = 0;
+            }
+        }
+        ave = AveBase();
+
+        for(int i = 0; i < RRBUFFER; i++) {
+            f.WriteToTxt(ECG[i] - ave);
+        }
+    }
+    f.CloseFiles();
+}
+
+void TestVariance(FileInput& f){
+    double variance = 0;
+    int val = 0;
+    /*
+    for(int i = 0; i < RRBUFFER; i++){
+        if(!f.Eof()) {
+            ECG[i] = f.InputFromSample();
+        }
+        else{
+            ECG[i] = 0;
+        }
+        val++;
+    }*/
+    while(!f.Eof()){
+        variance = Variance();
+        f.WriteToTxt(variance);
+        ECG[val%RRBUFFER] = f.InputFromSample();
+        val++;
+    }
+    f.CloseFiles();
+    val++;
+}
+
+void TestScalings(FileInput& f){
+    double ave, var, scale, inv;
+    while(!f.Eof()) {
+        for (int i = 0; i < RRBUFFER; i++) {
+            ECG[i] = f.InputFromSample();
+        }
+        ave = AveBase();
+        var = Variance();
+        inv = Inverted();
+        if(var < 0.01) {
+            for (int i = 0; i < RRBUFFER; i++) {
+                ECG[i] -= ave;
+                ECG[i] *= inv;
+            }
+            scale = Scale();
+            for(int i = 0; i < RRBUFFER; i++){
+                ECG[i] *= scale;
+                ECG[i] += 1000;
+            }
+        }
+        else {
+            for (int i = 0; i < RRBUFFER; i++) {
+                ECG[i] = 0;
+            }
+        }
+        for(int i = 0; i < RRBUFFER; i++){
+            f.WriteToTxt(ECG[i]);
+        }
+    }
+    f.CloseFiles();
+}
+
+void TestInverted(FileInput& f){
+    while(!f.Eof()){
+        for(int i = 0; i < RRBUFFER; i++){
+            if(!f.Eof())
+                ECG[i] = f.InputFromSample();
+            else{
+                ECG[i] = 0;
+            }
+
+        }
+        for(int i = 0; i < RRBUFFER; i++){
+            f.WriteToTxt(Inverted());
+        }
+    }
+    f.CloseFiles();
 }
 
 
@@ -308,27 +371,10 @@ int Input()
     such as feature extraction etc). Change its parameters to receive the necessary
     information to output.
 */
-void Output(int out)
-{
-	outFilePT << out << endl;
-}
 
-int FileLength(string in)
+void PanTompkins(FileInput &f)
 {
-	int length = 0;
-	while (!inFilePT.eof()) {
-		length++;
-		inFilePT.ignore(1000, '\n');
-	}
-	inFilePT.close();
-	inFilePT.open(in, fstream::in);
-	return length;
-}
-
-void PanTompkins(string in, string out)
-{
-	InitPT(in, out);
-	int fileLength = FileLength(in);
+	int fileLength = f.FileLength();
 	int iter = 0;
 	double progress = 0;
 	// The signal array is where the most recent samples are kept. The other arrays are the outputs of each
@@ -381,7 +427,7 @@ void PanTompkins(string in, string out)
 
 	// The main loop where everything proposed in the paper happens. Ends when there are no more signal samples.
 	do {
-		if (iter % 100000 == 0) {
+		if (iter % 1000 == 0) {
 			//system("cls");
 			progress = iter / (double)fileLength;
 			cout << progress << endl;
@@ -410,7 +456,7 @@ void PanTompkins(string in, string out)
 		{
 			current = sample;
 		}
-		signal[current] = Input();
+		signal[current] = Preprocessing(f);
 
 		// If no sample was read, stop processing!
 		if (signal[current] == NOSAMPLE)
@@ -557,7 +603,7 @@ void PanTompkins(string in, string out)
 				qrs = false;
 				outputSignal[current] = qrs;
 				if (sample > DELAY + BUFFSIZE)
-					Output(outputSignal[0]);
+					f.WriteToTxt(outputSignal[0]);
 				continue;
 			}
 
@@ -700,7 +746,7 @@ void PanTompkins(string in, string out)
 					outputSignal[current] = false;
 					outputSignal[i] = true;
 					if (sample > DELAY + BUFFSIZE)
-						Output(outputSignal[0]);
+						f.WriteToTxt(outputSignal[0]);
 					continue;
 				}
 			}
@@ -731,15 +777,14 @@ void PanTompkins(string in, string out)
 		// lighter thresholds. The final waveform output does match the original signal, though.
 		outputSignal[current] = qrs;
 		if (sample > DELAY + BUFFSIZE)
-			Output(outputSignal[0]);
+			f.WriteToTxt(outputSignal[0]);
 	} while (signal[current] != NOSAMPLE);
 
 	// Output the last remaining samples on the buffer
 	for (i = 1; i < BUFFSIZE; i++)
-		Output(outputSignal[i]);
-
-	// These last two lines must be deleted if you are not working with files.
-	inFilePT.close();
-	outFilePT.close();
+		f.WriteToTxt(outputSignal[i]);
+	f.CloseFiles();
+	first = 0;
+	f.Reopen();
 }
 
