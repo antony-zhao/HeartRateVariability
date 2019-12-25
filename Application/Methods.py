@@ -1,4 +1,4 @@
-from matplotlib import pyplot as plt
+import re
 
 def ecg_from_file(ecg, filename):
     f = open(filename, 'r')

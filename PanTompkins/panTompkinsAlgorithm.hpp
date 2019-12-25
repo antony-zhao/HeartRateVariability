@@ -233,6 +233,15 @@ int ScaleData(double value){
     return (int)(value*Scale()+1000);
 }
 
+double Variance(){
+    double ave = AveBase();
+    double variance = 0;
+    for(int i = 0; i < RRBUFFER; i++){
+        variance += pow(ECG[i],2);
+    }
+    return (variance / RRBUFFER) - pow(ave,2);
+}
+
 int Preprocessing(FileInput &f)
 {
 	double input;
@@ -258,16 +267,9 @@ int Preprocessing(FileInput &f)
 	else
         ECG[pointer] = NOSAMPLE;
 	pointer = (pointer + 1) % RRBUFFER;
+	if(Variance() > 0.003)
+	    input = 0;
 	return ScaleData(input);
-}
-
-double Variance(){
-    double ave = AveBase();
-    double variance = 0;
-    for(int i = 0; i < RRBUFFER; i++){
-        variance += pow(ECG[i],2);
-    }
-    return (variance / RRBUFFER) - pow(ave,2);
 }
 
 void TestAverage(FileInput& f){
@@ -785,6 +787,5 @@ void PanTompkins(FileInput &f)
 		f.WriteToTxt(outputSignal[i]);
 	f.CloseFiles();
 	first = 0;
-	f.Reopen();
 }
 

@@ -84,6 +84,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/FileInput.hpp">
+			<Option target="PanTompkins"/>
+		</Unit>
 		<Unit filename="C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/main.cpp">
 			<Option target="PanTompkins"/>
 		</Unit>

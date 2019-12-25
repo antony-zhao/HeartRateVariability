@@ -6,6 +6,12 @@
 
 #IncludeRegexTransform: 
 
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/FileInput.hpp
+iostream
+-
+fstream
+-
+
 C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/PTCorrections.hpp
 stdio.h
 -
@@ -43,4 +49,6 @@ iostream
 -
 fstream
 -
+FileInput.hpp
+C:/Users/tonyz/Documents/HeartRateVariability/PanTompkins/FileInput.hpp
 

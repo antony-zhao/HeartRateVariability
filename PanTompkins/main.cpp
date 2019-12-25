@@ -15,9 +15,6 @@ int main(void) {
 	string test = "../../Signal/Test.txt";
 	string inverted = "../../Signal/Inverted.txt";
 
-	FileInput f(file1, test);
-    TestScalings(f);
-    f.SetInFile(file1);
-    f.SetOutFile(inverted);
-    TestInverted(f);
+	FileInput PT(file1, file2);
+	PanTompkins(PT);
 }

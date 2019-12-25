@@ -7,6 +7,18 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Methods.py" beforeDir="false" afterPath="$PROJECT_DIR$/Methods.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/Makefile.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/Makefile.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/CXX.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/CXX.includecache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.internal" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.internal" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.make" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/main.cpp.obj" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/main.cpp.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/vc140.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/vc140.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.cbp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.exe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.ilk" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.ilk" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../PanTompkins/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Signal/Signal.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/Signal.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -47,7 +59,7 @@
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/Plot.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -70,11 +82,11 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/bin/python3" />
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Methods.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -91,11 +103,11 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/bin/python3" />
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Plot.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
