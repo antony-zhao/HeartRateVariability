@@ -2,23 +2,191 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Application.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Application.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Attempt.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Model.h5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ModelPrediction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000022/metrics/events.out.tfevents.1577606423.DESKTOP-CLKUASI.10644.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000022/train/events.out.tfevents.1577606423.DESKTOP-CLKUASI.10644.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000022/train/events.out.tfevents.1577606425.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000022/train/plugins/profile/2019-12-29_00-00-25/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000022/validation/events.out.tfevents.1577606426.DESKTOP-CLKUASI.10644.1621.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000621/metrics/events.out.tfevents.1577606782.DESKTOP-CLKUASI.17184.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000621/train/events.out.tfevents.1577606782.DESKTOP-CLKUASI.17184.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000621/train/events.out.tfevents.1577606783.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000621/train/plugins/profile/2019-12-29_00-06-23/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000621/validation/events.out.tfevents.1577606784.DESKTOP-CLKUASI.17184.1799.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000744/metrics/events.out.tfevents.1577606865.DESKTOP-CLKUASI.18052.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000744/train/events.out.tfevents.1577606865.DESKTOP-CLKUASI.18052.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000744/train/events.out.tfevents.1577606867.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000744/train/plugins/profile/2019-12-29_00-07-47/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-000744/validation/events.out.tfevents.1577606868.DESKTOP-CLKUASI.18052.1799.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001000/metrics/events.out.tfevents.1577607001.DESKTOP-CLKUASI.25524.237.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001000/train/events.out.tfevents.1577607001.DESKTOP-CLKUASI.25524.357.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001000/train/events.out.tfevents.1577607003.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001000/train/plugins/profile/2019-12-29_00-10-03/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001000/validation/events.out.tfevents.1577607004.DESKTOP-CLKUASI.25524.1750.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001257/metrics/events.out.tfevents.1577607178.DESKTOP-CLKUASI.11772.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001257/train/events.out.tfevents.1577607178.DESKTOP-CLKUASI.11772.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001257/train/events.out.tfevents.1577607180.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001257/train/plugins/profile/2019-12-29_00-13-00/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001257/validation/events.out.tfevents.1577607180.DESKTOP-CLKUASI.11772.1799.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001452/metrics/events.out.tfevents.1577607293.DESKTOP-CLKUASI.25092.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001452/train/events.out.tfevents.1577607293.DESKTOP-CLKUASI.25092.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001452/train/events.out.tfevents.1577607295.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001452/train/plugins/profile/2019-12-29_00-14-55/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001452/validation/events.out.tfevents.1577607296.DESKTOP-CLKUASI.25092.1799.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001937/metrics/events.out.tfevents.1577607578.DESKTOP-CLKUASI.25156.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001937/train/events.out.tfevents.1577607578.DESKTOP-CLKUASI.25156.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001937/train/events.out.tfevents.1577607581.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001937/train/plugins/profile/2019-12-29_00-19-41/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-001937/validation/events.out.tfevents.1577607586.DESKTOP-CLKUASI.25156.1799.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002329/metrics/events.out.tfevents.1577607810.DESKTOP-CLKUASI.28520.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002329/train/events.out.tfevents.1577607810.DESKTOP-CLKUASI.28520.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002329/train/events.out.tfevents.1577607812.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002329/train/plugins/profile/2019-12-29_00-23-32/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002354/metrics/events.out.tfevents.1577607835.DESKTOP-CLKUASI.18444.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002354/train/events.out.tfevents.1577607835.DESKTOP-CLKUASI.18444.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002354/train/events.out.tfevents.1577607837.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002354/train/plugins/profile/2019-12-29_00-23-57/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002418/metrics/events.out.tfevents.1577607859.DESKTOP-CLKUASI.13468.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002418/train/events.out.tfevents.1577607859.DESKTOP-CLKUASI.13468.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002418/train/events.out.tfevents.1577607861.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002418/train/plugins/profile/2019-12-29_00-24-21/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002438/metrics/events.out.tfevents.1577607879.DESKTOP-CLKUASI.26040.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002438/train/events.out.tfevents.1577607879.DESKTOP-CLKUASI.26040.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002438/train/events.out.tfevents.1577607881.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002438/train/plugins/profile/2019-12-29_00-24-41/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002456/metrics/events.out.tfevents.1577607897.DESKTOP-CLKUASI.4244.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002456/train/events.out.tfevents.1577607897.DESKTOP-CLKUASI.4244.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002456/train/events.out.tfevents.1577607899.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002456/train/plugins/profile/2019-12-29_00-24-59/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002609/metrics/events.out.tfevents.1577607970.DESKTOP-CLKUASI.2984.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002609/train/events.out.tfevents.1577607970.DESKTOP-CLKUASI.2984.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002609/train/events.out.tfevents.1577607972.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002609/train/plugins/profile/2019-12-29_00-26-12/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002732/metrics/events.out.tfevents.1577608053.DESKTOP-CLKUASI.17780.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002732/train/events.out.tfevents.1577608053.DESKTOP-CLKUASI.17780.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002732/train/events.out.tfevents.1577608055.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-002732/train/plugins/profile/2019-12-29_00-27-35/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003037/metrics/events.out.tfevents.1577608238.DESKTOP-CLKUASI.24632.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003037/train/events.out.tfevents.1577608238.DESKTOP-CLKUASI.24632.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003037/train/events.out.tfevents.1577608241.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003037/train/plugins/profile/2019-12-29_00-30-41/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003340/metrics/events.out.tfevents.1577608422.DESKTOP-CLKUASI.25620.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003340/train/events.out.tfevents.1577608422.DESKTOP-CLKUASI.25620.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003340/train/events.out.tfevents.1577608424.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003340/train/plugins/profile/2019-12-29_00-33-44/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003413/metrics/events.out.tfevents.1577608453.DESKTOP-CLKUASI.13200.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003413/train/events.out.tfevents.1577608453.DESKTOP-CLKUASI.13200.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003413/train/events.out.tfevents.1577608455.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003413/train/plugins/profile/2019-12-29_00-34-15/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003443/metrics/events.out.tfevents.1577608483.DESKTOP-CLKUASI.10616.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003443/train/events.out.tfevents.1577608484.DESKTOP-CLKUASI.10616.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003443/train/events.out.tfevents.1577608485.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003443/train/plugins/profile/2019-12-29_00-34-45/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003531/metrics/events.out.tfevents.1577608532.DESKTOP-CLKUASI.28084.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003531/train/events.out.tfevents.1577608532.DESKTOP-CLKUASI.28084.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003531/train/events.out.tfevents.1577608534.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003531/train/plugins/profile/2019-12-29_00-35-34/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003843/metrics/events.out.tfevents.1577608724.DESKTOP-CLKUASI.23364.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003843/train/events.out.tfevents.1577608725.DESKTOP-CLKUASI.23364.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003843/train/events.out.tfevents.1577608725.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003843/train/plugins/profile/2019-12-29_00-38-45/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-003843/validation/events.out.tfevents.1577608727.DESKTOP-CLKUASI.23364.1555.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/metrics/events.out.tfevents.1577644962.DESKTOP-CLKUASI.16164.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/metrics/events.out.tfevents.1577645000.DESKTOP-CLKUASI.16164.1400.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/train/events.out.tfevents.1577644962.DESKTOP-CLKUASI.16164.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/train/events.out.tfevents.1577644964.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/train/events.out.tfevents.1577645009.DESKTOP-CLKUASI.16164.1520.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104241/train/plugins/profile/2019-12-29_10-42-44/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104543/metrics/events.out.tfevents.1577645144.DESKTOP-CLKUASI.20056.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104543/train/events.out.tfevents.1577645144.DESKTOP-CLKUASI.20056.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104543/train/events.out.tfevents.1577645146.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-104543/train/plugins/profile/2019-12-29_10-45-46/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-105348/events.out.tfevents.1577645628.DESKTOP-CLKUASI" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-105420/events.out.tfevents.1577645661.DESKTOP-CLKUASI" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-105444/events.out.tfevents.1577645684.DESKTOP-CLKUASI" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-105807/events.out.tfevents.1577645888.DESKTOP-CLKUASI" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-110812/train/events.out.tfevents.1577646493.DESKTOP-CLKUASI.8456.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-110812/train/events.out.tfevents.1577646495.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-110812/train/plugins/profile/2019-12-29_11-08-15/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111357/train/events.out.tfevents.1577646838.DESKTOP-CLKUASI.7308.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111357/train/events.out.tfevents.1577646840.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111357/train/plugins/profile/2019-12-29_11-14-00/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111900/train/events.out.tfevents.1577647140.DESKTOP-CLKUASI.28256.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111900/train/events.out.tfevents.1577647142.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-111900/train/plugins/profile/2019-12-29_11-19-02/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120047/train/events.out.tfevents.1577649648.DESKTOP-CLKUASI.7564.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120047/train/events.out.tfevents.1577649650.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120047/train/plugins/profile/2019-12-29_12-00-50/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120134/train/events.out.tfevents.1577649695.DESKTOP-CLKUASI.5952.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120134/train/events.out.tfevents.1577649697.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120134/train/plugins/profile/2019-12-29_12-01-37/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120416/train/events.out.tfevents.1577649857.DESKTOP-CLKUASI.13052.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120416/train/events.out.tfevents.1577649859.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-120416/train/plugins/profile/2019-12-29_12-04-19/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131019/train/events.out.tfevents.1577653821.DESKTOP-CLKUASI.27488.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131019/train/events.out.tfevents.1577653824.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131019/train/plugins/profile/2019-12-29_13-10-24/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131210/train/events.out.tfevents.1577653931.DESKTOP-CLKUASI.2084.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131210/train/events.out.tfevents.1577653933.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131210/train/plugins/profile/2019-12-29_13-12-13/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131229/train/events.out.tfevents.1577653950.DESKTOP-CLKUASI.28816.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131229/train/events.out.tfevents.1577653952.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131229/train/plugins/profile/2019-12-29_13-12-32/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131623/train/events.out.tfevents.1577654184.DESKTOP-CLKUASI.12432.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131623/train/events.out.tfevents.1577654186.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-131623/train/plugins/profile/2019-12-29_13-16-26/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-132323/train/events.out.tfevents.1577654604.DESKTOP-CLKUASI.15416.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-132323/train/events.out.tfevents.1577654606.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-132323/train/plugins/profile/2019-12-29_13-23-26/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133032/train/events.out.tfevents.1577655034.DESKTOP-CLKUASI.22448.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133032/train/events.out.tfevents.1577655037.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133032/train/plugins/profile/2019-12-29_13-30-37/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133142/train/events.out.tfevents.1577655103.DESKTOP-CLKUASI.28536.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133142/train/events.out.tfevents.1577655105.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133142/train/plugins/profile/2019-12-29_13-31-45/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133216/train/events.out.tfevents.1577655137.DESKTOP-CLKUASI.13392.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133216/train/events.out.tfevents.1577655139.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133216/train/plugins/profile/2019-12-29_13-32-19/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133244/train/events.out.tfevents.1577655165.DESKTOP-CLKUASI.28676.360.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133244/train/events.out.tfevents.1577655166.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133244/train/plugins/profile/2019-12-29_13-32-46/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133244/validation/events.out.tfevents.1577655167.DESKTOP-CLKUASI.28676.1536.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133834/metrics/events.out.tfevents.1577655515.DESKTOP-CLKUASI.20440.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133834/train/events.out.tfevents.1577655515.DESKTOP-CLKUASI.20440.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133834/train/events.out.tfevents.1577655515.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133834/train/plugins/profile/2019-12-29_13-38-35/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-133834/validation/events.out.tfevents.1577655517.DESKTOP-CLKUASI.20440.1555.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134329/metrics/events.out.tfevents.1577655810.DESKTOP-CLKUASI.14256.256.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134329/train/events.out.tfevents.1577655810.DESKTOP-CLKUASI.14256.376.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134329/train/events.out.tfevents.1577655811.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134329/train/plugins/profile/2019-12-29_13-43-31/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134329/validation/events.out.tfevents.1577655812.DESKTOP-CLKUASI.14256.1563.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134420/metrics/events.out.tfevents.1577655861.DESKTOP-CLKUASI.21308.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134420/train/events.out.tfevents.1577655861.DESKTOP-CLKUASI.21308.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134420/train/events.out.tfevents.1577655862.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134420/train/plugins/profile/2019-12-29_13-44-22/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134420/validation/events.out.tfevents.1577655864.DESKTOP-CLKUASI.21308.1555.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134528/metrics/events.out.tfevents.1577655929.DESKTOP-CLKUASI.19104.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134528/train/events.out.tfevents.1577655929.DESKTOP-CLKUASI.19104.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134528/train/events.out.tfevents.1577655930.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134528/train/plugins/profile/2019-12-29_13-45-30/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134528/validation/events.out.tfevents.1577655931.DESKTOP-CLKUASI.19104.1558.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134708/metrics/events.out.tfevents.1577656029.DESKTOP-CLKUASI.26556.256.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134708/train/events.out.tfevents.1577656029.DESKTOP-CLKUASI.26556.376.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134708/train/events.out.tfevents.1577656030.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134708/train/plugins/profile/2019-12-29_13-47-10/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134708/validation/events.out.tfevents.1577656032.DESKTOP-CLKUASI.26556.1566.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134736/metrics/events.out.tfevents.1577656057.DESKTOP-CLKUASI.29136.248.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134736/train/events.out.tfevents.1577656057.DESKTOP-CLKUASI.29136.368.v2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134736/train/events.out.tfevents.1577656057.DESKTOP-CLKUASI.profile-empty" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134736/train/plugins/profile/2019-12-29_13-47-37/local.trace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Training/20191229-134736/validation/events.out.tfevents.1577656059.DESKTOP-CLKUASI.29136.1558.v2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Methods.py" beforeDir="false" afterPath="$PROJECT_DIR$/Methods.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/Makefile.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/Makefile.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/CXX.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/CXX.includecache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.internal" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.internal" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.make" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/depend.make" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/main.cpp.obj" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/main.cpp.obj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/vc140.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/CMakeFiles/PanTompkins.dir/vc140.pdb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.cbp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.cbp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.exe" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.ilk" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.ilk" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/cmake-build-debug/PanTompkins.pdb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../PanTompkins/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../PanTompkins/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Signal/Signal.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/Signal.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -59,7 +227,7 @@
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Model.py" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
@@ -74,7 +242,59 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Plot">
+  <component name="RunManager" selected="Python.Attempt">
+    <configuration name="PlotAttempt" type="CompoundRunConfigurationType">
+      <toRun name="Attempt" type="PythonConfigurationType" />
+      <toRun name="Plot" type="PythonConfigurationType" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="CompoundRunConfigurationType">
+      <toRun name="Attempt" type="PythonConfigurationType" />
+      <toRun name="Plot" type="PythonConfigurationType" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Attempt With Console" type="PythonConfigurationType" factoryName="Python">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Attempt.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Attempt" type="PythonConfigurationType" factoryName="Python">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Attempt.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Methods" type="PythonConfigurationType" factoryName="Python">
       <module name="Application" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -88,6 +308,48 @@
       <option name="ADD_CONTENT_ROOTS" value="false" />
       <option name="ADD_SOURCE_ROOTS" value="false" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Methods.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Model With Python Console" type="PythonConfigurationType" factoryName="Python">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Model" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Model.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -118,6 +380,11 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Compound.PlotAttempt" />
+      <item itemvalue="Python.Model" />
+      <item itemvalue="Python.Model With Python Console" />
+      <item itemvalue="Python.Attempt" />
+      <item itemvalue="Python.Attempt With Console" />
       <item itemvalue="Python.Plot" />
       <item itemvalue="Python.Methods" />
     </list>
@@ -152,38 +419,39 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1575240209646">
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1577607887012">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575240209646" />
-    <state x="739" y="274" key="FileChooserDialogImpl" timestamp="1575186995740">
+    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577607887012" />
+    <state x="739" y="274" key="FileChooserDialogImpl" timestamp="1577597443330">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="739" y="274" key="FileChooserDialogImpl/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575186995740" />
-    <state width="949" height="282" key="GridCell.Tab.0.bottom" timestamp="1575240262460">
+    <state x="-1181" y="289" key="FileChooserDialogImpl/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@-1920.15.1920.1040" timestamp="1577421975499" />
+    <state x="739" y="274" key="FileChooserDialogImpl/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577597443330" />
+    <state width="1899" height="282" key="GridCell.Tab.0.bottom" timestamp="1577653955942">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575240262460" />
-    <state width="949" height="282" key="GridCell.Tab.0.center" timestamp="1575240262460">
+    <state width="1899" height="282" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577653955942" />
+    <state width="1899" height="282" key="GridCell.Tab.0.center" timestamp="1577653955942">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="282" key="GridCell.Tab.0.center/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575240262460" />
-    <state width="949" height="282" key="GridCell.Tab.0.left" timestamp="1575240262460">
+    <state width="1899" height="282" key="GridCell.Tab.0.center/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577653955942" />
+    <state width="1899" height="282" key="GridCell.Tab.0.left" timestamp="1577653955941">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="282" key="GridCell.Tab.0.left/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575240262460" />
-    <state width="949" height="282" key="GridCell.Tab.0.right" timestamp="1575240262460">
+    <state width="1899" height="282" key="GridCell.Tab.0.left/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577653955941" />
+    <state width="1899" height="282" key="GridCell.Tab.0.right" timestamp="1577653955942">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="949" height="282" key="GridCell.Tab.0.right/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575240262460" />
+    <state width="1899" height="282" key="GridCell.Tab.0.right/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577653955942" />
     <state x="461" y="162" key="SettingsEditor" timestamp="1575186581707">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="461" y="162" key="SettingsEditor/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575186581707" />
-    <state x="623" y="225" key="search.everywhere.popup" timestamp="1575186913272">
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1577605969850">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" key="search.everywhere.popup/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1575186913272" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040/-1922.-753.1366.728/-1920.15.1920.1040@0.0.1920.1040" timestamp="1577605969850" />
   </component>
   <component name="masterDetails">
     <states>
