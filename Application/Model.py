@@ -43,8 +43,6 @@ modelFile = 'Model.h5'
 try:
     Model.load_weights(modelFile)
 except:
-    print("Remaking model")
-finally:
     Model.compile(optimizer = 'Adadelta', loss = 'categorical_crossentropy', metrics = ['accuracy'])
     file_writer = tf.summary.create_file_writer(logdir + "/metrics")
     file_writer.set_as_default()
@@ -69,9 +67,10 @@ finally:
         hist = Model.fit(x_train, y_train, batch_size = 64, validation_data = (x_test, y_test), callbacks = [tsbrd, lr_callback], epochs = 50, verbose = 2)
 
         Model.save(modelFile)
-
+'''
 with tf.device("/device:CPU:0"):
     plt.plot(range(len(x_test[0, :, 0])), x_test[0, :, 0])
     plt.plot(range(len(y_test[0, :])), y_test[0, :])
     plt.plot(range(len(x_test[0, :, 0])), Model.predict(x_test[0, :, 0].reshape(1, interval_length, 1))[0])
     plt.show()
+'''

@@ -6,24 +6,12 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, Activation
 import tensorflow as tf
 from itertools import repeat
+from Model import Model
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 interval_length = 400
 step = 100
-
-Model = Sequential()
-Model.add(Conv1D(input_shape = (interval_length,1), filters = 20, kernel_size = 4,strides = 2, activation = 'relu'))
-Model.add(MaxPooling1D())
-Model.add(Conv1D(50, kernel_size = 8, strides = 2, activation = 'relu'))
-Model.add(MaxPooling1D())
-Model.add(Flatten())
-Model.add(Dense(600))
-Model.add(Activation('relu'))
-Model.add(Dropout(0.2))
-Model.add(Dense(interval_length))
-Model.add(Activation('softmax'))
-Model.load_weights("Model.h5")
 
 ecg = []
 ecg_from_file(ecg, os.path.join('..','ECG_Data','T21.ascii'))
