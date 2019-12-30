@@ -7,6 +7,7 @@ from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1
 import tensorflow as tf
 from itertools import repeat
 from Model import Model
+import time
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
@@ -18,7 +19,9 @@ ecg_from_file(ecg, os.path.join('..','ECG_Data','T21.ascii'))
 signal = np.zeros((len(ecg)))
 std = []
 
-with tf.device("/device:CPU:0"):
+start = time.time()
+
+with tf.device("/device:GPU:0"):
     for i in range(0,len(ecg) - interval_length,step):
         #if i % 10000 == 0:
         #    print(i)
@@ -30,6 +33,9 @@ with tf.device("/device:CPU:0"):
         #else:
         temp -= np.average(temp)
         signal[i:i + interval_length] += temp.reshape(400,)
+end = time.time()
+
+print('elapsed time: ' + str(end-start))
 
 signal /= (interval_length/step)
 
@@ -46,3 +52,6 @@ axs[0].axis([0,6000,-0.5,1])
 axs[1].plot(range(len(std)), std)
 axs[1].axis([0,6000,-0.5,1])
 plt.show()
+
+del Model
+tf.keras.backend.clear_session()

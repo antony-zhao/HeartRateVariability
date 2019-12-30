@@ -12,6 +12,10 @@ from datetime import datetime
 ecg1 = []
 s1 = []
 
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 interval_length = 400
 
 for x in open(os.path.join('..','Training','Ecg1.txt')):
@@ -60,14 +64,16 @@ except:
         tf.summary.scalar('learning rate', data=learning_rate, step=epoch)
         return learning_rate
 
-    lr_callback = keras.callbacks.LearningRateScheduler(lr_schedule)
-    tsbrd = tf.keras.callbacks.TensorBoard(log_dir = logdir)
+    #lr_callback = keras.callbacks.LearningRateScheduler(lr_schedule)
+    #tsbrd = tf.keras.callbacks.TensorBoard(log_dir = logdir)
 
-    with tf.device("/device:CPU:0"):
-        hist = Model.fit(x_train, y_train, batch_size = 64, validation_data = (x_test, y_test), callbacks = [tsbrd, lr_callback], epochs = 50, verbose = 2)
+    #with tf.device("/device:CPU:0"):
+    hist = Model.fit(x_train, y_train, batch_size = 64, validation_data = (x_test, y_test), epochs = 200, verbose = 2)
 
-        Model.save(modelFile)
+    Model.save(modelFile)
+
 '''
+#Testing
 with tf.device("/device:CPU:0"):
     plt.plot(range(len(x_test[0, :, 0])), x_test[0, :, 0])
     plt.plot(range(len(y_test[0, :])), y_test[0, :])
