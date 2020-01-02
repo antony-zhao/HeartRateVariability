@@ -3,8 +3,8 @@ import numpy as np
 import os
 from Methods import *
 
-interval_length = 400
-step = 100
+interval_length = 600
+step = 300
 
 ecg = []
 ecg_from_file(ecg, os.path.join('..','ECG_Data','T21.ascii'))
@@ -27,5 +27,5 @@ f.close()
 
 plt.plot(range(len(ecg)), ecg)
 plt.plot(range(len(signal)), signal)
-plt.axis([0,6000,-0.5,1])
+plt.axis([330000,336000,-0.5,1])
 plt.show()

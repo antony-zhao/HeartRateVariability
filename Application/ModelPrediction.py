@@ -21,7 +21,7 @@ std = []
 
 start = time.time()
 
-with tf.device("/device:GPU:0"):
+with tf.device("/device:CPU:0"):
     for i in range(0,len(ecg) - interval_length,step):
         #if i % 10000 == 0:
         #    print(i)
@@ -44,13 +44,13 @@ for i in signal:
     f.write(str(i) + '\n')
 f.close()
 
-fig, axs = plt.subplots(2, sharex = True)
+#fig, axs = plt.subplots(2, sharex = True)
 
-axs[0].plot(range(len(ecg)), ecg)
-axs[0].plot(range(len(signal)), signal)
-axs[0].axis([0,6000,-0.5,1])
-axs[1].plot(range(len(std)), std)
-axs[1].axis([0,6000,-0.5,1])
+plt.plot(range(len(ecg)), ecg)
+plt.plot(range(len(signal)), signal)
+plt.axis([64000,70000,-0.5,1])
+#axs[1].plot(range(len(std)), std)
+#axs[1].axis([0,6000,-0.5,1])
 plt.show()
 
 del Model
