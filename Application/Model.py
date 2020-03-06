@@ -1,11 +1,10 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, Activation, GRU
 import tensorflow as tf
-import re
 from Methods import *
 import os
-from tensorflow import keras
 from matplotlib import pyplot as plt
+from tensorflow import keras
 from datetime import datetime
 
 
@@ -19,7 +18,7 @@ if len(physical_devices) > 0:
 interval_length = 400
 
 Model = Sequential()
-Model.add(Conv1D(input_shape = (interval_length,1), filters = 10, kernel_size = 4,strides = 2, activation = 'relu'))
+Model.add(Conv1D(input_shape = (interval_length, 1), filters = 10, kernel_size = 4,strides = 2, activation = 'relu'))
 Model.add(MaxPooling1D())
 Model.add(Conv1D(20, kernel_size = 8, strides = 2, activation = 'relu'))
 Model.add(MaxPooling1D())
@@ -28,19 +27,21 @@ Model.add(Dense(200))
 Model.add(Activation('relu'))
 Model.add(Dropout(0.2))
 Model.add(Dense(interval_length))
-Model.add(Activation('softmax'))
+Model.add(Activation('sigmoid'))
+
 
 def load_model(modelFile):
     Model.load_weights(modelFile)
 
-def train_model(epochs, modelFile):
-    for x in open(os.path.join('..', 'Training', 'Ecg1.txt')):
+def train_model(epochs, modelFile, samples = 10000, batch_size = 512):
+    for x in open(os.path.join('..', 'Training', 'ecg2.txt')):
         ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
-    for x in open(os.path.join('..', 'Training', 'Sig1.txt')):
+    for x in open(os.path.join('..', 'Training', 'sig2.txt')):
         s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
-    x_train, y_train = random_sampling(ecg1, s1, 5000, interval_length)
+    x_train, y_train = random_sampling(ecg1, s1, samples, interval_length)
+    #x_train, y_train = sequential_sampling(ecg1, s1, interval_length, interval_length//2)
 
     date = datetime.now().strftime("%Y%m%d-%H%M%S")
     logdir = os.path.join('Training', date)
@@ -64,16 +65,18 @@ def train_model(epochs, modelFile):
 
     lr_callback = keras.callbacks.LearningRateScheduler(lr_schedule)
     tsbrd = tf.keras.callbacks.TensorBoard(log_dir = logdir)
-
-    Model.fit(x_train, y_train, batch_size = 64, callbacks = [tsbrd, lr_callback],epochs = epochs, verbose = 2)
+    print(x_train.shape)
+    Model.fit(x_train, y_train, batch_size = batch_size, callbacks = [tsbrd, lr_callback],epochs = epochs, verbose = 2)
 
     Model.save(modelFile)
+"""
+for x in open(os.path.join('..', 'Training', 'ecg2.txt')):
+    ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
-'''
-#Testing
-with tf.device("/device:CPU:0"):
-    plt.plot(range(len(x_test[0, :, 0])), x_test[0, :, 0])
-    plt.plot(range(len(y_test[0, :])), y_test[0, :])
-    plt.plot(range(len(x_test[0, :, 0])), Model.predict(x_test[0, :, 0].reshape(1, interval_length, 1))[0])
-    plt.show()
-'''
+for x in open(os.path.join('..', 'Training', 'sig2.txt')):
+    s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
+
+plt.plot(range(len(ecg1)), ecg1)
+plt.plot(range(len(s1)), s1)
+plt.show()
+"""

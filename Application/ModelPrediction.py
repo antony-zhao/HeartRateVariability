@@ -9,44 +9,39 @@ import time
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 step = interval_length//2
-epochs = 100
+epochs = 50
 
-modelFile = 'Model.h5'
+model_file = 'Model2.h5'
 
 ecg = []
 ecg_from_file(ecg, os.path.join('..','ECG_Data','T21.ascii'))
 signal = np.zeros((len(ecg)))
 
-try:
-    load_model(modelFile)
-except:
-    train_start = time.time()
-    train_model(epochs, modelFile)
-    print(time.time() - train_start)
-    load_model(modelFile)
-finally:
-    start = time.time()
 
-    for i in range(0,len(ecg) - interval_length,step):
-        temp = np.asarray(ecg[i:i+interval_length])*100
-        temp = Model.predict(temp.reshape(1,interval_length, 1))
-        temp -= np.average(temp)
-        signal[i:i + interval_length] += temp.reshape(400,)
-    end = time.time()
+load_model(model_file)
 
-    print('elapsed time: ' + str(end-start))
+start = time.time()
 
-    signal /= (interval_length/step)
+for i in range(0,len(ecg) - interval_length,step):
+    temp = np.asarray(ecg[i:i+interval_length])*100
+    temp = Model.predict(temp.reshape(1,interval_length, 1))
+    temp -= np.average(temp)
+    signal[i:i + interval_length] += temp.reshape(400,)
+end = time.time()
 
-    f = open(os.path.join('..','Signal','SignalPy.txt'),'w')
-    for i in signal:
-        f.write(str(i) + '\n')
-    f.close()
+print('elapsed time: ' + str(end-start))
 
-    plt.plot(range(len(ecg)), ecg)
-    plt.plot(range(len(signal)), signal)
-    plt.axis([64000,70000,-0.5,1])
-    plt.show()
+signal /= (interval_length/step)
 
-    del Model
-    tf.keras.backend.clear_session()
+f = open(os.path.join('..','Signal','SignalPy.txt'),'w')
+for i in signal:
+    f.write(str(i) + '\n')
+f.close()
+
+plt.plot(range(len(ecg)), ecg)
+plt.plot(range(len(signal)), signal)
+plt.axis([0,6000,-0.5,1])
+plt.show()
+
+del Model
+tf.keras.backend.clear_session()
