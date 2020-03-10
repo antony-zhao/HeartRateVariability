@@ -41,6 +41,12 @@ def train_model(epochs, modelFile, samples = 10000, batch_size = 512):
         s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
     x_train, y_train = random_sampling(ecg1, s1, samples, interval_length)
+    x_train = np.append(x_train, -x_train)
+    y_train = np.append(y_train, y_train)
+    x_train = x_train.reshape(samples * 2,interval_length,1)
+    y_train = y_train.reshape(samples * 2, interval_length)
+    print(x_train.shape)
+    print(y_train.shape)
     #x_train, y_train = sequential_sampling(ecg1, s1, interval_length, interval_length//2)
 
     date = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -65,7 +71,6 @@ def train_model(epochs, modelFile, samples = 10000, batch_size = 512):
 
     lr_callback = keras.callbacks.LearningRateScheduler(lr_schedule)
     tsbrd = tf.keras.callbacks.TensorBoard(log_dir = logdir)
-    print(x_train.shape)
     Model.fit(x_train, y_train, batch_size = batch_size, callbacks = [tsbrd, lr_callback],epochs = epochs, verbose = 2)
 
     Model.save(modelFile)

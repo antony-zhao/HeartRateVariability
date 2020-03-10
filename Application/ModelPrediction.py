@@ -8,7 +8,7 @@ import time
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-step = interval_length//2
+step = interval_length//8
 epochs = 50
 
 model_file = 'Model2.h5'
@@ -23,15 +23,23 @@ load_model(model_file)
 start = time.time()
 
 for i in range(0,len(ecg) - interval_length,step):
-    temp = np.asarray(ecg[i:i+interval_length])*100
-    temp = Model.predict(temp.reshape(1,interval_length, 1))
+    temp = np.asarray(ecg[i:i+interval_length])
     temp -= np.average(temp)
-    signal[i:i + interval_length] += temp.reshape(400,)
+    temp *= 100
+    temp = Model.predict(temp.reshape(1,interval_length, 1))
+    temp = temp.reshape(interval_length,)
+    temp_max = temp.argmax()
+    temp[range(interval_length)] = 0
+    temp[temp_max] = 1
+    signal[i:i + interval_length] += temp
 end = time.time()
 
-print('elapsed time: ' + str(end-start))
-
 signal /= (interval_length/step)
+
+signal[signal < 0.3] = 0
+signal[signal >= 0.3] = 1
+
+print('elapsed time: ' + str(end-start))
 
 f = open(os.path.join('..','Signal','SignalPy.txt'),'w')
 for i in signal:

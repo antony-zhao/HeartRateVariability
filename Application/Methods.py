@@ -43,7 +43,9 @@ def sequential_sampling(ecg, signal, interval_length, step):
         x.append(ecg[i:i + interval_length])
         y.append(signal[i:i + interval_length])
     x = np.asarray(x)
-    x *= 100
+    for i in range(x.shape[0]):
+        x[i] -= np.average(x[i])
+        x[i] /= np.amax(np.abs(x[i]))
     y = np.asarray(y)
     size = x.size
     x = np.concatenate(x).ravel()
