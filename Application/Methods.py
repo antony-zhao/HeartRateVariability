@@ -3,13 +3,15 @@ import random
 import numpy as np
 import copy
 
+
 def ecg_from_file(ecg, filename):
     f = open(filename, 'r')
     for x in f:
-        if x[0] != '#' or len(x) > 0:
+        if x[0] != '#' and len(x) > 0:
             ecg.append(float(re.findall('([-0-9.]+)', x)[-1]))
     f.close()
 #x[x.index(',') + 1:x.index('\n')]
+
 
 def signal_from_file(signal, filename):
     f = open(filename,'r')
@@ -18,6 +20,7 @@ def signal_from_file(signal, filename):
     f.close()
     return signal
 
+
 def ecg_signal_from_file(ecg,signal,filename):
     f = open(filename, 'r')
     for x in f:
@@ -25,16 +28,24 @@ def ecg_signal_from_file(ecg,signal,filename):
         ecg.append(int(x[x.index('\t') + 1:x.index('\n')]))
     f.close()
 
+
 def random_sampling(ecg, signal, samples, interval_length):
     x, y = [], []
     for i in range(samples):
         j = random.randint(0, len(ecg) - interval_length)
-        x.append(ecg[j:j + interval_length])
+        temp = ecg[j:j + interval_length]
+        temp = np.asarray(temp)
+        temp -= np.average(temp)
+        temp *= 100
+        temp = temp.tolist()
+        x.append(temp)
         y.append(signal[j:j + interval_length])
     x = np.asarray(x)
-    x *= 100
     y = np.asarray(y)
-    return x.reshape(samples,interval_length,1),y
+    size = x.size
+    x = np.concatenate(x).ravel()
+    return x.reshape(size // interval_length, interval_length, 1), y
+
 
 def sequential_sampling(ecg, signal, interval_length, step):
     x, y = [], []
