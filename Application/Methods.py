@@ -4,13 +4,18 @@ import numpy as np
 import copy
 
 
-def ecg_from_file(ecg, filename):
+def ecg_from_file(ecg, filename, commented):
     f = open(filename, 'r')
+    if commented:
+        read = ""
+        while len(read) <= 1 or read[0] == "#":
+            read = f.readline()
+        f.readline()
+
     for x in f:
         if x[0] != '#' and len(x) > 0:
             ecg.append(float(re.findall('([-0-9.]+)', x)[-1]))
     f.close()
-#x[x.index(',') + 1:x.index('\n')]
 
 
 def signal_from_file(signal, filename):
@@ -21,7 +26,7 @@ def signal_from_file(signal, filename):
     return signal
 
 
-def ecg_signal_from_file(ecg,signal,filename):
+def ecg_signal_from_file(ecg,filename):
     f = open(filename, 'r')
     for x in f:
         ecg.append(float(x[0:x.index('\t')]))

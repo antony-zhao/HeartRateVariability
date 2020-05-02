@@ -6,34 +6,34 @@ import tensorflow as tf
 from Model import Model, train_model, load_model, interval_length
 import h5py
 import time
+import pandas as pd
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 step = interval_length // 4
 
-model_file = 'Model3.h5'
+model_file = 'Model.h5'
+
+lines_per_file = 1000000
+file_num = 1
 
 ecg = []
-file = open(os.path.join('..', 'ECG_Data', 'T21 - whole recording data.ascii'), 'r')
-f = open(os.path.join('..', 'Signal', 'T21Signal.txt'), 'w')
-
-ecg_from_file(ecg, os.path.join('..', 'ECG_Data', 'T21_transition example2_600s.ascii'))
+filename = "T21_transition example1_180s"
+file = open(os.path.join('..', 'ECG_Data', filename + '.ascii'), 'r')
+f = open(os.path.join('..', 'Signal', filename + str(file_num) + '.txt'), 'w')
+commented = True
 
 signal = np.zeros(interval_length)
 load_model(model_file)
 
 start = time.time()
+lines = 0
 
 
 def read_ecg(ecg_file, count):
     e = False
-    x = ecg_file.readline()
     sig = np.zeros(count)
-    if len(x) == 0:
-        e = True
-        return sig.reshape(count, 1), e
-    sig[0] = float(re.findall('([-0-9.]+)', x)[-1])
-    for i in range(1, count):
+    for i in range(count):
         x = ecg_file.readline()
         if len(x) == 0:
             e = True
@@ -43,22 +43,29 @@ def read_ecg(ecg_file, count):
 
 
 def write_signal(sig_file, sig, ecg):
-    for e, s in zip(sig, ecg):
+    lines = 0
+    for e, s in zip(ecg, sig):
+        lines += 1
         if s > 1 / (interval_length / step):
             s = 1
         else:
             s = 0
-        sig_file.write('{},{}\n'.format(e, s))
+        e = str(float(e))
+        e += '0' * (7 - len(e))
+        sig_file.write('{},{}\n'.format(e, int(s)))
+    return lines
 
 
-read = ""
-while len(read) < 1 or read[0] == "#":
-    read = file.readline()
-file.readline()
+if commented:
+    read = ""
+    while len(read) <= 1 or read[0] == "#":
+        read = file.readline()
+    file.readline()
 
 ecg_temp, EOF = read_ecg(file, interval_length)
 
-for i in range(0, len(ecg) - interval_length, step):
+while not EOF:
+    num_lines = 0
     temp = np.copy(ecg_temp)
     temp -= np.average(temp)
     temp *= 100
@@ -66,9 +73,6 @@ for i in range(0, len(ecg) - interval_length, step):
     temp = temp.reshape(interval_length, )
     temp[temp < 0.4] = 0
     temp[temp >= 0.4] = 1
-    #temp_max = temp.argmax()
-    #temp[range(interval_length)] = 0
-    #temp[temp_max] = 1
     signal += temp / (interval_length / step)
     '''
     plt.plot(ecg_temp)
@@ -78,12 +82,18 @@ for i in range(0, len(ecg) - interval_length, step):
     plt.axis([0, interval_length, -0.5, 1])
     plt.show()
     '''
+    num_lines = write_signal(f, signal[:step], ecg_temp[:interval_length - step])
+    lines += num_lines
     ecg_temp[0:interval_length - step] = ecg_temp[step:]
     ecg_temp[interval_length - step:], EOF = read_ecg(file, step)
-    write_signal(f, signal[:step])
     signal[0:interval_length - step] = signal[step:]
     signal[interval_length - step:] = 0
     signal[signal < 0.1] = 0
+    if lines >= lines_per_file:
+        lines = 0
+        file_num += 1
+        f.close()
+        f = open(os.path.join('..', 'Signal', filename + str(file_num) + '.txt'), 'w')
     '''
     plt.plot(ecg_temp)
     plt.plot(signal, color='orange')
@@ -93,17 +103,7 @@ for i in range(0, len(ecg) - interval_length, step):
     '''
 end = time.time()
 
-
 print('elapsed time: ' + str(end - start))
-
-signal = []
-signal_from_file(signal, os.path.join('..', 'Signal', 'SignalPy.txt'))
-
-plt.plot(range(len(ecg)), ecg)
-# plt.plot(range(len(temp_ecg)), temp_ecg)
-plt.plot(range(len(signal)), signal)
-plt.axis([0, 6000, -0.5, 1])
-plt.show()
 
 del Model
 tf.keras.backend.clear_session()

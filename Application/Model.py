@@ -1,5 +1,5 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, Activation, GRU
+from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, Activation, LeakyReLU
 import tensorflow as tf
 from Methods import *
 import os
@@ -18,10 +18,11 @@ if len(physical_devices) > 0:
 
 interval_length = 400
 
+
 Model = Sequential()
-Model.add(Conv1D(input_shape=(interval_length, 1), filters=32, kernel_size=12, strides=2, activation = 'relu'))
+Model.add(Conv1D(input_shape=(interval_length, 1), filters=32, kernel_size=12, strides=2, activation='relu'))
 Model.add(MaxPooling1D())
-Model.add(Conv1D(64, kernel_size=16, strides=2, activation = 'relu'))
+Model.add(Conv1D(64, kernel_size=16, strides=2, activation='relu'))
 Model.add(MaxPooling1D())
 Model.add(Flatten())
 Model.add(Dense(512))
@@ -43,10 +44,10 @@ def distance(y_true, y_labels):
 
 
 def train_model(epochs, modelFile, samples=10000, batch_size=512):
-    for x in open(os.path.join('..', 'Training', 'ecg4.txt')):
+    for x in open(os.path.join('..', 'Training', 'ecg3.txt')):
         ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
-    for x in open(os.path.join('..', 'Training', 'sig4.txt')):
+    for x in open(os.path.join('..', 'Training', 'sig3.txt')):
         s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
     x_train, y_train = random_sampling(ecg1, s1, samples, interval_length)
@@ -54,7 +55,7 @@ def train_model(epochs, modelFile, samples=10000, batch_size=512):
     y_train = np.append(y_train, y_train)
     x_train = x_train.reshape(samples * 2,interval_length,1)
     y_train = y_train.reshape(samples * 2, interval_length)
-    optim = keras.optimizers.Adam(lr=0.01, clipvalue = 5)
+    optim = tf.keras.optimizers.Adadelta(lr=0.01)
     Model.compile(optimizer = optim, loss = 'categorical_crossentropy', metrics = ['categorical_accuracy', distance], verbose=1)
 
     Model.fit(x_train, y_train, batch_size = batch_size,epochs = epochs, verbose = 2)
