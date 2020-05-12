@@ -2,7 +2,7 @@ import os
 from matplotlib import pyplot as plt
 import mmap
 import re
-from matplotlib.widgets import Button, Slider, TextBox
+from matplotlib.widgets import Button, Slider, TextBox, RadioButtons
 from collections import deque
 import numpy as np
 
@@ -35,24 +35,6 @@ class Events:
         self.uncertain.append(ind)
         self.dist.append(dist)
 
-    def toggle_add(self, event):
-        if not self.adding:
-            self.removing = False
-        self.adding = not self.adding
-        if self.adding and not self.removing:
-            text.set_val("Adding")
-        if not self.adding and not self.removing:
-            text.set_val("")
-
-    def toggle_remove(self, event):
-        if not self.removing:
-            self.adding = False
-        self.removing = not self.removing
-        if self.removing and not self.adding:
-            text.set_val("Deleting")
-        if not self.adding and not self.removing:
-            text.set_val("")
-
     def next(self, event):
         if self.prev_ann is not None:
             self.prev_ann.remove()
@@ -68,9 +50,14 @@ class Events:
         self.prev_ann = axs.annotate("*", (val, -0.2))
         if self.ind == len(self.uncertain) - 1:
             axs.annotate('FINAL', (val, -0.25))
-        slider.valinit = length
-        slider.reset()
+        width_slider.valinit = length
+        width_slider.reset()
+        position_slider.valinit = val
+        position_slider.reset()
         plt.draw()
+
+    def prev(self, event):
+        pass
 
     def delete_onclick(self, event):
         if self.removing:
@@ -88,6 +75,8 @@ class Events:
         self.x_right += dist / 6
         axs.axis([self.x_left, self.x_right, -0.5, 1])
         plt.draw()
+        position_slider.valinit = (self.x_right+self.x_left)/2
+        position_slider.reset()
 
     def add_onclick(self, event):
         if self.adding:
@@ -105,6 +94,23 @@ class Events:
         axs.axis([self.x_left, self.x_right, -0.5, 1])
         plt.draw()
 
+    def change_mode(self, label):
+        if label == 'Browse':
+            self.adding = False
+            self.removing = False
+        elif label == 'Add':
+            self.adding = True
+            self.removing = False
+        else:
+            self.removing = True
+            self.adding = False
+
+    def set_pos(self, val):
+        width = self.x_right-self.x_left
+        self.x_left = val-width/2
+        self.x_right = val+width/2
+        axs.axis([self.x_left, self.x_right, -0.5, 1])
+        plt.draw()
 
 def add(ind):
     for i in range(-2, 2):
@@ -156,17 +162,15 @@ if len(events.uncertain) > 0:
     next_button = Button(button1, 'Next')
     next_button.on_clicked(events.next)
 
-button2 = plt.axes([0.6, 0.01, 0.1, 0.075])
-button3 = plt.axes([0.5, 0.01, 0.1, 0.075])
-slider_pos = plt.axes([0.2, 0.9, 0.65, 0.03])
-status = plt.axes([0.1, 0.01, 0.1, 0.075])
-delete_button = Button(button2, 'Delete')
-add_button = Button(button3, 'Add')
-slider = Slider(slider_pos, 'Width', 200, 10000, valinit=3000)
-text = TextBox(status, "")
-delete_button.on_clicked(events.toggle_remove)
-add_button.on_clicked(events.toggle_add)
-slider.on_changed(events.set_width)
+rad = plt.axes([0.6, 0.01, 0.1, 0.075])
+width_slider_pos = plt.axes([0.2, 0.9, 0.65, 0.03])
+position_slider_pos = plt.axes([0.2, 0.95, 0.65, 0.03])
+stat = RadioButtons(rad, ('Browse', 'Add', 'Delete'))
+stat.on_clicked(events.change_mode)
+width_slider = Slider(width_slider_pos, 'Width', 200, 10000, valinit=3000)
+width_slider.on_changed(events.set_width)
+position_slider = Slider(position_slider_pos, 'Position', 0, len(signal), valinit=0)
+position_slider.on_changed(events.set_pos)
 
 figManager = plt.get_current_fig_manager()
 figManager.window.showMaximized()
