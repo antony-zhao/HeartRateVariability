@@ -1,5 +1,7 @@
 import numpy as np
 import os
+import multiprocessing
+import concurrent.futures
 
 file = open(os.path.join('..','Signal','SignalPy.txt'),'r')
 out = open(os.path.join('..', 'Signal', 'HRV.txt'), 'w')

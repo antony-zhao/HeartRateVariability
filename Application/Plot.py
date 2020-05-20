@@ -5,8 +5,16 @@ import re
 from matplotlib.widgets import Button, Slider, TextBox, RadioButtons
 from collections import deque
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 
-file = open(os.path.join('..', 'Signal', 'T21_transition example1_180s1.txt'), 'r+')
+root = tk.Tk()
+currdir = os.getcwd()
+root.filename = filedialog.askopenfilename(initialdir=currdir+"/../Signal",title="Select file", filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+file = root.filename
+root.destroy()
+
+file = open(os.path.join('..', 'Signal', file), 'r+')
 fig, axs = plt.subplots()
 
 file.readline()
@@ -39,6 +47,27 @@ class Events:
         if self.prev_ann is not None:
             self.prev_ann.remove()
         self.ind = (self.ind + 1) % len(self.uncertain)
+        val = self.uncertain[self.ind]
+        dist = self.dist[self.ind]
+        length = min(2000, dist * 50)
+        if length < 600:
+            length = 200
+        axs.axis([val - length, val + length, -0.5, 1])
+        self.x_left = val - length
+        self.x_right = val + length
+        self.prev_ann = axs.annotate("*", (val, -0.2))
+        if self.ind == len(self.uncertain) - 1:
+            axs.annotate('FINAL', (val, -0.25))
+        width_slider.valinit = length
+        width_slider.reset()
+        position_slider.valinit = val
+        position_slider.reset()
+        plt.draw()
+
+    def previous(self, event):
+        if self.prev_ann is not None:
+            self.prev_ann.remove()
+        self.ind = (self.ind - 1) % len(self.uncertain)
         val = self.uncertain[self.ind]
         dist = self.dist[self.ind]
         length = min(2000, dist * 50)
@@ -158,9 +187,12 @@ axs.legend(["ECG", "Signal"], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 
 if len(events.uncertain) > 0:
-    button1 = plt.axes([0.7, 0.01, 0.1, 0.075])
+    button1 = plt.axes([0.8, 0.01, 0.1, 0.075])
     next_button = Button(button1, 'Next')
     next_button.on_clicked(events.next)
+    button2 = plt.axes([0.7, 0.01, 0.1, 0.075])
+    prev_button = Button(button2, 'Previous')
+    prev_button.on_clicked(events.previous)
 
 rad = plt.axes([0.6, 0.01, 0.1, 0.075])
 width_slider_pos = plt.axes([0.2, 0.9, 0.65, 0.03])
