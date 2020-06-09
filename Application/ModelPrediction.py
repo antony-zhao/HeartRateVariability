@@ -3,22 +3,20 @@ import numpy as np
 import os
 from Methods import *
 import tensorflow as tf
-from Model import Model, train_model, load_model, interval_length
+from Model import Model, train_model, load_model, interval_length, step
 import h5py
 import time
+from collections import deque
 import pandas as pd
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-
-step = interval_length // 4
-
 model_file = 'Model.h5'
 
-lines_per_file = 1000000
+lines_per_file = 10000000
 file_num = 1
 
 ecg = []
-filename = "T21_transition example1_180s"
+filename = "T21_transition example2_600s"
 file = open(os.path.join('..', 'ECG_Data', filename + '.ascii'), 'r')
 f = open(os.path.join('..', 'Signal', filename + str(file_num) + '.txt'), 'w')
 commented = True
@@ -60,8 +58,8 @@ if commented:
     read = ""
     while len(read) <= 1 or read[0] == "#":
         read = file.readline()
-    file.readline()
 
+ecg_temp = []
 ecg_temp, EOF = read_ecg(file, interval_length)
 
 while not EOF:
@@ -74,17 +72,11 @@ while not EOF:
     temp[temp < 0.4] = 0
     temp[temp >= 0.4] = 1
     signal += temp / (interval_length / step)
-    '''
-    plt.plot(ecg_temp)
-    plt.plot(temp, color='green')
-    plt.plot(signal, color='orange')
-    plt.legend(["ECG", "Temp", "Signal"])
-    plt.axis([0, interval_length, -0.5, 1])
-    plt.show()
-    '''
+
     num_lines = write_signal(f, signal[:step], ecg_temp[:interval_length - step])
     lines += num_lines
-    ecg_temp[0:interval_length - step] = ecg_temp[step:]
+
+    ecg_temp[:interval_length - step] = ecg_temp[step:]
     ecg_temp[interval_length - step:], EOF = read_ecg(file, step)
     signal[0:interval_length - step] = signal[step:]
     signal[interval_length - step:] = 0
@@ -94,13 +86,7 @@ while not EOF:
         file_num += 1
         f.close()
         f = open(os.path.join('..', 'Signal', filename + str(file_num) + '.txt'), 'w')
-    '''
-    plt.plot(ecg_temp)
-    plt.plot(signal, color='orange')
-    plt.legend(["ECG", "Signal"])
-    plt.axis([0, interval_length, -0.5, 1])
-    plt.show()
-    '''
+write_signal(f, signal[:interval_length - step], ecg_temp[:interval_length - step])
 end = time.time()
 
 print('elapsed time: ' + str(end - start))

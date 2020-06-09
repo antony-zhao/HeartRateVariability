@@ -1,7 +1,6 @@
 import re
 import random
 import numpy as np
-import copy
 
 
 def ecg_from_file(ecg, filename, commented):
@@ -52,17 +51,17 @@ def random_sampling(ecg, signal, samples, interval_length):
     return x.reshape(size // interval_length, interval_length, 1), y
 
 
-def sequential_sampling(ecg, signal, interval_length, step):
+def sequential_sampling(ecg, signal, interval_length, step, stack=True):
     x, y = [], []
-    ecg = np.asarray(ecg)
-    for i in range(0, len(ecg) - len(ecg) % interval_length - step, step):
+    for i in range(0, len(ecg) - interval_length, step):
         x.append(ecg[i:i + interval_length])
         y.append(signal[i:i + interval_length])
     x = np.asarray(x)
     for i in range(x.shape[0]):
         x[i] -= np.average(x[i])
-        x[i] /= np.amax(np.abs(x[i]))
+    x *= 100
     y = np.asarray(y)
+
     size = x.size
     x = np.concatenate(x).ravel()
-    return x.reshape(size//interval_length, interval_length,1),y
+    return x.reshape(size // interval_length, interval_length, 1), y
