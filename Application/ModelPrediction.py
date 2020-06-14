@@ -7,7 +7,11 @@ from Model import Model, train_model, load_model, interval_length, step
 import h5py
 import time
 from collections import deque
-import pandas as pd
+from scipy.signal import filtfilt
+
+n = 20  # https://stackoverflow.com/questions/37598986/reducing-noise-on-data
+b = [1 / n] * n
+a = 1
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 model_file = 'Model.h5'
@@ -64,9 +68,12 @@ ecg_temp, EOF = read_ecg(file, interval_length)
 
 while not EOF:
     num_lines = 0
-    temp = np.copy(ecg_temp)
-    temp -= np.average(temp)
-    temp *= 100
+    temp = np.asarray(ecg_temp).reshape(interval_length, )
+    # temp -= np.average(temp)
+    # temp *= 100
+    temp = filtfilt(b, a, temp)
+    temp -= np.mean(temp)
+    temp /= np.max(np.abs(temp))
     temp = Model.predict(temp.reshape(1, interval_length, 1))
     temp = temp.reshape(interval_length, )
     temp[temp < 0.4] = 0

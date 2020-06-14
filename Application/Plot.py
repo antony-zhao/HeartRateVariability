@@ -7,6 +7,7 @@ from collections import deque
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
+from scipy.signal import lfilter
 
 root = tk.Tk()
 currdir = os.getcwd()
@@ -286,6 +287,7 @@ plt.text(0.5, -0.3, "Uncertain: {} \n Total: {}".format(len(events.uncertain), t
 
 axs.plot(range(len(ecg)), ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
+
 axs.legend(["ECG", "Signal"], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 

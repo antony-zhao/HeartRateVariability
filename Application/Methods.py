@@ -1,7 +1,12 @@
 import re
 import random
 import numpy as np
+from matplotlib import pyplot as plt
+from scipy.signal import lfilter, lfilter_zi, filtfilt
 
+n = 20  # https://stackoverflow.com/questions/37598986/reducing-noise-on-data
+b = [1 / n] * n
+a = 1
 
 def ecg_from_file(ecg, filename, commented):
     f = open(filename, 'r')
@@ -37,10 +42,23 @@ def random_sampling(ecg, signal, samples, interval_length):
     x, y = [], []
     for i in range(samples):
         j = random.randint(0, len(ecg) - interval_length)
+        if 1 not in signal[j:j + interval_length]:
+            i -= 1
+            continue
         temp = ecg[j:j + interval_length]
         temp = np.asarray(temp)
-        temp -= np.average(temp)
-        temp *= 100
+        temp -= np.mean(temp)
+        temp /= np.max(np.abs(temp))
+        # cleaned = lfilter(b, a, temp)
+        # cleaned1 = filtfilt(b, a, temp)
+        # cleaned2 = lfilter_zi(b, temp)
+        # plt.plot(range(len(temp)), temp)
+        # plt.plot(range(len(cleaned)), cleaned)
+        # plt.plot(range(len(cleaned1)), cleaned1)
+        # # plt.plot(range(len(cleaned2)), cleaned2)
+        # plt.plot(range(len(signal[j:j + interval_length])), np.array(signal[j:j + interval_length]))
+        # plt.legend(['og', 'lfilter', 'filtfilt', 'signal'])
+        # plt.show()
         temp = temp.tolist()
         x.append(temp)
         y.append(signal[j:j + interval_length])

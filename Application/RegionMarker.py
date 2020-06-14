@@ -43,10 +43,10 @@ def load_model(model_file):
 
 
 def train_marker(epochs, model_file, batch_size=128, learning_rate=0.01):
-    for x in open(os.path.join('..', 'Training', 'ecg3.txt')):
+    for x in open(os.path.join('..', 'Training', 'ecg4.txt')):
         ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
-    for x in open(os.path.join('..', 'Training', 'sig3.txt')):
+    for x in open(os.path.join('..', 'Training', 'sig4.txt')):
         s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
     # plt.plot(range(len(ecg1)), ecg1)
