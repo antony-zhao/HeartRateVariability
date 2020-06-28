@@ -1,0 +1,3 @@
+interval_length: 400	#Number of data signals between each R wave.
+max_dist_percentage: 0.2	#Maximum percent distance between 2 R waves. (So 0.2 means can only be 80-120% * average away from previous wave)
+lines_per_file: 10000000	#Maximum lines per text file

@@ -1,16 +1,12 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D,\
                                     Activation, LeakyReLU, GRU, LSTM, TimeDistributed
-from keras.preprocessing import sequence
 import tensorflow as tf
 from Methods import *
 import os
 import keras.backend as K
-from matplotlib import pyplot as plt
-from tensorflow import keras
-from datetime import datetime
 from scipy.signal import filtfilt
-
+from Parameters import interval_length
 
 ecg1 = []
 s1 = []
@@ -59,6 +55,8 @@ def train_model(epochs, model_file, samples=10000, batch_size=512, learning_rate
         s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
 
     x_train, y_train = random_sampling(ecg1, s1, samples, interval_length)
+    s1.clear()
+    ecg1.clear()
     # x_train, y_train = sequential_sampling(ecg1, s1, interval_length, step, stack=False)
     x_train = np.append(x_train, -x_train, axis=0)
     y_train = np.append(y_train, y_train, axis=0)

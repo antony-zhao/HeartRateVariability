@@ -1,18 +1,32 @@
-from matplotlib.widgets import Slider, Button, RadioButtons
 import tkinter as tk
+import os
 
 root = tk.Tk()
 
-canvas = tk.Canvas(root, height = 540, width = 960)
+
+def plot():
+    os.system('python Plot.py')
+
+
+def model_predict():
+    os.system('python ModelPrediction.py')
+
+
+def excel():
+    os.system('python PostProcessing.py')
+
+
+canvas = tk.Canvas(root, height=100, width=450)
 canvas.pack()
 
-train_button = tk.Button(root, text="Train Model", padx=2, pady=10, relief="raised", width=15)
-train_button.place(relx=0.1, rely=0.1)
+prediction = tk.Button(root, text="Prediction for Signal", padx=2, pady=10,
+                       relief="raised", width=15, command=model_predict)
+prediction.place(relx=0.1, rely=0.1)
 
-prediction = tk.Button(root, text="Prediction for Signal", padx=2, pady=10, relief="raised", width=15)
-prediction.place(relx=0.25, rely=0.1)
-
-plot = tk.Button(root, text="Plot", padx=2, pady=10, relief="raised", width=15)
+plot = tk.Button(root, text="Plot", padx=2, pady=10, relief="raised", width=15, command=plot)
 plot.place(relx=0.4, rely=0.1)
+
+to_excel = tk.Button(root, text="Write to Excel", padx=2, pady=10, relief="raised", width=15, command=excel)
+to_excel.place(relx=0.7, rely=0.1)
 
 root.mainloop()
