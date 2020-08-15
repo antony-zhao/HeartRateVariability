@@ -8,7 +8,19 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 from Parameters import interval_length, max_dist_percentage
+from scipy.signal import savgol_filter, filtfilt, butter
 
+T = 0.1          # Sample Period
+fs = 4000.0      # sample rate, Hz
+low_cutoff = 5      # desired cutoff frequency of the filter, Hz ,      slightly higher than actual 1.2 Hz
+high_cutoff = 200
+nyq = 0.5 * fs   # Nyquist Frequency
+order = 4        # sin wave can be approx represented as quadratic
+n = int(T * fs)  # total number of samples
+# b, a = butter(N=order, Wn=low_cutoff/nyq, btype='low', analog=False)
+b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', analog=False)
+
+# b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', analog=False)
 root = tk.Tk()
 currdir = os.getcwd()
 root.filename = filedialog.askopenfilename(initialdir=currdir + "/../Signal", title="Select file",
@@ -28,8 +40,10 @@ signals = []
 
 class Events:
     def __init__(self):
-        self.ind = -1
-        self.uncertain = []
+        self.ind_unmarked = -1
+        self.ind_mismarked = -1
+        self.unmarked = []
+        self.mismarked = []
         self.dist = []
         self.to_be_deleted = []
         self.prev_ann = None
@@ -41,16 +55,11 @@ class Events:
         self.clean = False
         self.width = 3000
 
-    def append(self, ind, dist):
-        self.uncertain.append(ind)
-        self.dist.append(dist)
-
-    def next(self, event):
+    def next_unmarked(self, event):
         if self.prev_ann is not None:
             self.prev_ann.remove()
-        self.ind = (self.ind + 1) % len(self.uncertain)
-        val = self.uncertain[self.ind]
-        dist = self.dist[self.ind]
+        self.ind_unmarked = (self.ind_unmarked + 1) % len(self.unmarked)
+        val, dist = self.unmarked[self.ind_unmarked]
         length = min(2000, dist * 50)
         if length < 600:
             length = 200
@@ -58,7 +67,7 @@ class Events:
         self.x_left = val - length
         self.x_right = val + length
         self.prev_ann = axs.annotate("*", (val, -0.2))
-        if self.ind == len(self.uncertain) - 1:
+        if self.ind_unmarked == len(self.unmarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
         width_slider.reset()
@@ -66,12 +75,11 @@ class Events:
         position_slider.reset()
         plt.draw()
 
-    def previous(self, event):
+    def next_mismarked(self, event):
         if self.prev_ann is not None:
             self.prev_ann.remove()
-        self.ind = (self.ind - 1) % len(self.uncertain)
-        val = self.uncertain[self.ind]
-        dist = self.dist[self.ind]
+        self.ind_mismarked = (self.ind_mismarked + 1) % len(self.mismarked)
+        val, dist = self.mismarked[self.ind_mismarked]
         length = min(2000, dist * 50)
         if length < 600:
             length = 200
@@ -79,7 +87,47 @@ class Events:
         self.x_left = val - length
         self.x_right = val + length
         self.prev_ann = axs.annotate("*", (val, -0.2))
-        if self.ind == len(self.uncertain) - 1:
+        if self.ind_mismarked == len(self.mismarked) - 1:
+            axs.annotate('FINAL', (val, -0.25))
+        width_slider.valinit = length
+        width_slider.reset()
+        position_slider.valinit = val
+        position_slider.reset()
+        plt.draw()
+
+    def previous_unmarked(self, event):
+        if self.prev_ann is not None:
+            self.prev_ann.remove()
+        self.ind_unmarked = (self.ind_unmarked - 1) % len(self.unmarked)
+        val, dist = self.unmarked[self.ind_unmarked]
+        length = min(2000, dist * 50)
+        if length < 600:
+            length = 200
+        axs.axis([val - length, val + length, -0.5, 1])
+        self.x_left = val - length
+        self.x_right = val + length
+        self.prev_ann = axs.annotate("*", (val, -0.2))
+        if self.ind_unmarked == len(self.unmarked) - 1:
+            axs.annotate('FINAL', (val, -0.25))
+        width_slider.valinit = length
+        width_slider.reset()
+        position_slider.valinit = val
+        position_slider.reset()
+        plt.draw()
+
+    def previous_mismarked(self, event):
+        if self.prev_ann is not None:
+            self.prev_ann.remove()
+        self.ind_mismarked = (self.ind_mismarked - 1) % len(self.mismarked)
+        val, dist = self.mismarked[self.ind_mismarked]
+        length = min(2000, dist * 50)
+        if length < 600:
+            length = 200
+        axs.axis([val - length, val + length, -0.5, 1])
+        self.x_left = val - length
+        self.x_right = val + length
+        self.prev_ann = axs.annotate("*", (val, -0.2))
+        if self.ind_mismarked == len(self.mismarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
         width_slider.reset()
@@ -208,6 +256,7 @@ x2 = None
 total_marks = 0
 mismarked = 0
 unmarked_regions = 0
+prev = 0
 
 for i, line in enumerate(file):
     dist += 1
@@ -219,20 +268,21 @@ for i, line in enumerate(file):
         if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the signal is correct
             if dist == 1:  # For the areas where the signal is marked multiple times
                 dist = 0
+                total_marks -= 1
             else:
                 if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too large
                     unmarked_regions += 1
-                    events.append(prev + interval_length, interval_length)
+                    events.unmarked.append((prev + interval_length, interval_length))
                 elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):    # For when one beat is missed and the next one is also wrong
                     if i - prev > 1:
-                        events.append(i, interval_length)
+                        events.mismarked.append((i, interval_length))
                         mismarked += 1
                     prev = i
                     continue
                 signals.append(i)  # indices of signals
 
         else:
-            events.append(i, dist)  # These are the mismarked signals
+            events.mismarked.append((i, dist))  # These are the mismarked signals
             mismarked += 1
         if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
             last_few.append(dist)  # add the distance to the running average
@@ -257,21 +307,42 @@ for i, line in enumerate(file):
 plt.text(0.5, -0.3, "Mismarked: {} \n Unmarked Regions : {} \n Total: {}".format(mismarked, unmarked_regions, total_marks),
          bbox=dict(facecolor='red', alpha=0.5))
 
+
+T = 0.1          # Sample Period
+fs = 4000.0      # sample rate, Hz
+low_cutoff = 200      # desired cutoff frequency of the filter, Hz ,      slightly higher than actual 1.2 Hz
+high_cutoff = 5
+nyq = 0.5 * fs   # Nyquist Frequency
+order = 4        # sin wave can be approx represented as quadratic
+n = int(T * fs)  # total number of samples
+b, a = butter(N=order, Wn=low_cutoff/nyq, btype='low', analog=False)
+ecg = filtfilt(b, a, np.asarray(ecg))
+b, a = butter(N=order, Wn=high_cutoff/nyq, btype='high', analog=False)
+ecg = filtfilt(b, a, np.asarray(ecg))
+
 axs.plot(range(len(ecg)), ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
 
 axs.legend(["ECG", "Signal"], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 
-if len(events.uncertain) > 0:
-    button1 = plt.axes([0.8, 0.01, 0.1, 0.075])
-    next_button = Button(button1, 'Next')
-    next_button.on_clicked(events.next)
-    button2 = plt.axes([0.7, 0.01, 0.1, 0.075])
-    prev_button = Button(button2, 'Previous')
-    prev_button.on_clicked(events.previous)
+if len(events.unmarked) > 0:
+    button1 = plt.axes([0.6, 0.01, 0.1, 0.075])
+    next_un_button = Button(button1, 'Next Unmarked')
+    next_un_button.on_clicked(events.next_unmarked)
+    button2 = plt.axes([0.5, 0.01, 0.1, 0.075])
+    prev_un_button = Button(button2, 'Previous Unmarked')
+    prev_un_button.on_clicked(events.previous_unmarked)
 
-rad = plt.axes([0.6, 0.01, 0.1, 0.075])
+if len(events.mismarked) > 0:
+    button3 = plt.axes([0.8, 0.01, 0.1, 0.075])
+    next_mis_button = Button(button3, 'Next Mismarked')
+    next_mis_button.on_clicked(events.next_mismarked)
+    button4 = plt.axes([0.7, 0.01, 0.1, 0.075])
+    prev_mis_button = Button(button4, 'Previous Mismarked')
+    prev_mis_button.on_clicked(events.previous_mismarked)
+
+rad = plt.axes([0.4, 0.01, 0.1, 0.075])
 width_slider_pos = plt.axes([0.2, 0.9, 0.65, 0.03])
 position_slider_pos = plt.axes([0.2, 0.95, 0.65, 0.03])
 stat = RadioButtons(rad, ('Browse', 'Add', 'Delete', 'Clean Region'))

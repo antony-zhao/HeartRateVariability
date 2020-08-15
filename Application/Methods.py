@@ -2,11 +2,17 @@ import re
 import random
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import lfilter, lfilter_zi, filtfilt
+from scipy.signal import lfilter, lfilter_zi, filtfilt, savgol_filter, butter
+from collections import deque
 
-n = 20  # https://stackoverflow.com/questions/37598986/reducing-noise-on-data
-b = [1 / n] * n
-a = 1
+T = 0.1  # Sample Period
+fs = 4000.0  # sample rate, Hz
+low_cutoff = 200  # desired cutoff frequency of the filter, Hz ,      slightly higher than actual 1.2 Hz
+high_cutoff = 5
+nyq = 0.5 * fs  # Nyquist Frequency
+order = 4  # sin wave can be approx represented as quadratic
+n = int(T * fs)  # total number of samples
+
 
 def ecg_from_file(ecg, filename, commented):
     f = open(filename, 'r')
@@ -30,7 +36,7 @@ def signal_from_file(signal, filename):
     return signal
 
 
-def ecg_signal_from_file(ecg,filename):
+def ecg_signal_from_file(ecg, filename):
     f = open(filename, 'r')
     for x in f:
         ecg.append(float(x[0:x.index('\t')]))
@@ -38,48 +44,64 @@ def ecg_signal_from_file(ecg,filename):
     f.close()
 
 
-def random_sampling(ecg, signal, samples, interval_length):
+def random_sampling(ecg, signal, samples, interval_length, step, stack=1):
     x, y = [], []
+    avg_max = 0
     for i in range(samples):
-        j = random.randint(0, len(ecg) - interval_length)
+        j = random.randint(step*stack, len(ecg) - interval_length)
         if 1 not in signal[j:j + interval_length]:
             i -= 1
             continue
-        temp = ecg[j:j + interval_length]
-        temp = np.asarray(temp)
-        temp -= np.mean(temp)
-        temp /= np.max(np.abs(temp))
-        # cleaned = lfilter(b, a, temp)
-        # cleaned1 = filtfilt(b, a, temp)
-        # cleaned2 = lfilter_zi(b, temp)
-        # plt.plot(range(len(temp)), temp)
-        # plt.plot(range(len(cleaned)), cleaned)
-        # plt.plot(range(len(cleaned1)), cleaned1)
-        # # plt.plot(range(len(cleaned2)), cleaned2)
-        # plt.plot(range(len(signal[j:j + interval_length])), np.array(signal[j:j + interval_length]))
-        # plt.legend(['og', 'lfilter', 'filtfilt', 'signal'])
-        # plt.show()
-        temp = temp.tolist()
-        x.append(temp)
+        ls = []
+        if np.random.random() < 0.8:
+            for k in range(stack):
+                ind = j - (stack - k - 1) * step
+                temp = ecg[ind:ind + interval_length]
+                temp = np.asarray(temp).reshape(interval_length, )
+                b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
+                temp = filtfilt(b, a, np.asarray(temp))
+                b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+                temp = filtfilt(b, a, np.asarray(temp))
+                temp = temp.tolist()
+                ls.append(temp)
+        else:
+            rand = np.random.randint(1, stack-1)
+            for k in range(rand):
+                ls.append([0]*interval_length)
+            for k in range(rand, stack):
+                ind = j - (stack - k - 1) * step
+                temp = ecg[ind:ind + interval_length]
+                temp = np.asarray(temp).reshape(interval_length, )
+                b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
+                temp = filtfilt(b, a, np.asarray(temp))
+                b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+                temp = filtfilt(b, a, np.asarray(temp))
+                temp = temp.tolist()
+                ls.append(temp)
+
+        x.append(ls)
         y.append(signal[j:j + interval_length])
     x = np.asarray(x)
+    x = np.swapaxes(x, 1, 2)
+
+    x = (2*x/(np.nanmean(np.where(np.max(np.abs(x), axis=1).reshape((-1, 1, stack)) != 0,
+                                  np.max(np.abs(x), axis=1).reshape((-1, 1, stack)), np.nan), axis=2).reshape((-1, 1, 1))
+              + np.max(np.abs(x), axis=1).reshape((-1, 1, stack))))
+
     y = np.asarray(y)
-    size = x.size
-    x = np.concatenate(x).ravel()
-    return x.reshape(size // interval_length, interval_length, 1), y
+    return x, y
 
 
-def sequential_sampling(ecg, signal, interval_length, step, stack=True):
+def sequential_sampling(ecg, signal, interval_length, step):
     x, y = [], []
+    prev = np.zeros(shape=interval_length)
     for i in range(0, len(ecg) - interval_length, step):
+        temp = np.asarray(ecg[i:i + interval_length])
+        temp -= np.mean(temp)
+        temp /= np.max(np.abs(temp))
         x.append(ecg[i:i + interval_length])
         y.append(signal[i:i + interval_length])
     x = np.asarray(x)
-    for i in range(x.shape[0]):
-        x[i] -= np.average(x[i])
-    x *= 100
     y = np.asarray(y)
 
-    size = x.size
-    x = np.concatenate(x).ravel()
-    return x.reshape(size // interval_length, interval_length, 1), y
+    return x.reshape(-1, interval_length, 1), y
