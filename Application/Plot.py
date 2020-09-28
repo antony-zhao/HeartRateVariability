@@ -1,4 +1,5 @@
 import os
+import tkinter
 from matplotlib import pyplot as plt
 import mmap
 import re
@@ -9,6 +10,13 @@ import tkinter as tk
 from tkinter import filedialog
 from Parameters import interval_length, max_dist_percentage
 from scipy.signal import savgol_filter, filtfilt, butter
+import matplotlib
+
+'''
+Put * under all of the unmarked
+Put # under mismarked
+'''
+
 
 T = 0.1          # Sample Period
 fs = 4000.0      # sample rate, Hz
@@ -25,13 +33,13 @@ root = tk.Tk()
 currdir = os.getcwd()
 root.filename = filedialog.askopenfilename(initialdir=currdir + "/../Signal", title="Select file",
                                            filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+matplotlib.use('TkAgg')
 filename = root.filename
 root.destroy()
 
 file = open(os.path.join('..', 'Signal', filename), 'r+')
 fig, axs = plt.subplots()
 
-file.readline()
 ecg = []
 signal = []
 
@@ -66,7 +74,6 @@ class Events:
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
-        self.prev_ann = axs.annotate("*", (val, -0.2))
         if self.ind_unmarked == len(self.unmarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
@@ -86,7 +93,6 @@ class Events:
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
-        self.prev_ann = axs.annotate("*", (val, -0.2))
         if self.ind_mismarked == len(self.mismarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
@@ -106,7 +112,6 @@ class Events:
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
-        self.prev_ann = axs.annotate("*", (val, -0.2))
         if self.ind_unmarked == len(self.unmarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
@@ -126,7 +131,6 @@ class Events:
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
-        self.prev_ann = axs.annotate("*", (val, -0.2))
         if self.ind_mismarked == len(self.mismarked) - 1:
             axs.annotate('FINAL', (val, -0.25))
         width_slider.valinit = length
@@ -273,9 +277,11 @@ for i, line in enumerate(file):
                 if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too large
                     unmarked_regions += 1
                     events.unmarked.append((prev + interval_length, interval_length))
+                    axs.annotate("*", (prev + interval_length, -0.2))
                 elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):    # For when one beat is missed and the next one is also wrong
                     if i - prev > 1:
                         events.mismarked.append((i, interval_length))
+                        axs.annotate("#", (i, -0.2))
                         mismarked += 1
                     prev = i
                     continue
@@ -283,6 +289,7 @@ for i, line in enumerate(file):
 
         else:
             events.mismarked.append((i, dist))  # These are the mismarked signals
+            axs.annotate("#", (i, -0.2))
             mismarked += 1
         if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
             last_few.append(dist)  # add the distance to the running average
@@ -366,34 +373,35 @@ file.close()
 file = open(os.path.join('..', 'Signal', filename), 'rb+')
 
 file_mm = mmap.mmap(file.fileno(), 0)
+line_length = len(file_mm.readline())
 
 for action, val1, val2 in events.actions:
     if action == 'delete':
         ind = val1
         rad = val2
         for i in range(-rad, rad):
-            if file_mm[38 * (ind + 1 + i) - 3] == ord('2'):
+            if file_mm[line_length * (ind + 1 + i) - 3] == ord('2'):
                 continue
             else:
-                file_mm[38 * (ind + 1 + i) - 3] = ord('0')
+                file_mm[line_length * (ind + 1 + i) - 3] = ord('0')
     elif action == 'add':
         ind = val1
         rad = val2
         for i in range(-rad, rad):
-            if file_mm[38 * (ind + 1 + i) - 3] == ord('2'):
+            if file_mm[line_length * (ind + 1 + i) - 3] == ord('2'):
                 continue
             else:
-                file_mm[38 * (ind + 1 + i) - 3] = ord('1')
+                file_mm[line_length * (ind + 1 + i) - 3] = ord('1')
     elif action == 'mark':
         x1 = val1
         x2 = val2
         for i in range(x1, x2):
-            file_mm[38 * (1 + i) - 3] = ord('2')
+            file_mm[line_length * (1 + i) - 3] = ord('2')
     elif action == 'clean':
         x1 = val1
         x2 = val2
         for i in range(x1, x2):
-            file_mm[38 * (1 + i) - 3] = ord('0')
+            file_mm[line_length * (1 + i) - 3] = ord('0')
 
 file_mm.close()
 file.close()

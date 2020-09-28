@@ -15,11 +15,7 @@ import multiprocessing as mp
 
 """
 TODO
-Add STD and AVG every 2 minutes
-STD of AVGs and AVG of STDs
-Separate between next unmarked region and next mismarked region
-
-(Convert to executable)
+ModuleNotFoundError: No module named 'six'
 """
 
 
@@ -159,4 +155,6 @@ def main():
 
 
 if __name__ == "__main__":
+    mp.freeze_support()
     main()
+    input()

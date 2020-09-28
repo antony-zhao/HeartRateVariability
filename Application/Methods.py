@@ -65,7 +65,7 @@ def random_sampling(ecg, signal, samples, interval_length, step, stack=1):
                 temp = temp.tolist()
                 ls.append(temp)
         else:
-            rand = np.random.randint(1, stack-1)
+            rand = np.random.randint(1, stack-1) if stack > 1 else 0
             for k in range(rand):
                 ls.append([0]*interval_length)
             for k in range(rand, stack):

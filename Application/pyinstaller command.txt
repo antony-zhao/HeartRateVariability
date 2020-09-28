@@ -1,0 +1,5 @@
+pyinstaller --add-data parameters.txt;. --add-data libiomp5md.dll;. --hidden-import=matplotlib --hidden-import=tkinter --hidden-import=numpy --hidden-import=scipy Plot.py
+
+pyinstaller --add-data Model.h5;. --add-data parameters.txt;. --add-data libiomp5md.dll;. --hidden-import=h5py --hidden-import=tensorflow --hidden-import=keras --hidden-import=matplotlib --hidden-import=numpy --hidden-import=h5py.defs --hidden-import=h5py.utils --hidden-import=h5py.h5ac --hidden-import=h5py._proxy --hidden-import=scipy --hidden-import=encodings.ascii ModelPrediction.py
+
+pyinstaller --add-data parameters.txt;. --add-data libiomp5md.dll;. --hidden-import=numpy --hidden-import=scipy --hidden-import=tkinter --hidden-import=xlsxwriter --hidden-import=multiprocessing --hidden-import=mkl.six --hidden-import=mkl --hidden-import=six PostProcessing.py

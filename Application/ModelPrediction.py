@@ -3,7 +3,8 @@ import numpy as np
 import os
 from Methods import *
 import tensorflow as tf
-from Model import model, train_model, load_model, interval_length, step, stack
+from tensorflow.keras.models import load_model
+from Model import model, load_model, interval_length, step, stack
 import h5py
 import time
 from collections import deque
@@ -13,6 +14,15 @@ from scipy.signal import filtfilt, butter
 import scipy.signal
 from Parameters import lines_per_file
 
+'''
+Figure out why executable is slow
+
+
+Deal with runaway averages.
+
+Check logic with marking beats.
+'''
+
 
 T = 0.1          # Sample Period
 fs = 4000.0      # sample rate, Hz
@@ -21,9 +31,10 @@ high_cutoff = 5
 nyq = 0.5 * fs   # Nyquist Frequency
 order = 4        # sin wave can be approx represented as quadratic
 n = int(T * fs)  # total number of samples
+b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-model_file = 'val_distance.h5'
+model_file = 'Model.h5'
 
 file_num = 1
 
@@ -33,12 +44,19 @@ root.filename = filedialog.askopenfilename(initialdir=currdir+"/../ECG_Data", ti
                                            filetypes=(("ascii files", "*.ascii"), ("txt files", "*.txt"),
                                                       ("all files", "*.*")))
 filename = root.filename
-filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]
+file = open(os.path.join('..', 'ECG_Data', filename), 'r')
 root.destroy()
 
+root = tk.Tk()
+root.withdraw()
+folder_selected = filedialog.askdirectory()
+print(folder_selected)
+
 ecg = []
-file = open(os.path.join('..', 'ECG_Data', filename + ".ascii"), 'r')
-f = open(os.path.join('..', 'Signal', filename + '{:03}'.format(file_num) + '.txt'), 'w')
+filepath = filename[:filename.index('ECG_Data')]
+filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]
+f = open(os.path.join(filepath, 'Signal', filename + '{:03}'.format(file_num) + '.txt'), 'w')
+
 
 signal = np.zeros(interval_length)
 # with tf.device('/cpu:0'):
@@ -79,8 +97,8 @@ def write_signal(sig_file, datetime, sig, ecg):
         e = ecg[i][0]
         s = sig[i]
         lines += 1
-        if s > 0.01:  # max(0.7, 1.5 / (interval_length / step)):
-            if dist < 0.8 * np.mean(average_interval):
+        if s > 0.1:  # max(0.7, 1.5 / (interval_length / step)):
+            if dist < 0.9 * np.mean(average_interval):
                 if first:
                     s = 1
                     first = False
@@ -88,12 +106,12 @@ def write_signal(sig_file, datetime, sig, ecg):
                     s = 0
             else:
                 s = 1
-                if 0.8 * np.mean(average_interval) < dist < np.mean(average_interval) * 1.2:
+                if 0.9 * np.mean(average_interval) < dist < np.mean(average_interval) * 1.1:
                     average_interval.append(dist)
                 dist = 0
         else:
             s = 0
-        sig_file.write('{},{:.5f},{}\n'.format(d, e, int(s)))
+        sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), int(s)))
         dist += 1
     return lines
 
@@ -113,6 +131,9 @@ while not EOF:
     num_lines = 0
     temp = np.asarray(ecg_temp).reshape(interval_length, )
     temp -= np.mean(temp)
+    temp = filtfilt(b, a, np.asarray(temp))
+    # b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+    # temp = filtfilt(b, a, np.asarray(temp))
     ecg_deque.append(temp)
     temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
     temp = (2 * temp / (np.nanmean(np.where(np.max(np.abs(temp), axis=1).reshape((-1, 1, stack)) != 0,
@@ -152,6 +173,7 @@ write_signal(f, datetime[:interval_length - step], signal[:interval_length - ste
 end = time.time()
 
 print('elapsed time: ' + str(end - start))
+input()
 
 del model
 tf.keras.backend.clear_session()
