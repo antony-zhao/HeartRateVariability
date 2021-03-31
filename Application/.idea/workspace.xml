@@ -19,28 +19,15 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="Massive improvement to the model">
-      <change afterPath="$PROJECT_DIR$/Parameters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/parameters.txt" afterDir="false" />
+    <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="Reduction to the model size for speeding up the program">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Application.py" beforeDir="false" afterPath="$PROJECT_DIR$/Application.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Marker.h5" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model.h5" beforeDir="false" afterPath="$PROJECT_DIR$/Model.h5" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ModelPrediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/ModelPrediction.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PostProcessing.py" beforeDir="false" afterPath="$PROJECT_DIR$/PostProcessing.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/RegionMarker.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TrainModel.py" beforeDir="false" afterPath="$PROJECT_DIR$/TrainModel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ECG_Data/T21_transition example2_600s.ascii" beforeDir="false" afterPath="$PROJECT_DIR$/../ECG_Data/T21_transition example2_600s.ascii" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Signal/T21_transition example1_180s1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/T21_transition example1_180s1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Signal/T21_transition example2_600s1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../Signal/T21_transition example2_600s1.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ChangesViewManager" show_ignored="true" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -50,6 +37,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="ProjectConfigurationFiles">
     <option name="files">
@@ -74,7 +69,8 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="TERMINAL_CUSTOM_COMMANDS_GOT_IT" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/minmaxtrain.py" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -82,99 +78,10 @@
       <recent name="C:\Users\tonyz\Documents\HeartRateVariability\Application" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.ModelPrediction">
-    <configuration name="PlotAttempt" type="CompoundRunConfigurationType">
-      <toRun name="Attempt" type="PythonConfigurationType" />
-      <toRun name="Plot" type="PythonConfigurationType" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.plot">
     <configuration default="true" type="CompoundRunConfigurationType">
       <toRun name="Attempt" type="PythonConfigurationType" />
       <toRun name="Plot" type="PythonConfigurationType" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Application" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Application.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Attempt With Console" type="PythonConfigurationType" factoryName="Python">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Attempt.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Attempt" type="PythonConfigurationType" factoryName="Python">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Attempt.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="ExcelAsciiReader" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ExcelAsciiReader.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
     <configuration name="Methods" type="PythonConfigurationType" factoryName="Python">
@@ -189,7 +96,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="false" />
       <option name="ADD_SOURCE_ROOTS" value="false" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Methods.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\methods.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -210,30 +117,9 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Model.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\model.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Model" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Model.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
@@ -252,7 +138,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ModelPrediction.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\model_prediction.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -282,48 +168,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Plot" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="false" />
-      <option name="ADD_SOURCE_ROOTS" value="false" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Plot.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="PostProcessing" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
-      <module name="Application" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/PostProcessing.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="RegionMarker" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Application" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -345,7 +189,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="TrainModel" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+    <configuration name="application" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="Application" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -357,7 +201,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/TrainModel.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\application.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -387,24 +231,220 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="config" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\envs\hrv\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/config.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="dataset" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\envs\hrv\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dataset.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="excel_ascii_reader" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\excel_ascii_reader.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="minmaxtrain" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\envs\hrv\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/minmaxtrain.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="model (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="model" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="plot" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="false" />
+      <option name="ADD_SOURCE_ROOTS" value="false" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\plot.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="post_processing" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\post_processing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_model" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Application" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Users\tonyz\Anaconda3\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="C:\Users\tonyz\Documents\HeartRateVariability\Application\train_model.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <list>
-      <item itemvalue="Compound.PlotAttempt" />
-      <item itemvalue="Python.Model" />
-      <item itemvalue="Python.ModelPrediction" />
-      <item itemvalue="Python.Application" />
-      <item itemvalue="Python.PostProcessing" />
-      <item itemvalue="Python.TrainModel" />
-      <item itemvalue="Python.ModelPyTorch" />
-      <item itemvalue="Python.ExcelAsciiReader" />
-      <item itemvalue="Python.Model With Python Console" />
-      <item itemvalue="Python.Attempt" />
-      <item itemvalue="Python.Attempt With Console" />
-      <item itemvalue="Python.Plot" />
-      <item itemvalue="Python.RegionMarker" />
-      <item itemvalue="Python.buttons" />
       <item itemvalue="Python.Methods" />
+      <item itemvalue="Python.Model With Python Console" />
+      <item itemvalue="Python.ModelPrediction" />
+      <item itemvalue="Python.ModelPyTorch" />
+      <item itemvalue="Python.RegionMarker" />
+      <item itemvalue="Python.application" />
+      <item itemvalue="Python.buttons" />
+      <item itemvalue="Python.config" />
+      <item itemvalue="Python.dataset" />
+      <item itemvalue="Python.excel_ascii_reader" />
+      <item itemvalue="Python.minmaxtrain" />
+      <item itemvalue="Python.model" />
+      <item itemvalue="Python.plot" />
+      <item itemvalue="Python.post_processing" />
+      <item itemvalue="Python.train_model" />
+      <item itemvalue="Python.model (1)" />
     </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.model (1)" />
+      </list>
+    </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -437,7 +477,35 @@
       <option name="project" value="LOCAL" />
       <updated>1592118664699</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Massive improvement to the model">
+      <created>1593325108611</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1593325108611</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Big improvement to model + other changes to post processing">
+      <created>1597453181207</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1597453181207</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Improvement to model, also other improvements to modelprediction and others.">
+      <created>1601309122497</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1601309122497</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Reduction to the model size for speeding up the program">
+      <created>1617206000268</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1617206000268</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -456,89 +524,11 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Modifications to plot.py, changing some buttons to radio button and adding a position slider." />
     <MESSAGE value="Massive improvement to the model" />
-    <option name="LAST_COMMIT_MESSAGE" value="Massive improvement to the model" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="586" y="198" key="#Inspections" timestamp="1591413266870">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="586" y="198" key="#Inspections/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1591413266870" />
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1591575348419">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1506" y="186" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1585877177079" />
-    <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1591575348419" />
-    <state x="717" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1592544111864">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="717" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592544111864" />
-    <state x="-1333" y="100" key="CommitChangelistDialog2" timestamp="1592470877533">
-      <screen x="-1920" y="12" width="1920" height="1040" />
-    </state>
-    <state x="-1333" y="100" key="CommitChangelistDialog2/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592470877533" />
-    <state x="587" y="88" key="CommitChangelistDialog2/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592118659501" />
-    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog" timestamp="1592113881736">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="92" y="92" width="1736" height="856" key="DiffContextDialog/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592113881736" />
-    <state x="739" y="274" key="FileChooserDialogImpl" timestamp="1591575346315">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="-1181" y="286" key="FileChooserDialogImpl/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1586204157342" />
-    <state x="739" y="274" key="FileChooserDialogImpl/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1591575346315" />
-    <state width="1899" height="279" key="GridCell.Tab.0.bottom" timestamp="1593324793269">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="279" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592515451881" />
-    <state width="1899" height="279" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1593324793269" />
-    <state width="1899" height="279" key="GridCell.Tab.0.center" timestamp="1593324793269">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="279" key="GridCell.Tab.0.center/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592515451881" />
-    <state width="1899" height="279" key="GridCell.Tab.0.center/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1593324793269" />
-    <state width="1899" height="279" key="GridCell.Tab.0.left" timestamp="1593324793269">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="279" key="GridCell.Tab.0.left/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592515451881" />
-    <state width="1899" height="279" key="GridCell.Tab.0.left/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1593324793269" />
-    <state width="1899" height="279" key="GridCell.Tab.0.right" timestamp="1593324793269">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="279" key="GridCell.Tab.0.right/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592515451881" />
-    <state width="1899" height="279" key="GridCell.Tab.0.right/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1593324793269" />
-    <state width="1899" height="348" key="GridCell.Tab.1.bottom" timestamp="1592556244698">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592093311338" />
-    <state width="1899" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592556244698" />
-    <state width="1899" height="348" key="GridCell.Tab.1.center" timestamp="1592556244698">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="348" key="GridCell.Tab.1.center/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592093311338" />
-    <state width="1899" height="348" key="GridCell.Tab.1.center/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592556244698" />
-    <state width="1899" height="348" key="GridCell.Tab.1.left" timestamp="1592556244698">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="348" key="GridCell.Tab.1.left/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592093311338" />
-    <state width="1899" height="348" key="GridCell.Tab.1.left/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592556244698" />
-    <state width="1899" height="348" key="GridCell.Tab.1.right" timestamp="1592556244698">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="1899" height="348" key="GridCell.Tab.1.right/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1592093311338" />
-    <state width="1899" height="348" key="GridCell.Tab.1.right/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592556244698" />
-    <state width="968" height="528" key="XDebugger.FullValuePopup" timestamp="1592085164089">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="968" height="528" key="XDebugger.FullValuePopup/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@-1920.12.1920.1040" timestamp="1586466522114" />
-    <state width="968" height="528" key="XDebugger.FullValuePopup/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592085164089" />
-    <state x="769" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1589253733990">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="769" y="434" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1589253733990" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1592555967309">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040/-1920.12.1920.1040/-1925.-1012.1280.984@0.0.1920.1040" timestamp="1592555967309" />
+    <MESSAGE value="Big improvement to model + other changes to post processing" />
+    <MESSAGE value="Improvement to model, also other improvements to modelprediction and others." />
+    <MESSAGE value="Reduction to the model size to speed up the program" />
+    <MESSAGE value="Reduction to the model size for speeding up the program" />
+    <option name="LAST_COMMIT_MESSAGE" value="Reduction to the model size for speeding up the program" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -5,15 +5,15 @@ root = tk.Tk()
 
 
 def plot():
-    os.system('python Plot.py')
+    os.system('python plot.py')
 
 
 def model_predict():
-    os.system('python ModelPrediction.py')
+    os.system('python model_prediction.py')
 
 
 def excel():
-    os.system('python PostProcessing.py')
+    os.system('python post_processing.py')
 
 
 canvas = tk.Canvas(root, height=100, width=450)

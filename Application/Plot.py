@@ -8,14 +8,21 @@ from collections import deque
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
-from Parameters import interval_length, max_dist_percentage
-from scipy.signal import savgol_filter, filtfilt, butter
+import json
+from scipy.signal import filtfilt, butter
 import matplotlib
 
 '''
-Put * under all of the unmarked
-Put # under mismarked
+
 '''
+config_file = open("config.json", "r")
+config = json.load(config_file)
+interval_length = config["interval_length"]
+step = config["step"]
+stack = config["stack"]
+scale_down = config["scale_down"]
+datapoints = config["datapoints"]
+max_dist_percentage = config["max_dist_percentage"]
 
 
 T = 0.1          # Sample Period

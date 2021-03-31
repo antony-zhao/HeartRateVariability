@@ -1,36 +1,27 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
-    Activation, LeakyReLU, GRU, LSTM, BatchNormalization, AveragePooling1D, Input, \
-    GaussianNoise, Reshape, Permute, Add
-from tensorflow.keras.regularizers import l1_l2
-from tensorflow.keras.layers.experimental.preprocessing import Normalization
+    Activation, BatchNormalization
 import tensorflow as tf
-from Methods import *
+from methods import *
 import os
 import keras.backend as K
-from scipy.signal import filtfilt, butter
-from scipy import signal
-from Parameters import interval_length
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+import json
 
-T = 0.1  # Sample Period
-fs = 4000.0  # sample rate, Hz
-cutoff = 200  # desired cutoff frequency of the filter, Hz ,      slightly higher than actual 1.2 Hz
-nyq = 0.5 * fs  # Nyquist Frequency
-order = 4  # sin wave can be approx represented as quadratic
-n = int(T * fs)  # total number of samples
-b, a = butter(N=order, Wn=cutoff / nyq, btype='low', analog=False)
+config_file = open("config.json", "r")
+config = json.load(config_file)
+interval_length = config["interval_length"]
+step = config["step"]
+stack = config["stack"]
+scale_down = config["scale_down"]
+datapoints = config["datapoints"]
 
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-interval_length = 400
-step = interval_length // 2
-stack = 8
 
-
-class Res1D(tf.keras.Model):
+class Res1D(tf.keras.layers.Layer):
     def __init__(self, filters, kernel_size):
         super(Res1D, self).__init__()
         self.filters = filters
@@ -57,141 +48,56 @@ class Res1D(tf.keras.Model):
 
 
 model = Sequential()
-model.add(Conv1D(input_shape=(interval_length, stack), filters=16, kernel_size=12, strides=1, padding='same'))
+model.add(Conv1D(input_shape=(datapoints, stack), filters=stack * 2, kernel_size=datapoints // 25, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
-model.add(Res1D(16, 8))
 model.add(MaxPooling1D())
-model.add(Conv1D(filters=32, kernel_size=12, strides=2, padding='same'))  # stride 2 when interval_length = 400
+model.add(Conv1D(filters=stack * 4, kernel_size=datapoints // 20, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
-model.add(Res1D(32, 8))
 model.add(MaxPooling1D())
-model.add(Conv1D(filters=64, kernel_size=12, strides=2, padding='same'))  # stride 2 when interval_length = 400
+model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
-model.add(Res1D(64, 8))
 model.add(MaxPooling1D())
 model.add(Flatten())
-# model.add(Permute((2, 1)))
-# model.add(Reshape((stack, 800)))
-model.add(Dense(units=interval_length // 2, kernel_regularizer='l2', activity_regularizer='l2',
-                kernel_initializer='glorot_normal'))
+model.add(Dense(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
 model.add(Dropout(0.5))
-model.add(Dense(units=interval_length // 1, kernel_regularizer='l2', activity_regularizer='l2',
-                kernel_initializer='glorot_normal'))
+model.add(Dense(units=datapoints * 2, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
 model.add(Dropout(0.5))
 model.add(Dense(interval_length, use_bias=False, kernel_initializer='glorot_normal'))
 model.add(Activation('sigmoid'))
 
-# model = Sequential()
-# model.add(Conv1D(input_shape=(interval_length, stack), filters=16, kernel_size=12, strides=1, padding='same'))
-# model.add(BatchNormalization(axis=1))
-# model.add(Res1D(16, 8))
-# model.add(MaxPooling1D())
-# model.add(Conv1D(filters=48, kernel_size=12, strides=2, padding='same'))  # stride 2 when interval_length = 400
-# model.add(BatchNormalization(axis=1))
-# model.add(Res1D(48, 8))
-# model.add(MaxPooling1D())
-# model.add(Conv1D(filters=96, kernel_size=12, strides=2, padding='same'))  # stride 2 when interval_length = 400
-# model.add(BatchNormalization(axis=1))
-# model.add(Res1D(96, 8))
-# model.add(MaxPooling1D())
-# model.add(Flatten())
-# # model.add(Permute((2, 1)))
-# # model.add(Reshape((stack, 800)))
-# model.add(Dense(units=interval_length // 2, kernel_regularizer='l2', activity_regularizer='l2',
-#                 kernel_initializer='glorot_normal'))
-# model.add(Activation('relu'))
-# model.add(BatchNormalization())
-# model.add(Dropout(0.5))
-# model.add(Dense(units=interval_length // 2, kernel_regularizer='l2', activity_regularizer='l2',
-#                 kernel_initializer='glorot_normal'))
-# model.add(Activation('relu'))
-# model.add(BatchNormalization())
-# model.add(Dropout(0.5))
-# model.add(Dense(interval_length, use_bias=False, kernel_initializer='glorot_normal'))
-# model.add(Activation('sigmoid'))
-
-
-# model = Sequential()
-# model.add(Conv1D(input_shape=(interval_length, stack), filters=16 * stack, kernel_size=12, strides=2, padding='same'))
-# model.add(BatchNormalization(axis=1))
-# model.add(MaxPooling1D())
-# model.add(Conv1D(filters=32 * stack, kernel_size=16, strides=2, padding='same'))  # stride 2 when interval_length = 400
-# model.add(BatchNormalization(axis=1))
-# model.add(MaxPooling1D())
-# # model.add(Flatten())
-# model.add(Permute((2, 1)))
-# model.add(Reshape((stack, 800)))
-# model.add(GRU(units=interval_length // 2, kernel_regularizer='l2', activity_regularizer='l2', return_sequences=True,
-#               kernel_initializer='glorot_normal'))
-# # model.add(Activation('relu'))
-# model.add(BatchNormalization())
-# model.add(Dropout(0.5))
-# model.add(GRU(units=interval_length // 2, kernel_regularizer='l2', activity_regularizer='l2',
-#               kernel_initializer='glorot_normal'))
-# # model.add(Activation('relu'))
-# model.add(BatchNormalization())
-# model.add(Dropout(0.5))
-# model.add(Dense(interval_length, use_bias=False, kernel_initializer='glorot_normal'))
-# model.add(Activation('sigmoid'))
 
 model.summary()
-
-
-def load_model(model_file):
-    model.load_weights(model_file)
 
 
 def distance(y_true, y_labels):
     return K.mean(K.abs(K.argmax(y_true) - K.argmax(y_labels)))
 
 
-def train_model(epochs, model_file, samples=10000, batch_size=512, learning_rate=0.001):
-    ecg1, s1 = [], []
-    ecg2, s2 = [], []
-    ecg3, s3 = [], []
-    for x in open(os.path.join('..', 'Training', 'ecg1.txt')):
-        ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
+if __name__ == '__main__':
+    model_file = 'Model1.h5'
+    epochs = 100
+    batch_size = 64
+    learning_rate = 0.002
+    x_train = np.load("x_train.npy")
+    y_train = np.load("y_train.npy")
+    x_test = np.load("x_test.npy")
+    y_test = np.load("y_test.npy")
 
-    for x in open(os.path.join('..', 'Training', 'sig1.txt')):
-        s1.append(float(re.findall('([-0-9.]+)', x)[-1]))
-
-    for x in open(os.path.join('..', 'Training', 'ecg.txt')):
-        ecg2.append(float(re.findall('([-0-9.]+)', x)[-1]))
-
-    for x in open(os.path.join('..', 'Training', 'sig.txt')):
-        s3.append(float(re.findall('([-0-9.]+)', x)[-1]))
-
-    for x in open(os.path.join('..', 'Training', 'ecg6.txt')):
-        ecg3.append(float(re.findall('([-0-9.]+)', x)[-1]))
-
-    for x in open(os.path.join('..', 'Training', 'sig6.txt')):
-        s3.append(float(re.findall('([-0-9.]+)', x)[-1]))
-
-    x_train, y_train = random_sampling(ecg1, s1, samples, interval_length, step, stack)
-    x_train_1, y_train_1 = random_sampling(ecg2, s2, samples // 4, interval_length, step, stack)
-    x_train = np.append(x_train, x_train_1, axis=0)
-    y_train = np.append(y_train, y_train_1, axis=0)
-    x_train = np.append(x_train, -x_train, axis=0)
-    y_train = np.append(y_train, y_train, axis=0)
-    x_test, y_test = random_sampling(ecg3, s3, samples // 4, interval_length, step, stack)
-    x_test = np.append(x_test, -x_test, axis=0)
-    y_test = np.append(y_test, y_test, axis=0)
-    # x_train, y_train = sequential_sampling(ecg1, s1, interval_length, step)
-    del s1
-    del ecg1
-    del ecg2
-    del s2
-    del ecg3
-    del s3
-
-    # for i in range(100):
-    #     ind = np.random.choice(x_train.shape[0])
-    #     plt.plot(range(interval_length), x_train[ind, :, -1])
-    #     plt.plot(range(interval_length), y_train[ind, :])
+    # for i in range(200):
+    #     temp = x_train[i, :, 0]
+    #     for j in range(1, stack):
+    #         temp = np.append(temp, x_train[i, :, j][datapoints//(interval_length//step):])
+    #     plt.plot(temp)
+    #     sig = y_train[i, :]
+    #     sum = np.sum(sig)
+    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down * sum
+    #     ls = np.asarray([0] * (datapoints//(interval_length//step)) * (stack - 1))
+    #     sig = np.append(ls, sig)
+    #     plt.plot(sig)
     #     plt.show(block=False)
     #     plt.pause(0.5)
     #     plt.close()
@@ -207,9 +113,30 @@ def train_model(epochs, model_file, samples=10000, batch_size=512, learning_rate
                          save_best_only=True)
     vl = ModelCheckpoint('val_loss.h5', monitor='val_loss', mode='min', verbose=1,
                          save_best_only=True)
-    model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2, validation_data=(x_test, y_test),
-              callbacks=[vd, vc, vk, vl])
+    reducelr = ReduceLROnPlateau()
+    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2, validation_data=(x_test, y_test),
+                        callbacks=[vd, vc, vk, vl, reducelr])
 
-    # model.evaluate(x_test, y_test, batch_size=1, verbose=2)
-    #
-    # model.save(model_file)
+    plt.plot(history.history['top_k_categorical_accuracy'])
+    plt.plot(history.history['val_top_k_categorical_accuracy'])
+    plt.ylabel('top k accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.show()
+
+    for i in range(10):
+        plt.plot(x_test[i, :, -1])
+        sig = model.predict(x_test[i][np.newaxis, :, :])[0]
+        sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+        plt.plot(sig)
+        plt.show()
+
+    model.save(model_file)
