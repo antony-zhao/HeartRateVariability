@@ -10,13 +10,28 @@ from xlsxwriter import Workbook
 from datetime import datetime as dt
 import datetime
 import time
-from parameters import interval_length
 import multiprocessing as mp
+import json
 
 """
 TODO
 ModuleNotFoundError: No module named 'six'
 """
+config_file = open("config.json", "r")
+config = json.load(config_file)
+interval_length = config["interval_length"]
+step = config["step"]
+stack = config["stack"]
+scale_down = config["scale_down"]
+datapoints = config["datapoints"]
+lines_per_file = config["lines_per_file"]
+T = config["T"]
+fs = config["fs"]
+low_cutoff = config["low_cutoff"]
+high_cutoff = config["high_cutoff"]
+nyq = config["nyq"]
+order = config["order"]
+n = config["n"]
 
 
 def process_file(filename):
