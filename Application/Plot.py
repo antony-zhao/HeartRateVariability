@@ -1,5 +1,4 @@
 import os
-import tkinter
 from matplotlib import pyplot as plt
 import mmap
 import re
@@ -13,7 +12,8 @@ from scipy.signal import filtfilt, butter
 import matplotlib
 
 '''
-
+Plotting program for ECG signals, also marks some regions where the program might have messed up for optional human 
+review, though the final program skips over the messed up regions.
 '''
 config_file = open("config.json", "r")
 config = json.load(config_file)
@@ -54,6 +54,9 @@ signals = []
 
 
 class Events:
+    """
+    Class for an interactive pyplot to handle click/scroll etc events
+    """
     def __init__(self):
         self.ind_unmarked = -1
         self.ind_mismarked = -1

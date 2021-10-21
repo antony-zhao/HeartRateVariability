@@ -3,25 +3,15 @@ import numpy as np
 import os
 from methods import *
 import tensorflow as tf
-from tensorflow.keras.models import load_model
-from model import model, Res1D, distance
+from model import model
 from dataset import preprocess_ecg
-import h5py
 import time
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
 import json
-import joblib
-from sklearn.preprocessing import StandardScaler
 
-'''
-Figure out why executable is slow
-
-Check logic with marking beats.
-'''
-scaler = joblib.load("scaler.save")
-
+# Initialize variables and constants
 config_file = open("config.json", "r")
 config = json.load(config_file)
 interval_length = config["interval_length"]
@@ -40,12 +30,16 @@ n = config["n"]
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 model_file = 'val_top_k.h5'
+np.seterr(all='raise')
 
 file_num = 1
+signal = np.zeros(interval_length)
+model.load_weights(model_file)
 
+# Opening file and choosing directory to save code in
 root = tk.Tk()
 currdir = os.getcwd()
-root.filename = filedialog.askopenfilename(initialdir=currdir+"/../ECG_Data", title="Select file",
+root.filename = filedialog.askopenfilename(initialdir=currdir + "/../ECG_Data", title="Select file",
                                            filetypes=(("ascii files", "*.ascii"), ("txt files", "*.txt"),
                                                       ("all files", "*.*")))
 filename = root.filename
@@ -62,10 +56,7 @@ filepath = filename[:filename.index('ECG_Data')]
 filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]
 f = open(os.path.join(folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
 
-
-signal = np.zeros(interval_length)
-model.load_weights(model_file)
-
+# Start timer (displays time elapsed in the end)
 start = time.time()
 lines = 0
 dist = 0
@@ -125,7 +116,7 @@ ecg_segment = []
 datetime_segment = []
 datetime = []
 ecg_deque = deque(maxlen=stack)
-for i in range(stack-1):
+for i in range(stack - 1):
     ecg_deque.append(np.zeros(datapoints, ))
 
 read = ""
@@ -148,7 +139,11 @@ while True:
     temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
     ecg_deque.append(temp)
     temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
-    temp = temp / np.max(np.abs(temp))
+    try:
+        temp = temp / np.max(np.abs(temp))
+    except FloatingPointError:
+        pass
+    # Blocked out code for visualizations on data
     # plt_temp = temp[0, :, 0]
     # for j in range(1, stack):
     #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])

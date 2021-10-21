@@ -1,10 +1,6 @@
 import numpy as np
 import re
 import os
-import methods
-import time
-import joblib
-from sklearn.preprocessing import StandardScaler
 import json
 import random
 from scipy.signal import filtfilt, butter
@@ -25,7 +21,7 @@ order = config["order"]
 n = config["n"]
 
 
-def random_sampling(ecg, signal, samples, interval_length, step, scale_down, scaler, stack=1):
+def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack=1):
     datapoints = interval_length // scale_down
     x, y = [], []
     i = 0
@@ -123,12 +119,12 @@ if __name__ == '__main__':
         if counter >= lines:
             break
 
-    x_train, y_train = random_sampling(ecg1, s1, samples, interval_length, step, scale_down, scaler, stack)
+    x_train, y_train = random_sampling(ecg1, s1, samples, interval_length, step, scale_down, stack)
 
     x_train = np.append(x_train, -x_train, axis=0)
     y_train = np.append(y_train, y_train, axis=0)
 
-    x_test, y_test = random_sampling(ecg2, s2, samples // 3, interval_length, step, scale_down, scaler, stack)
+    x_test, y_test = random_sampling(ecg2, s2, samples // 3, interval_length, step, scale_down, stack)
     x_test = np.append(x_test, -x_test, axis=0)
     y_test = np.append(y_test, y_test, axis=0)
     del s1

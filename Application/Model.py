@@ -3,11 +3,13 @@ from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1
     Activation, BatchNormalization
 import tensorflow as tf
 from methods import *
-import os
 import keras.backend as K
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 import json
 
+"""
+Default configs
+"""
 config_file = open("config.json", "r")
 config = json.load(config_file)
 interval_length = config["interval_length"]
@@ -22,6 +24,10 @@ if len(physical_devices) > 0:
 
 
 class Res1D(tf.keras.layers.Layer):
+    """
+    Optional Residual layer
+    """
+
     def __init__(self, filters, kernel_size):
         super(Res1D, self).__init__()
         self.filters = filters
@@ -29,7 +35,8 @@ class Res1D(tf.keras.layers.Layer):
         self.res = Sequential()
 
     def build(self, input_shape):
-        self.res.add(Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same', input_shape=input_shape[1:]))
+        self.res.add(
+            Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same', input_shape=input_shape[1:]))
         self.res.add(BatchNormalization(axis=1))
         self.res.add(Activation('relu'))
         self.res.add(Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same'))
@@ -47,8 +54,12 @@ class Res1D(tf.keras.layers.Layer):
         return {"filters": self.filters, "kernel_size": self.kernel_size}
 
 
+"""
+ML model
+"""
 model = Sequential()
-model.add(Conv1D(input_shape=(datapoints, stack), filters=stack * 2, kernel_size=datapoints // 25, strides=1, padding='same'))
+model.add(
+    Conv1D(input_shape=(datapoints, stack), filters=stack * 2, kernel_size=datapoints // 25, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
 model.add(MaxPooling1D())
 model.add(Conv1D(filters=stack * 4, kernel_size=datapoints // 20, strides=1, padding='same'))
@@ -58,17 +69,18 @@ model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, pad
 model.add(BatchNormalization(axis=1))
 model.add(MaxPooling1D())
 model.add(Flatten())
-model.add(Dense(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
+model.add(
+    Dense(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
 model.add(Dropout(0.5))
-model.add(Dense(units=datapoints * 2, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
+model.add(
+    Dense(units=datapoints * 2, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
 model.add(Dropout(0.5))
 model.add(Dense(interval_length, use_bias=False, kernel_initializer='glorot_normal'))
 model.add(Activation('sigmoid'))
-
 
 model.summary()
 
@@ -79,6 +91,7 @@ def distance(y_true, y_labels):
 
 if __name__ == '__main__':
     model_file = 'Model1.h5'
+
     epochs = 100
     batch_size = 64
     learning_rate = 0.002
@@ -87,6 +100,9 @@ if __name__ == '__main__':
     x_test = np.load("x_test.npy")
     y_test = np.load("y_test.npy")
 
+    """
+    Optional data visualizer
+    """
     # for i in range(200):
     #     temp = x_train[i, :, 0]
     #     for j in range(1, stack):
@@ -102,6 +118,9 @@ if __name__ == '__main__':
     #     plt.pause(0.5)
     #     plt.close()
 
+    """
+    Initializing the model and training
+    """
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optim, loss='categorical_crossentropy',
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance])
@@ -114,7 +133,8 @@ if __name__ == '__main__':
     vl = ModelCheckpoint('val_loss.h5', monitor='val_loss', mode='min', verbose=1,
                          save_best_only=True)
     reducelr = ReduceLROnPlateau()
-    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2, validation_data=(x_test, y_test),
+    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
+                        validation_data=(x_test, y_test),
                         callbacks=[vd, vc, vk, vl, reducelr])
 
     plt.plot(history.history['top_k_categorical_accuracy'])
@@ -132,6 +152,9 @@ if __name__ == '__main__':
     plt.legend(['train', 'val'], loc='upper left')
     plt.show()
 
+    """
+    Visualizing results
+    """
     for i in range(10):
         plt.plot(x_test[i, :, -1])
         sig = model.predict(x_test[i][np.newaxis, :, :])[0]

@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['Plot.py'],
+a = Analysis(['plot.py'],
              pathex=['C:\\Users\\tonyz\\Documents\\HeartRateVariability\\Application'],
              binaries=[],
-             datas=[('parameters.txt', '.'), ('libiomp5md.dll', '.')],
+             datas=[('config.json', '.'), ('libiomp5md.dll', '.')],
              hiddenimports=['matplotlib', 'tkinter', 'numpy', 'scipy'],
              hookspath=[],
              runtime_hooks=[],
@@ -21,7 +21,7 @@ exe = EXE(pyz,
           a.scripts,
           [],
           exclude_binaries=True,
-          name='Plot',
+          name='plot',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -34,4 +34,4 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                upx_exclude=[],
-               name='Plot')
+               name='plot')
