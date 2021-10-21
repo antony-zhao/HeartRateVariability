@@ -1,0 +1,5 @@
+pyinstaller --add-data config.json;. --add-data libiomp5md.dll;. --hidden-import=matplotlib --hidden-import=tkinter --hidden-import=numpy --hidden-import=scipy plot.py
+
+pyinstaller --add-data val_top_k.h5;. --add-data config.json;. --add-data libiomp5md.dll;. --hidden-import=h5py --hidden-import=tensorflow --hidden-import=keras --hidden-import=matplotlib --hidden-import=numpy --hidden-import=h5py.defs --hidden-import=h5py.utils --hidden-import=h5py.h5ac --hidden-import=h5py._proxy --hidden-import=scipy --hidden-import=encodings.ascii model_prediction.py
+
+pyinstaller --add-data config.json;. --add-data libiomp5md.dll;. --hidden-import=numpy --hidden-import=scipy --hidden-import=tkinter --hidden-import=xlsxwriter --hidden-import=multiprocessing --hidden-import=mkl.six --hidden-import=mkl --hidden-import=six post_processing.py

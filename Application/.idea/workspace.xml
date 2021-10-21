@@ -19,8 +19,17 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="Reduction to the model size for speeding up the program">
+    <list default="true" id="d0dfa974-4b84-4fdc-bc0f-89b1c7944a01" name="Default Changelist" comment="Updated post_processing.py">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Methods.py" beforeDir="false" afterPath="$PROJECT_DIR$/Methods.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Plot.py" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Plot.spec" beforeDir="false" afterPath="$PROJECT_DIR$/Plot.spec" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataset.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dist/Folders with executables.zip" beforeDir="false" afterPath="$PROJECT_DIR$/dist/Folders with executables.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model_prediction.py" beforeDir="false" afterPath="$PROJECT_DIR$/model_prediction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyinstaller command.txt" beforeDir="false" afterPath="$PROJECT_DIR$/pyinstaller command.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +79,7 @@
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="TERMINAL_CUSTOM_COMMANDS_GOT_IT" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/minmaxtrain.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/.." />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -78,7 +87,7 @@
       <recent name="C:\Users\tonyz\Documents\HeartRateVariability\Application" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.plot">
+  <component name="RunManager" selected="Python.ModelPrediction">
     <configuration default="true" type="CompoundRunConfigurationType">
       <toRun name="Attempt" type="PythonConfigurationType" />
       <toRun name="Plot" type="PythonConfigurationType" />
@@ -444,7 +453,18 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="project-level" UseSingleDictionary="true" transferred="true" />
+  <component name="ServiceViewManager">
+    <option name="viewStates">
+      <list>
+        <serviceView>
+          <treeState>
+            <expand />
+            <select />
+          </treeState>
+        </serviceView>
+      </list>
+    </option>
+  </component>
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -505,7 +525,21 @@
       <option name="project" value="LOCAL" />
       <updated>1617206000268</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Reduction to the model size for speeding up the program">
+      <created>1617207760687</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1617207760687</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Updated post_processing.py">
+      <created>1619572732596</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1619572732596</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -513,12 +547,13 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
@@ -528,7 +563,54 @@
     <MESSAGE value="Improvement to model, also other improvements to modelprediction and others." />
     <MESSAGE value="Reduction to the model size to speed up the program" />
     <MESSAGE value="Reduction to the model size for speeding up the program" />
-    <option name="LAST_COMMIT_MESSAGE" value="Reduction to the model size for speeding up the program" />
+    <MESSAGE value="Updated post_processing.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated post_processing.py" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="720" y="324" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1632206269123">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="720" y="324" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1632206269123" />
+    <state x="740" y="276" key="FileChooserDialogImpl" timestamp="1633158396096">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="276" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1633158396096" />
+    <state width="1899" height="348" key="GridCell.Tab.0.bottom" timestamp="1633158397496">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397496" />
+    <state width="1899" height="348" key="GridCell.Tab.0.center" timestamp="1633158397496">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397496" />
+    <state width="1899" height="348" key="GridCell.Tab.0.left" timestamp="1633158397496">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397496" />
+    <state width="1899" height="348" key="GridCell.Tab.0.right" timestamp="1633158397496">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397496" />
+    <state width="1899" height="348" key="GridCell.Tab.1.bottom" timestamp="1633158397497">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397497" />
+    <state width="1899" height="348" key="GridCell.Tab.1.center" timestamp="1633158397497">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397497" />
+    <state width="1899" height="348" key="GridCell.Tab.1.left" timestamp="1633158397496">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397496" />
+    <state width="1899" height="348" key="GridCell.Tab.1.right" timestamp="1633158397497">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1899" height="348" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1633158397497" />
+    <state x="461" y="163" key="SettingsEditor" timestamp="1632205743745">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="163" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1632205743745" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
