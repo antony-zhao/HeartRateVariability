@@ -34,10 +34,11 @@ order = config["order"]
 n = config["n"]
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-model_file = 'Model1.h5'
+model_file = 'val_cat_acc.h5'
 np.seterr(all='raise')
 
 file_num = 1
+update_freq = 10
 signal = np.zeros(interval_length)
 model.load_weights(model_file)
 
@@ -135,7 +136,6 @@ file_loc = file.tell()
 temp_line = file.readline()
 file.seek(file_loc)
 line_size = len(temp_line.encode('utf-8'))
-# pbar = progress_bar(file_size, line_size)
 datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
 b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
 ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
@@ -148,6 +148,7 @@ ecg_segment = ecg_segment[step:]
 datetime_segment = datetime_segment[:step]
 
 with tqdm.tqdm(total=file_size) as pbar:
+    iter = 0
     while True:
         num_lines = 0
         temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
@@ -197,8 +198,10 @@ with tqdm.tqdm(total=file_size) as pbar:
             datetime = datetime[step:]
             datetime = np.append(datetime, datetime_segment[:step])
         elif not EOF:
+            iter += 1
             datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
-            pbar.update(line_size * len(datetime_segment))
+            if iter % update_freq == 0:
+                pbar.update(line_size * len(datetime_segment) * update_freq)
             b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
             ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
             b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
@@ -221,7 +224,7 @@ write_signal(f, datetime[:interval_length - step], signal[:interval_length - ste
 end = time.time()
 
 print('elapsed time: ' + str(end - start))
-input()
+input("Press enter to continue")
 
 del model
 tf.keras.backend.clear_session()

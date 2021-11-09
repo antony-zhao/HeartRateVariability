@@ -56,10 +56,9 @@ def random_sampling(ecg, signal, samples, interval_length, step, scale_down, sta
     x = np.asarray(x)
     x = np.swapaxes(x, 1, 2)
 
-    # Scaling, very scuffed currently, probably should look at
-    # x = (2*x/(np.nanmean(np.where(np.max(np.abs(x), axis=1).reshape((-1, 1, stack)) != 0,
-    #                               np.max(np.abs(x), axis=1).reshape((-1, 1, stack)), np.nan), axis=2).reshape((-1, 1, 1))
-    #           + np.max(np.abs(x), axis=1).reshape((-1, 1, stack))))
+    # Scaling, very scuffed currently, probably should look at x = (2*x/(np.nanmean(np.where(np.max(np.abs(x),
+    # axis=1).reshape((-1, 1, stack)) != 0, np.max(np.abs(x), axis=1).reshape((-1, 1, stack)), np.nan),
+    # axis=2).reshape((-1, 1, 1)) + np.max(np.abs(x), axis=1).reshape((-1, 1, stack))))
 
     y = np.asarray(y)
     return x, y

@@ -124,6 +124,7 @@ def main():
     root.destroy()
 
     if len(filenames) == 0:
+        print("Please select files")
         return
 
     root = tk.Tk()
@@ -134,6 +135,7 @@ def main():
                                                  filetypes=(("excel file", "*.xlsx"),), defaultextension=".xlsx")
     saveas = root.filename
     if saveas == '':
+        print("Please input a filename")
         return
     root.destroy()
 
