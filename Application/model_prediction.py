@@ -1,7 +1,10 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import os
-from methods import *
+import re
+from scipy.signal import filtfilt, savgol_filter, butter, resample
+from sklearn.preprocessing import MinMaxScaler
+import joblib
 import tensorflow as tf
 from model import model
 from dataset import preprocess_ecg
@@ -10,6 +13,8 @@ from collections import deque
 import tkinter as tk
 from tkinter import filedialog
 import json
+import tqdm
+from pathlib import Path
 
 # Initialize variables and constants
 config_file = open("config.json", "r")
@@ -29,7 +34,7 @@ order = config["order"]
 n = config["n"]
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-model_file = 'val_top_k.h5'
+model_file = 'Model1.h5'
 np.seterr(all='raise')
 
 file_num = 1
@@ -39,11 +44,13 @@ model.load_weights(model_file)
 # Opening file and choosing directory to save code in
 root = tk.Tk()
 currdir = os.getcwd()
-root.filename = filedialog.askopenfilename(initialdir=currdir + "/../ECG_Data", title="Select file",
+par = Path(currdir).parent
+root.filename = filedialog.askopenfilename(initialdir=str(par) + r"\ECG_Data", title="Select file",
                                            filetypes=(("ascii files", "*.ascii"), ("txt files", "*.txt"),
                                                       ("all files", "*.*")))
 filename = root.filename
 file = open(os.path.join('..', 'ECG_Data', filename), 'r')
+file_size = os.stat(filename).st_size
 root.destroy()
 
 root = tk.Tk()
@@ -116,6 +123,7 @@ ecg_segment = []
 datetime_segment = []
 datetime = []
 ecg_deque = deque(maxlen=stack)
+
 for i in range(stack - 1):
     ecg_deque.append(np.zeros(datapoints, ))
 
@@ -123,6 +131,11 @@ read = ""
 while len(read) <= 1 or read[0] == "#":
     read = file.readline()
 
+file_loc = file.tell()
+temp_line = file.readline()
+file.seek(file_loc)
+line_size = len(temp_line.encode('utf-8'))
+# pbar = progress_bar(file_size, line_size)
 datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
 b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
 ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
@@ -134,74 +147,76 @@ datetime = datetime_segment[:interval_length]
 ecg_segment = ecg_segment[step:]
 datetime_segment = datetime_segment[:step]
 
-while True:
-    num_lines = 0
-    temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
-    ecg_deque.append(temp)
-    temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
-    try:
-        temp = temp / np.max(np.abs(temp))
-    except FloatingPointError:
-        pass
-    # Blocked out code for visualizations on data
-    # plt_temp = temp[0, :, 0]
-    # for j in range(1, stack):
-    #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])
-    # plt.plot(plt_temp)
-    temp = model.predict(temp)
-    sig = np.sum(temp.reshape((-1, scale_down)), axis=1) / scale_down
-    # ls = np.asarray([0] * (datapoints // (interval_length // step)) * (stack - 1))
-    # temp_sig = np.append(ls, sig)
-    # plt.plot(temp_sig)
-    # plt.show(block=False)
-    # plt.pause(0.5)
-    # plt.close()
-    temp = temp.reshape(interval_length, )
-    max_ind = np.argmax(temp)
-    # temp[min(interval_length, max_ind+1):] = 0
-    # temp[:max(0, max_ind-1)] = 0
+with tqdm.tqdm(total=file_size) as pbar:
+    while True:
+        num_lines = 0
+        temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
+        ecg_deque.append(temp)
+        temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
+        try:
+            temp = temp / np.max(np.abs(temp))
+        except FloatingPointError:
+            pass
+        # Blocked out code for visualizations on data
+        # plt_temp = temp[0, :, 0]
+        # for j in range(1, stack):
+        #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])
+        # plt.plot(plt_temp)
+        temp = model.predict(temp)
+        sig = np.sum(temp.reshape((-1, scale_down)), axis=1) / scale_down
+        # ls = np.asarray([0] * (datapoints // (interval_length // step)) * (stack - 1))
+        # temp_sig = np.append(ls, sig)
+        # plt.plot(temp_sig)
+        # plt.show(block=False)
+        # plt.pause(0.5)
+        # plt.close()
+        temp = temp.reshape(interval_length, )
+        max_ind = np.argmax(temp)
+        # temp[min(interval_length, max_ind+1):] = 0
+        # temp[:max(0, max_ind-1)] = 0
 
-    # plt.plot(ecg_temp)
-    # plt.plot(temp)
-    # plt.show(block=False)
-    # plt.pause(0.5)
-    # plt.close()
+        # plt.plot(ecg_temp)
+        # plt.plot(temp)
+        # plt.show(block=False)
+        # plt.pause(0.5)
+        # plt.close()
 
-    signal += temp / (interval_length / step)
+        signal += temp / (interval_length / step)
 
-    num_lines = write_signal(f, datetime[:step], signal[:step], ecg_temp[:interval_length - step])
-    lines += num_lines
+        num_lines = write_signal(f, datetime[:step], signal[:step], ecg_temp[:interval_length - step])
+        lines += num_lines
 
-    signal[0:interval_length - step] = signal[step:]
-    signal[interval_length - step:] = 0
-    signal[signal < 0.1] = 0
-    ecg_segment = ecg_segment[step:]
-    if ecg_segment.size > 0:
-        ecg_temp = ecg_temp[step:]
-        ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-        datetime_segment = datetime_segment[:step]
-        datetime = datetime[step:]
-        datetime = np.append(datetime, datetime_segment[:step])
-    elif not EOF:
-        datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
-        b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
-        ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-        b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-        ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-        ecg_segment = ecg_segment.flatten()
-        ecg_temp = ecg_temp[step:]
-        ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-        datetime = datetime[step:]
-        datetime = np.append(datetime, datetime_segment[:step])
-    else:
-        break
+        signal[0:interval_length - step] = signal[step:]
+        signal[interval_length - step:] = 0
+        signal[signal < 0.1] = 0
+        ecg_segment = ecg_segment[step:]
+        if ecg_segment.size > 0:
+            ecg_temp = ecg_temp[step:]
+            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
+            datetime_segment = datetime_segment[:step]
+            datetime = datetime[step:]
+            datetime = np.append(datetime, datetime_segment[:step])
+        elif not EOF:
+            datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
+            pbar.update(line_size * len(datetime_segment))
+            b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
+            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
+            b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
+            ecg_segment = ecg_segment.flatten()
+            ecg_temp = ecg_temp[step:]
+            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
+            datetime = datetime[step:]
+            datetime = np.append(datetime, datetime_segment[:step])
+        else:
+            break
 
-    if lines >= lines_per_file:
-        lines = 0
-        file_num += 1
-        f.close()
+        if lines >= lines_per_file:
+            lines = 0
+            file_num += 1
+            f.close()
 
-        f = open(os.path.join('..', 'Signal', filename + '{:03}'.format(file_num) + '.txt'), 'w')
+            f = open(os.path.join('..', 'Signal', filename + '{:03}'.format(file_num) + '.txt'), 'w')
 write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], ecg_temp[:interval_length - step])
 end = time.time()
 

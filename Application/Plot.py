@@ -10,6 +10,8 @@ from tkinter import filedialog
 import json
 from scipy.signal import filtfilt, butter
 import matplotlib
+from pathlib import Path
+import tqdm
 
 '''
 Plotting program for ECG signals, also marks some regions where the program might have messed up for optional human 
@@ -38,14 +40,21 @@ b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', a
 # b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', analog=False)
 root = tk.Tk()
 currdir = os.getcwd()
-root.filename = filedialog.askopenfilename(initialdir=currdir + "/../Signal", title="Select file",
+par = Path(currdir).parent
+signal_dir = str(par) + r"\Signal"
+root.filename = filedialog.askopenfilename(initialdir=signal_dir, title="Select file",
                                            filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 matplotlib.use('TkAgg')
 filename = root.filename
+file_size = os.stat(filename).st_size
 root.destroy()
 
-file = open(os.path.join('..', 'Signal', filename), 'r+')
+file = open((filename), 'r+')
 fig, axs = plt.subplots()
+file_loc = file.tell()
+temp_line = file.readline()
+file.seek(file_loc)
+line_size = len(temp_line.encode('utf-8'))
 
 ecg = []
 signal = []
@@ -272,54 +281,60 @@ mismarked = 0
 unmarked_regions = 0
 prev = 0
 
-for i, line in enumerate(file):
-    dist += 1
-    temp = re.findall('([-0-9.]+)', line)
-    ecg.append(float(temp[-2]))
-    signal.append(int(temp[-1]))
-    if int(temp[-1]) == 1:
-        total_marks += 1
-        if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the signal is correct
-            if dist == 1:  # For the areas where the signal is marked multiple times
-                dist = 0
-                total_marks -= 1
+every_i = 1000
+with tqdm.tqdm(total=file_size) as pbar:
+    for i, line in enumerate(file):
+        if i % every_i == 0:
+            pbar.update(line_size * every_i)
+        dist += 1
+        temp = re.findall('([-0-9.]+)', line)
+        ecg.append(float(temp[-2]))
+        signal.append(int(temp[-1]))
+        if int(temp[-1]) == 1:
+            total_marks += 1
+            if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the
+                # signal is correct
+                if dist == 1:  # For the areas where the signal is marked multiple times
+                    dist = 0
+                    total_marks -= 1
+                else:
+                    if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too
+                        # large
+                        unmarked_regions += 1
+                        events.unmarked.append((prev + interval_length, interval_length))
+                        axs.annotate("*", (prev + interval_length, -0.2))
+                    elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):    # For when one beat is missed and the next one is also wrong
+                        if i - prev > 1:
+                            events.mismarked.append((i, interval_length))
+                            axs.annotate("#", (i, -0.2))
+                            mismarked += 1
+                        prev = i
+                        continue
+                    signals.append(i)  # indices of signals
+
             else:
-                if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too large
-                    unmarked_regions += 1
-                    events.unmarked.append((prev + interval_length, interval_length))
-                    axs.annotate("*", (prev + interval_length, -0.2))
-                elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):    # For when one beat is missed and the next one is also wrong
-                    if i - prev > 1:
-                        events.mismarked.append((i, interval_length))
-                        axs.annotate("#", (i, -0.2))
-                        mismarked += 1
-                    prev = i
-                    continue
-                signals.append(i)  # indices of signals
+                events.mismarked.append((i, dist))  # These are the mismarked signals
+                axs.annotate("#", (i, -0.2))
+                mismarked += 1
+            if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
+                last_few.append(dist)  # add the distance to the running average
+            dist = 0  # Reset distance between last and current signal
+            if first:
+                first = False  # handling first signal
+            if len(last_few) == 8:
+                interval_length = np.mean(last_few)  # running average of rr interval
+            prev = i
 
-        else:
-            events.mismarked.append((i, dist))  # These are the mismarked signals
-            axs.annotate("#", (i, -0.2))
-            mismarked += 1
-        if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
-            last_few.append(dist)  # add the distance to the running average
-        dist = 0  # Reset distance between last and current signal
-        if first:
-            first = False  # handling first signal
-        if len(last_few) == 8:
-            interval_length = np.mean(last_few)  # running average of rr interval
-        prev = i
+        if int(temp[-1]) == 2:
+            if x1 is None:
+                x1 = i
+            else:
+                x2 = i
 
-    if int(temp[-1]) == 2:
-        if x1 is None:
-            x1 = i
-        else:
-            x2 = i
-
-    if int(temp[-1]) == 0 and x2 is not None:
-        axs.axvspan(xmin=x1, xmax=x2, ymin=-0.5, ymax=1, color='#d62728', zorder=100)
-        x1 = None
-        x2 = None
+        if int(temp[-1]) == 0 and x2 is not None:
+            axs.axvspan(xmin=x1, xmax=x2, ymin=-0.5, ymax=1, color='#d62728', zorder=100)
+            x1 = None
+            x2 = None
 
 plt.text(0.5, -0.3, "Mismarked: {} \n Unmarked Regions : {} \n Total: {}".format(mismarked, unmarked_regions, total_marks),
          bbox=dict(facecolor='red', alpha=0.5))

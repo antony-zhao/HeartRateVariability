@@ -1,22 +1,21 @@
+import multiprocessing
+from pathlib import Path
 import numpy as np
 import os
 import tkinter as tk
 from tkinter import filedialog
 import re
 from collections import deque
-import xlsxwriter
-from multiprocessing import Process
 from xlsxwriter import Workbook
 from datetime import datetime as dt
 import datetime
 import time
 import multiprocessing as mp
+from multiprocessing.dummy import Pool as ThreadPool
 import json
+import tqdm
+from functools import partial
 
-"""
-TODO
-ModuleNotFoundError: No module named 'six'
-"""
 config_file = open("config.json", "r")
 config = json.load(config_file)
 interval_length = config["interval_length"]
@@ -33,17 +32,22 @@ nyq = config["nyq"]
 order = config["order"]
 n = config["n"]
 
+pbar = tqdm.tqdm
 
-def process_file(filename):
+
+def process_file(filenames, filename):
     global interval_length
     first = True
     last_few = deque(maxlen=8)
     dist = 0
     reset = True
     file = open(os.path.join('..', 'Signal', filename), 'r+')
+    file_loc = file.tell()
+    temp_line = file.readline()
+    file.seek(file_loc)
+    line_size = len(temp_line.encode('utf-8'))
     lines = []
     for i, line in enumerate(file):
-        # print(i)
         dist += 1
         temp = re.findall('([-0-9.]+)', line)
         date = line[:line.index(',')]
@@ -76,6 +80,7 @@ def process_file(filename):
                 first = False  # handling first signal
             if len(last_few) == 8:
                 interval_length = np.mean(last_few)  # running average of rr interval
+    print("{}/{} file has been completed".format(filenames.index(filename) + 1, len(filenames)))
     return lines
 
 
@@ -92,7 +97,8 @@ def write_to_excel(lines, sheet1, row, wb):
         sheet1.write_datetime(row, 1, line[0], time_format)
         sheet1.write(row, 4, row)
         sheet1.write(row, 5, line[1], interval_format)
-        sheet1.write(row, 6, (line[1] - prev_value)**2 if not prev_value == '' and not line[1] == '' else '', diff_format)
+        sheet1.write(row, 6, (line[1] - prev_value) ** 2 if not prev_value == '' and not line[1] == '' else '',
+                     diff_format)
         if line[0] - start_time >= datetime.timedelta(minutes=2):
             sheet1.write(row, 7, np.mean(intervals), interval_format)
             sheet1.write(row, 8, np.std(intervals), interval_format)
@@ -112,6 +118,9 @@ def main():
                                                 filetypes=(("txt files", "*.txt"),
                                                            ("all files", "*.*")))
     filenames = list(root.filename)
+    total_size = 0
+    for file_name in filenames:
+        total_size += os.stat(file_name).st_size
     root.destroy()
 
     if len(filenames) == 0:
@@ -119,7 +128,9 @@ def main():
 
     root = tk.Tk()
     currdir = os.getcwd()
-    root.filename = filedialog.asksaveasfilename(initialdir=currdir + "/../Signal",
+    par = Path(currdir).parent
+    signal_dir = str(par) + r"\Signal"
+    root.filename = filedialog.asksaveasfilename(initialdir=signal_dir,
                                                  filetypes=(("excel file", "*.xlsx"),), defaultextension=".xlsx")
     saveas = root.filename
     if saveas == '':
@@ -128,7 +139,7 @@ def main():
 
     start = time.time()
 
-    out = os.path.join('..', 'Signal', saveas)
+    out = os.path.join(signal_dir, saveas)
 
     wb = Workbook(out)
     sheet1 = wb.add_worksheet('Sheet 1')
@@ -149,10 +160,14 @@ def main():
 
     row = 1
 
-    pool = mp.Pool()
-    results = pool.map(process_file, filenames)
+    pool = mp.Pool(processes=max(1, multiprocessing.cpu_count() - 2))
+    func = partial(process_file, filenames)
+    results = pool.map(func, filenames)
+    # pool = mp.Pool()
+    # results = pool.map(process_file, filenames)
 
     pool.close()
+    # pool.terminate()
     pool.join()
 
     for result in results:
@@ -172,4 +187,4 @@ def main():
 if __name__ == "__main__":
     mp.freeze_support()
     main()
-    input()
+    input("Press enter to continue")
