@@ -281,7 +281,7 @@ mismarked = 0
 unmarked_regions = 0
 prev = 0
 
-every_i = 1000
+every_i = 100000
 with tqdm.tqdm(total=file_size) as pbar:
     for i, line in enumerate(file):
         if i % every_i == 0:

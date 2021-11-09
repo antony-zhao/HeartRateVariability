@@ -96,35 +96,7 @@ def distance(y_true, y_labels):
     return K.mean(K.abs(K.argmax(y_true) - K.argmax(y_labels)))
 
 
-if __name__ == '__main__':
-    model_file = 'Model1.h5'
-
-    epochs = 100
-    batch_size = 64
-    learning_rate = 0.002
-    x_train = np.load("x_train.npy")
-    y_train = np.load("y_train.npy")
-    x_test = np.load("x_test.npy")
-    y_test = np.load("y_test.npy")
-
-    """
-    Optional data visualizer
-    """
-    # for i in range(200):
-    #     temp = x_train[i, :, 0]
-    #     for j in range(1, stack):
-    #         temp = np.append(temp, x_train[i, :, j][datapoints//(interval_length//step):])
-    #     plt.plot(temp)
-    #     sig = y_train[i, :]
-    #     sum = np.sum(sig)
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down * sum
-    #     ls = np.asarray([0] * (datapoints//(interval_length//step)) * (stack - 1))
-    #     sig = np.append(ls, sig)
-    #     plt.plot(sig)
-    #     plt.show(block=False)
-    #     plt.pause(0.5)
-    #     plt.close()
-
+def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test):
     """
     Initializing the model and training
     """
@@ -170,3 +142,37 @@ if __name__ == '__main__':
         plt.show()
 
     model.save(model_file)
+
+
+if __name__ == '__main__':
+    model_file = 'model_new.h5'
+
+    epochs = 100
+    batch_size = 64
+    learning_rate = 2e-5
+    x_train = np.load("x_train.npy")
+    y_train = np.load("y_train.npy")
+    x_test = np.load("x_test.npy")
+    y_test = np.load("y_test.npy")
+
+    """
+    Optional data visualizer
+    """
+    # for i in range(200):
+    #     temp = x_train[i, :, 0]
+    #     for j in range(1, stack):
+    #         temp = np.append(temp, x_train[i, :, j][datapoints//(interval_length//step):])
+    #     plt.plot(temp)
+    #     sig = y_train[i, :]
+    #     sum = np.sum(sig)
+    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down * sum
+    #     ls = np.asarray([0] * (datapoints//(interval_length//step)) * (stack - 1))
+    #     sig = np.append(ls, sig)
+    #     plt.plot(sig)
+    #     plt.show(block=False)
+    #     plt.pause(0.5)
+    #     plt.close()
+
+    train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test)
+
+
