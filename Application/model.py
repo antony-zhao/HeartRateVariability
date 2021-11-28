@@ -1,6 +1,6 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
-    Activation, BatchNormalization
+    Activation, BatchNormalization, Input
 import tensorflow as tf
 import re
 import random
@@ -10,8 +10,8 @@ from scipy.signal import lfilter, lfilter_zi, filtfilt, savgol_filter, butter, r
 from collections import deque
 from sklearn.preprocessing import MinMaxScaler
 import joblib
-import keras.backend as K
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+import tensorflow.keras.backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 import json
 
 """
@@ -96,60 +96,64 @@ def distance(y_true, y_labels):
     return K.mean(K.abs(K.argmax(y_true) - K.argmax(y_labels)))
 
 
-def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test):
+def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
     """
     Initializing the model and training
     """
-    optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    global model
+    optim = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
     model.compile(optimizer=optim, loss='categorical_crossentropy',
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance])
-    vd = ModelCheckpoint('val_distance.h5', monitor='val_distance', mode='min', verbose=1,
+    vd = ModelCheckpoint(model_file + '_val_distance.h5', monitor='val_distance', mode='min', verbose=1,
                          save_best_only=True)
-    vc = ModelCheckpoint('val_cat_acc.h5', monitor='val_categorical_accuracy', mode='max', verbose=1,
+    vc = ModelCheckpoint(model_file + '_val_cat_acc.h5', monitor='val_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True)
-    vk = ModelCheckpoint('val_top_k.h5', monitor='val_top_k_categorical_accuracy', mode='max', verbose=1,
+    vk = ModelCheckpoint(model_file + '_val_top_k.h5', monitor='val_top_k_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True)
-    vl = ModelCheckpoint('val_loss.h5', monitor='val_loss', mode='min', verbose=1,
+    vl = ModelCheckpoint(model_file + '_val_loss.h5', monitor='val_loss', mode='min', verbose=1,
                          save_best_only=True)
     reducelr = ReduceLROnPlateau()
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
                         validation_data=(x_test, y_test),
+                        # callbacks=[reducelr])
                         callbacks=[vd, vc, vk, vl, reducelr])
-
-    plt.plot(history.history['top_k_categorical_accuracy'])
-    plt.plot(history.history['val_top_k_categorical_accuracy'])
-    plt.ylabel('top k accuracy')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.show()
-
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.show()
-
-    """
-    Visualizing results
-    """
-    for i in range(10):
-        plt.plot(x_test[i, :, -1])
-        sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-        sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        plt.plot(sig)
+    if plot:
+        plt.plot(history.history['top_k_categorical_accuracy'])
+        plt.plot(history.history['val_top_k_categorical_accuracy'])
+        plt.ylabel('top k accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'val'], loc='upper left')
         plt.show()
 
-    model.save(model_file)
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'val'], loc='upper left')
+        plt.show()
+
+        """
+        Visualizing results
+        """
+        for i in range(10):
+            plt.plot(x_test[i, :, -1])
+            sig = model.predict(x_test[i][np.newaxis, :, :])[0]
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+            plt.plot(sig)
+            plt.show()
+
+    model.save_weights(model_file + ".h5")
+    del model
+    tf.keras.backend.clear_session()
 
 
 if __name__ == '__main__':
-    model_file = 'model_new.h5'
+    model_file = 'model_new'
 
-    epochs = 100
+    epochs = 20
     batch_size = 64
-    learning_rate = 2e-5
+    learning_rate = 1e-5
     x_train = np.load("x_train.npy")
     y_train = np.load("y_train.npy")
     x_test = np.load("x_test.npy")
