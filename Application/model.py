@@ -75,6 +75,9 @@ model.add(MaxPooling1D())
 model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
 model.add(MaxPooling1D())
+model.add(Conv1D(filters=stack * 16, kernel_size=datapoints // 20, strides=1, padding='same'))
+model.add(BatchNormalization(axis=1))
+model.add(MaxPooling1D())
 model.add(Flatten())
 model.add(
     Dense(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
@@ -102,7 +105,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     """
     global model
     optim = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
-    model.compile(optimizer=optim, loss='categorical_crossentropy',
+    model.compile(optimizer=optim, loss='binary_crossentropy',
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance])
     vd = ModelCheckpoint(model_file + '_val_distance.h5', monitor='val_distance', mode='min', verbose=1,
                          save_best_only=True)
@@ -149,11 +152,11 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 
 
 if __name__ == '__main__':
-    model_file = 'model_new'
+    model_file = 'model'
 
-    epochs = 20
+    epochs = 120
     batch_size = 64
-    learning_rate = 1e-5
+    learning_rate = 2e-5
     x_train = np.load("x_train.npy")
     y_train = np.load("y_train.npy")
     x_test = np.load("x_test.npy")

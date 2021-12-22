@@ -42,7 +42,7 @@ np.seterr(all='raise')
 file_num = 1
 update_freq = 10
 signal = np.zeros(interval_length)
-model.load_weights("model_new_val_cat_acc.h5")
+model.load_weights("model.h5")
 # model = keras.models.load_model(model_file, custom_objects={'distance': distance}, compile=False)
 
 # Opening file and choosing directory to save code in
@@ -224,14 +224,13 @@ with tqdm.tqdm(total=file_size) as pbar:
                 file_num += 1
                 f.close()
 
-                f = open(os.path.join('..', 'Signal', filename + '{:03}'.format(file_num) + '.txt'), 'w')
+                f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
 write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], ecg_temp[:interval_length - step])
 end = time.time()
+f.close()
 
 print('elapsed time: ' + str(end - start))
 input("Press enter to continue")
 
 del model
 tf.keras.backend.clear_session()
-
-f.close()

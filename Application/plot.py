@@ -41,10 +41,10 @@ b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', a
 root = tk.Tk()
 currdir = os.getcwd()
 par = Path(currdir).parent
-signal_dir = str(par) + r"\Signal"
+signal_dir = str(par) + r"\ECG_Data"
 root.filename = filedialog.askopenfilename(initialdir=signal_dir, title="Select file",
                                            filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
-matplotlib.use('TkAgg')
+matplotlib.use('Qt5Agg')
 filename = root.filename
 file_size = os.stat(filename).st_size
 root.destroy()
