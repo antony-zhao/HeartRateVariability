@@ -2,14 +2,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
     Activation, BatchNormalization, Input
 import tensorflow as tf
-import re
-import random
 import numpy as np
 from matplotlib import pyplot as plt
-from scipy.signal import lfilter, lfilter_zi, filtfilt, savgol_filter, butter, resample
-from collections import deque
-from sklearn.preprocessing import MinMaxScaler
-import joblib
 import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 import json
@@ -31,9 +25,7 @@ if len(physical_devices) > 0:
 
 
 class Res1D(tf.keras.layers.Layer):
-    """
-    Optional Residual layer
-    """
+    """Optional 1D Residual layer for Keras."""
 
     def __init__(self, filters, kernel_size):
         super(Res1D, self).__init__()
@@ -61,10 +53,7 @@ class Res1D(tf.keras.layers.Layer):
         return {"filters": self.filters, "kernel_size": self.kernel_size}
 
 
-"""
-ML model
-"""
-model = Sequential()
+model = Sequential()  # The main model used for detecting R peaks.
 model.add(
     Conv1D(input_shape=(datapoints, stack), filters=stack * 2, kernel_size=datapoints // 25, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
@@ -96,12 +85,28 @@ model.summary()
 
 
 def distance(y_true, y_labels):
+    """Distance metric for training, displays the average
+    absolute distance between the true and predicted peak."""
     return K.mean(K.abs(K.argmax(y_true) - K.argmax(y_labels)))
 
 
 def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
     """
-    Initializing the model and training
+    Trains the model on the train set and evaluates its performance on the test set, then saves the model
+     to the specified file, as well as some checkpoints that save the best performance version of the model.
+
+    Args:
+        model_file (str): The prefix of the file name of the model.
+        epochs (int): The number of epochs to train the model for
+        batch_size (int): Size of the minibatches
+        learning_rate (float): The learning rate
+        x_train (numpy.ndarray): The training data for the training set
+        y_train (numpy.ndarray): The output data for the training set
+        x_test (numpy.ndarray): The training data for the test set
+        y_test (numpy.ndarray): The output data for the test set
+        plot (bool): Optional parameter to specify whether or not to display
+            some random samples drawn and the model output on them.
+            (default is False)
     """
     global model
     optim = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
@@ -117,10 +122,9 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          save_best_only=True)
     reducelr = ReduceLROnPlateau()
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test),
-                        # callbacks=[reducelr])
-                        callbacks=[vd, vc, vk, vl, reducelr])
-    if plot:
+                        validation_data=(x_test, y_test), callbacks=[vd, vc, vk, vl, reducelr])
+
+    if plot:  # Optional plotting to visualize and verify the model.
         plt.plot(history.history['top_k_categorical_accuracy'])
         plt.plot(history.history['val_top_k_categorical_accuracy'])
         plt.ylabel('top k accuracy')
@@ -136,9 +140,6 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
         plt.legend(['train', 'val'], loc='upper left')
         plt.show()
 
-        """
-        Visualizing results
-        """
         for i in range(10):
             plt.plot(x_test[i, :, -1])
             sig = model.predict(x_test[i][np.newaxis, :, :])[0]
@@ -162,24 +163,4 @@ if __name__ == '__main__':
     x_test = np.load("x_test.npy")
     y_test = np.load("y_test.npy")
 
-    """
-    Optional data visualizer
-    """
-    # for i in range(200):
-    #     temp = x_train[i, :, 0]
-    #     for j in range(1, stack):
-    #         temp = np.append(temp, x_train[i, :, j][datapoints//(interval_length//step):])
-    #     plt.plot(temp)
-    #     sig = y_train[i, :]
-    #     sum = np.sum(sig)
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down * sum
-    #     ls = np.asarray([0] * (datapoints//(interval_length//step)) * (stack - 1))
-    #     sig = np.append(ls, sig)
-    #     plt.plot(sig)
-    #     plt.show(block=False)
-    #     plt.pause(0.5)
-    #     plt.close()
-
     train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test)
-
-

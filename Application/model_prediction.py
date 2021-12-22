@@ -2,9 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import re
-from scipy.signal import filtfilt, savgol_filter, butter, resample
-from sklearn.preprocessing import MinMaxScaler
-import joblib
+from scipy.signal import filtfilt, butter
 import tensorflow as tf
 from model import model
 from dataset import preprocess_ecg
@@ -15,8 +13,7 @@ from tkinter import filedialog
 import json
 import tqdm
 from pathlib import Path
-import keras
-from model import distance
+
 
 # Initialize variables and constants
 config_file = open("config.json", "r")
