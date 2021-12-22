@@ -4,21 +4,8 @@ import os
 import json
 import random
 from scipy.signal import filtfilt, butter
-
-config_file = open("config.json", "r")
-config = json.load(config_file)
-interval_length = config["interval_length"]
-step = config["step"]
-stack = config["stack"]
-scale_down = config["scale_down"]
-datapoints = config["datapoints"]
-T = config["T"]
-fs = config["fs"]
-low_cutoff = config["low_cutoff"]
-high_cutoff = config["high_cutoff"]
-nyq = config["nyq"]
-order = config["order"]
-n = config["n"]
+from config import interval_length, step, stack, scale_down, datapoints, \
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
 
 
 def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack=1):

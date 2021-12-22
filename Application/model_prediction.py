@@ -13,26 +13,9 @@ from tkinter import filedialog
 import json
 import tqdm
 from pathlib import Path
+from config import interval_length, step, stack, scale_down, datapoints, \
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
 
-
-# Initialize variables and constants
-config_file = open("config.json", "r")
-config = json.load(config_file)
-interval_length = config["interval_length"]
-step = config["step"]
-stack = config["stack"]
-scale_down = config["scale_down"]
-datapoints = config["datapoints"]
-lines_per_file = config["lines_per_file"]
-T = config["T"]
-fs = config["fs"]
-low_cutoff = config["low_cutoff"]
-high_cutoff = config["high_cutoff"]
-nyq = config["nyq"]
-order = config["order"]
-n = config["n"]
-
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
 
@@ -149,79 +132,79 @@ datetime_segment = datetime_segment[:step]
 
 with tqdm.tqdm(total=file_size) as pbar:
     # with tf.device('/cpu:0'):
-        iter = 0
-        while True:
-            num_lines = 0
-            temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
-            ecg_deque.append(temp)
-            temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
-            try:
-                temp = temp / np.max(np.abs(temp))
-            except FloatingPointError:
-                pass
-            # Blocked out code for visualizations on data
-            # plt_temp = temp[0, :, 0]
-            # for j in range(1, stack):
-            #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])
-            # plt.plot(plt_temp)
-            temp = model(temp, training=False).numpy()
-            # temp = np.zeros(interval_length,)
-            # sig = np.sum(temp.reshape((-1, scale_down)), axis=1) / scale_down
-            # ls = np.asarray([0] * (datapoints // (interval_length // step)) * (stack - 1))
-            # temp_sig = np.append(ls, sig)
-            # plt.plot(temp_sig)
-            # plt.show(block=False)
-            # plt.pause(0.5)
-            # plt.close()
-            temp = temp.reshape(interval_length, )
-            max_ind = np.argmax(temp)
-            # temp[min(interval_length, max_ind+1):] = 0
-            # temp[:max(0, max_ind-1)] = 0
+    iter = 0
+    while True:
+        num_lines = 0
+        temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
+        ecg_deque.append(temp)
+        temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
+        try:
+            temp = temp / np.max(np.abs(temp))
+        except FloatingPointError:
+            pass
+        # Blocked out code for visualizations on data
+        # plt_temp = temp[0, :, 0]
+        # for j in range(1, stack):
+        #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])
+        # plt.plot(plt_temp)
+        temp = model(temp, training=False).numpy()
+        # temp = np.zeros(interval_length,)
+        # sig = np.sum(temp.reshape((-1, scale_down)), axis=1) / scale_down
+        # ls = np.asarray([0] * (datapoints // (interval_length // step)) * (stack - 1))
+        # temp_sig = np.append(ls, sig)
+        # plt.plot(temp_sig)
+        # plt.show(block=False)
+        # plt.pause(0.5)
+        # plt.close()
+        temp = temp.reshape(interval_length, )
+        max_ind = np.argmax(temp)
+        # temp[min(interval_length, max_ind+1):] = 0
+        # temp[:max(0, max_ind-1)] = 0
 
-            # plt.plot(ecg_temp)
-            # plt.plot(temp)
-            # plt.show(block=False)
-            # plt.pause(0.5)
-            # plt.close()
+        # plt.plot(ecg_temp)
+        # plt.plot(temp)
+        # plt.show(block=False)
+        # plt.pause(0.5)
+        # plt.close()
 
-            signal += temp / (interval_length / step)
+        signal += temp / (interval_length / step)
 
-            num_lines = write_signal(f, datetime[:step], signal[:step], ecg_temp[:interval_length - step])
-            lines += num_lines
+        num_lines = write_signal(f, datetime[:step], signal[:step], ecg_temp[:interval_length - step])
+        lines += num_lines
 
-            signal[0:interval_length - step] = signal[step:]
-            signal[interval_length - step:] = 0
-            signal[signal < 0.1] = 0
-            ecg_segment = ecg_segment[step:]
-            if ecg_segment.size > 0:
-                ecg_temp = ecg_temp[step:]
-                ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-                datetime_segment = datetime_segment[:step]
-                datetime = datetime[step:]
-                datetime = np.append(datetime, datetime_segment[:step])
-            elif not EOF:
-                iter += 1
-                datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
-                if iter % update_freq == 0:
-                    pbar.update(line_size * len(datetime_segment) * update_freq)
-                b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
-                ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-                b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-                ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-                ecg_segment = ecg_segment.flatten()
-                ecg_temp = ecg_temp[step:]
-                ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-                datetime = datetime[step:]
-                datetime = np.append(datetime, datetime_segment[:step])
-            else:
-                break
+        signal[0:interval_length - step] = signal[step:]
+        signal[interval_length - step:] = 0
+        signal[signal < 0.1] = 0
+        ecg_segment = ecg_segment[step:]
+        if ecg_segment.size > 0:
+            ecg_temp = ecg_temp[step:]
+            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
+            datetime_segment = datetime_segment[:step]
+            datetime = datetime[step:]
+            datetime = np.append(datetime, datetime_segment[:step])
+        elif not EOF:
+            iter += 1
+            datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
+            if iter % update_freq == 0:
+                pbar.update(line_size * len(datetime_segment) * update_freq)
+            b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
+            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
+            b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
+            ecg_segment = ecg_segment.flatten()
+            ecg_temp = ecg_temp[step:]
+            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
+            datetime = datetime[step:]
+            datetime = np.append(datetime, datetime_segment[:step])
+        else:
+            break
 
-            if lines >= lines_per_file:
-                lines = 0
-                file_num += 1
-                f.close()
+        if lines >= lines_per_file:
+            lines = 0
+            file_num += 1
+            f.close()
 
-                f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
+            f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
 write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], ecg_temp[:interval_length - step])
 end = time.time()
 f.close()

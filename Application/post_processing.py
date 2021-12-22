@@ -11,26 +11,11 @@ from datetime import datetime as dt
 import datetime
 import time
 import multiprocessing as mp
-from multiprocessing.dummy import Pool as ThreadPool
 import json
 import tqdm
 from functools import partial
-
-config_file = open("config.json", "r")
-config = json.load(config_file)
-interval_length = config["interval_length"]
-step = config["step"]
-stack = config["stack"]
-scale_down = config["scale_down"]
-datapoints = config["datapoints"]
-lines_per_file = config["lines_per_file"]
-T = config["T"]
-fs = config["fs"]
-low_cutoff = config["low_cutoff"]
-high_cutoff = config["high_cutoff"]
-nyq = config["nyq"]
-order = config["order"]
-n = config["n"]
+from config import interval_length, step, stack, scale_down, datapoints, \
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
 
 pbar = tqdm.tqdm
 

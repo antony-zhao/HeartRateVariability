@@ -6,18 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-import json
-
-"""
-Default configs
-"""
-config_file = open("config.json", "r")
-config = json.load(config_file)
-interval_length = config["interval_length"]
-step = config["step"]
-stack = config["stack"]
-scale_down = config["scale_down"]
-datapoints = config["datapoints"]
+from config import interval_length, stack, scale_down, datapoints
 
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
