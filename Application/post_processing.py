@@ -15,7 +15,7 @@ import json
 import tqdm
 from functools import partial
 from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order
 
 pbar = tqdm.tqdm
 

@@ -14,7 +14,7 @@ import json
 import tqdm
 from pathlib import Path
 from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')

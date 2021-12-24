@@ -5,7 +5,7 @@ import json
 import random
 from scipy.signal import filtfilt, butter
 from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order, n
+    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order
 
 
 def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack=1):
