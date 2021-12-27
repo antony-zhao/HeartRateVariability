@@ -6,11 +6,12 @@ scale_down = 4  # Optional, to reduce the amount of data. Averages every (scale_
 datapoints = interval_length // scale_down  #
 lines_per_file = 5000000  # The number of lines per file the model_prediction program creates
 max_dist_percentage = 0.2  # Maximum amount the R peaks can vary
-T = 0.1  # Remaining are the filter parameters, taken from
-# https://stackoverflow.com/questions/25191620/creating-lowpass-filter-in-scipy-understanding-methods-and-units and
+# Remaining are the filter parameters, example from
+# https://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html and
 # experimented with to find the current parameters.
-fs = 4000.0
-nyq = fs * 0.5
+T = 0.1  # Sample Period
+fs = 4000.0  # Sample rate, Hz
+nyq = fs * 0.5  # Nyquist Frequency
 high_cutoff = 5
-low_cutoff = int(nyq / high_cutoff)
-order = 4
+low_cutoff = 200
+order = 4  # sin wave can be approx represented as quadratic

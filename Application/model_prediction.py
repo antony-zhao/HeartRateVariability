@@ -10,7 +10,6 @@ import time
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
-import json
 import tqdm
 from pathlib import Path
 from config import interval_length, step, stack, scale_down, datapoints, \
@@ -23,7 +22,6 @@ file_num = 1
 update_freq = 10
 signal = np.zeros(interval_length)
 model.load_weights("model.h5")
-# model = keras.models.load_model(model_file, custom_objects={'distance': distance}, compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
