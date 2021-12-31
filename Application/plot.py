@@ -218,22 +218,26 @@ class Events:
         plt.draw()
 
 
-def add(ind):  # Adds a signal to the plot
+def add(ind):
+    """Adds a signal to the plot at some index."""
     for i in range(-2, 2):
         signal[ind + i] = 1
 
 
-def remove(ind, radius=2):  # Removes a signal from the plot
+def remove(ind, radius=2):
+    """Removes signals from the plot at some index with some 'radius' around it."""
     for i in range(-radius, radius):
         signal[ind + i] = 0
 
 
-def clean(x1, x2):  # Cleans a region on the plot
+def clean(x1, x2):
+    """Cleans a region on the plot, from x1 to x2."""
     for i in range(x1, x2 + 1):
         signal[i] = 0
 
 
 def toggle_clean_selector(event):
+    """Handles the selector for region selection for cleaning."""
     if events.clean:
         if toggle_clean_selector.RS.active:
             toggle_clean_selector.RS.set_active(False)
@@ -302,8 +306,8 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
                 interval_length = np.mean(last_few)  # Running average of rr interval
             prev = i
 
-plt.text(0.5, -0.3, "Mismarked: {} \n Unmarked Regions : {} \n Total: {}".format(mismarked, unmarked_regions, total_marks),
-         bbox=dict(facecolor='red', alpha=0.5))
+plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
+         .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))
 
 b, a = butter(N=order, Wn=low_cutoff/nyq, btype='low', analog=False)
 ecg = filtfilt(b, a, np.asarray(ecg))
@@ -313,7 +317,7 @@ ecg = filtfilt(b, a, np.asarray(ecg))
 axs.plot(range(len(ecg)), ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
 
-axs.legend(["ECG", "Signal"], loc='upper left')
+axs.legend(['ECG', 'Signal'], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 
 if len(events.unmarked) > 0:  # Only display unmarked and mismarked buttons if there are unmarked/mismarked signals

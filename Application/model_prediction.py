@@ -13,7 +13,7 @@ from tkinter import filedialog
 import tqdm
 from pathlib import Path
 from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
@@ -40,75 +40,87 @@ root.withdraw()
 folder_selected = filedialog.askdirectory()
 print(folder_selected)
 
-ecg = []
-filepath = filename[:filename.index('ECG_Data')]
-filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]
-f = open(os.path.join(folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
+filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]  # Gets the name of the file itself
+# without the full path
+f = open(os.path.join(folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')  # Opens the first of the
+# files of which the data will be saved into. Whenever the number of lines reaches a certain point, file_num gets
+# incremented and a new file with the new number is created.
 
 # Start timer (displays time elapsed in the end)
 start = time.time()
-lines = 0
+
+ecg = []
+lines = 0  # Tracks the number of lines for the current file
 dist = 0
-first = True
-average_interval = deque(maxlen=10)
+first = True  # ??
+average_interval = deque(maxlen=10)  # Last 10 interval lengths, used to find the running average
 average_interval.append(interval_length)
 
 
 def read_ecg(ecg_file, count):
-    e = False
-    sig = np.zeros(count)
+    """Reads 'count' lines from the ecg_file and returns them"""
+    e = False  # End of file
+    ecg = np.zeros(count)
     datetime = []
     for i in range(count):
-        x = ecg_file.readline()
-        if len(x) == 0:
+        line = ecg_file.readline()
+        if len(line) == 0:  # Signifies an end of the file
             e = True
             break
-        temp = re.findall('([-0-9.x]+)', x)[-1]
-        sig[i] = 0 if temp == 'x' else float(temp)
-        datetime.append(x[:x.index(',')])
-    return datetime, sig.reshape(count, 1), e
+        temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
+        # otherwise this just reads the the signal value
+        ecg[i] = 0 if temp == 'x' else float(temp)
+        datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
+        # and transferred to the output file.
+    return datetime, ecg.reshape(count, 1), e
 
 
 def write_signal(sig_file, datetime, sig, ecg):
+    """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
     global dist
     global first
-    lines = 0
-    # plt.plot(ecg)
+    # plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
     # plt.plot(sig)
     # plt.show()
+    # The maximum amount we think the signal can differ by, our default is 0.2 so we don't believe any 'signal'
+    # with a distance of 0.8-1.2 from the previous is real and so we omit it.
+    min_dist = 1 - max_dist_percentage
+    max_dist = 1 + max_dist_percentage
     for i in range(len(datetime)):
         d = datetime[i]
         e = ecg[i]
         s = sig[i]
-        lines += 1
-        if s > 0.1:  # max(0.7, 1.5 / (interval_length / step)):
-            if dist < 0.9 * np.mean(average_interval):
-                if first:
+        if s > 0.1:  # Minimum value of the signal before other checks.
+            if dist < min_dist * np.mean(average_interval):
+                if first:  # The very first signal
                     s = 1
                     first = False
                 else:
                     s = 0
             else:
                 s = 1
-                if 0.9 * np.mean(average_interval) < dist < np.mean(average_interval) * 1.1:
+                if dist < np.mean(average_interval) * max_dist:
                     average_interval.append(dist)
                 dist = 0
         else:
             s = 0
         sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), int(s)))
         dist += 1
-    return lines
+    return len(datetime)
 
 
 ecg_temp = []
 ecg_segment = []
 datetime_segment = []
 datetime = []
-ecg_deque = deque(maxlen=stack)
+ecg_deque = deque(maxlen=stack)  # Variable which will eventually be converted to a numpy array and fed to the model.
 
-for i in range(stack - 1):
+for i in range(stack - 1):   # Initializes the values to just be 0's. (The dataset includes and the model has been
+    # trained to deal with this, can also be treated the same as if the data were just blank in the case of missing
+    # data)
     ecg_deque.append(np.zeros(datapoints, ))
 
+# Skips through empty lines and comments, in our case comments are '#'
 read = ""
 while len(read) <= 1 or read[0] == "#":
     read = file.readline()
@@ -116,7 +128,10 @@ while len(read) <= 1 or read[0] == "#":
 file_loc = file.tell()
 temp_line = file.readline()
 file.seek(file_loc)
-line_size = len(temp_line.encode('utf-8'))
+line_size = len(temp_line.encode('utf-8'))  # Gets the average size of the line for the progress bar
+# to track approximately where we are within the file.
+
+# Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
 datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
 b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
 ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
@@ -126,11 +141,10 @@ ecg_segment = ecg_segment.flatten()
 ecg_temp = ecg_segment[:interval_length]
 datetime = datetime_segment[:interval_length]
 ecg_segment = ecg_segment[step:]
-datetime_segment = datetime_segment[:step]
+datetime_segment = datetime_segment[step:]
 
 with tqdm.tqdm(total=file_size) as pbar:
-    # with tf.device('/cpu:0'):
-    iter = 0
+    iter = 0  # Used for the progress bar to update it every so often.
     while True:
         num_lines = 0
         temp = preprocess_ecg(np.asarray(ecg_temp), scale_down)
@@ -177,7 +191,7 @@ with tqdm.tqdm(total=file_size) as pbar:
         if ecg_segment.size > 0:
             ecg_temp = ecg_temp[step:]
             ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-            datetime_segment = datetime_segment[:step]
+            datetime_segment = datetime_segment[step:]
             datetime = datetime[step:]
             datetime = np.append(datetime, datetime_segment[:step])
         elif not EOF:
@@ -197,7 +211,7 @@ with tqdm.tqdm(total=file_size) as pbar:
         else:
             break
 
-        if lines >= lines_per_file:
+        if lines >= lines_per_file:  # Creates a new file in case the current one has enough lines.
             lines = 0
             file_num += 1
             f.close()
@@ -207,7 +221,7 @@ write_signal(f, datetime[:interval_length - step], signal[:interval_length - ste
 end = time.time()
 f.close()
 
-print('elapsed time: ' + str(end - start))
+print('elapsed time: ' + str(end - start) + ' seconds')
 input("Press enter to continue")
 
 del model
