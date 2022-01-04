@@ -9,6 +9,7 @@ from config import interval_length, step, stack, scale_down, datapoints, \
 
 
 def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack=1):
+    """Randomly creates a sample from somewhere within the data."""
     datapoints = interval_length // scale_down
     x, y = [], []
     i = 0
@@ -43,24 +44,22 @@ def random_sampling(ecg, signal, samples, interval_length, step, scale_down, sta
     x = np.asarray(x)
     x = np.swapaxes(x, 1, 2)
 
-    # Scaling, very scuffed currently, probably should look at x = (2*x/(np.nanmean(np.where(np.max(np.abs(x),
-    # axis=1).reshape((-1, 1, stack)) != 0, np.max(np.abs(x), axis=1).reshape((-1, 1, stack)), np.nan),
-    # axis=2).reshape((-1, 1, 1)) + np.max(np.abs(x), axis=1).reshape((-1, 1, stack))))
-
     y = np.asarray(y)
     return x, y
 
 
 def preprocess_ecg(ecg, scale_down):
+    """Sets the baseline to be 0, and also averages every 'scale_down' datapoints to reduce the total amount of data
+    per sample """
     ecg = ecg
     ecg = ecg.reshape(interval_length, )
     ecg = ecg - np.mean(ecg)
-    # ecg = ecg / np.max(np.abs(ecg))
     ecg = np.sum(ecg.reshape((-1, scale_down)), axis=1) / scale_down
     return ecg
 
 
 if __name__ == '__main__':
+    """Creates the train and test datasets for the model to be trained on."""
     ecg1, s1 = [], []
     ecg2, s2 = [], []
 
@@ -118,7 +117,7 @@ if __name__ == '__main__':
     del ecg2
     del s2
 
-    np.save("x_train", x_train)
-    np.save("y_train", y_train)
-    np.save("x_test", x_test)
-    np.save("y_test", y_test)
+    np.save(os.path.join('..', 'Training', 'x_train'), x_train)
+    np.save(os.path.join('..', 'Training', 'y_train'), y_train)
+    np.save(os.path.join('..', 'Training', 'x_test'), x_test)
+    np.save(os.path.join('..', 'Training', 'y_test'), y_test)

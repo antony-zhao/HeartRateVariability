@@ -1,3 +1,5 @@
+import os
+
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
     Activation, BatchNormalization, Input
@@ -39,7 +41,7 @@ class Res1D(tf.keras.layers.Layer):
         return tf.nn.relu(x)
 
     def get_config(self):
-        return {"filters": self.filters, "kernel_size": self.kernel_size}
+        return {'filters': self.filters, 'kernel_size': self.kernel_size}
 
 
 model = Sequential()  # The main model used for detecting R peaks.
@@ -136,7 +138,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
             plt.plot(sig)
             plt.show()
 
-    model.save_weights(model_file + ".h5")
+    model.save_weights(model_file + '.h5')
     del model
     tf.keras.backend.clear_session()
 
@@ -147,9 +149,9 @@ if __name__ == '__main__':
     epochs = 120
     batch_size = 64
     learning_rate = 2e-5
-    x_train = np.load("x_train.npy")
-    y_train = np.load("y_train.npy")
-    x_test = np.load("x_test.npy")
-    y_test = np.load("y_test.npy")
+    x_train = np.load(os.path.join('..', 'Training', 'x_train.npy'))
+    y_train = np.load(os.path.join('..', 'Training', 'y_train.npy'))
+    x_test = np.load(os.path.join('..', 'Training', 'x_test.npy'))
+    y_test = np.load(os.path.join('..', 'Training', 'y_test.npy'))
 
     train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test)
