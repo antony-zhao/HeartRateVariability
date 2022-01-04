@@ -5,7 +5,7 @@ import re
 from scipy.signal import filtfilt, butter
 import tensorflow as tf
 from model import model
-from dataset import preprocess_ecg
+from dataset import preprocess_ecg, filters
 import time
 from collections import deque
 import tkinter as tk
@@ -20,16 +20,15 @@ np.seterr(all='raise')
 
 file_num = 1
 update_freq = 10
-signal = np.zeros(interval_length)
-model.load_weights("model.h5")
+model.load_weights('model.h5')
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
 currdir = os.getcwd()
 par = Path(currdir).parent
-root.filename = filedialog.askopenfilename(initialdir=str(par) + r"\ECG_Data", title="Select file",
-                                           filetypes=(("ascii files", "*.ascii"), ("txt files", "*.txt"),
-                                                      ("all files", "*.*")))
+root.filename = filedialog.askopenfilename(initialdir=str(par) + r'\ECG_Data', title='Select file',
+                                           filetypes=(('ascii files', '*.ascii'), ('txt files', '*.txt'),
+                                                      ('all files', '*.*')))
 filename = root.filename
 file = open(os.path.join('..', 'ECG_Data', filename), 'r')
 file_size = os.stat(filename).st_size
@@ -40,7 +39,7 @@ root.withdraw()
 folder_selected = filedialog.askdirectory()
 print(folder_selected)
 
-filename = filename[len(filename) - filename[::-1].index("/"):filename.index(".")]  # Gets the name of the file itself
+filename = filename[len(filename) - filename[::-1].index('/'):filename.index('.')]  # Gets the name of the file itself
 # without the full path
 f = open(os.path.join(folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')  # Opens the first of the
 # files of which the data will be saved into. Whenever the number of lines reaches a certain point, file_num gets
@@ -49,10 +48,9 @@ f = open(os.path.join(folder_selected, filename + '{:03}'.format(file_num) + '.t
 # Start timer (displays time elapsed in the end)
 start = time.time()
 
-ecg = []
 lines = 0  # Tracks the number of lines for the current file
 dist = 0
-first = True  # ??
+first = True  # For handling the first signal
 average_interval = deque(maxlen=10)  # Last 10 interval lengths, used to find the running average
 average_interval.append(interval_length)
 
@@ -72,7 +70,7 @@ def read_ecg(ecg_file, count):
         ecg[i] = 0 if temp == 'x' else float(temp)
         datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
         # and transferred to the output file.
-    return datetime, ecg.reshape(count, 1), e
+    return datetime, ecg, e
 
 
 def write_signal(sig_file, datetime, sig, ecg):
@@ -109,10 +107,11 @@ def write_signal(sig_file, datetime, sig, ecg):
     return len(datetime)
 
 
-ecg_temp = []
-ecg_segment = []
-datetime_segment = []
+ecg_segment = []  # Acts as a buffer for the ecg signals
+datetime_segment = []  # Similarly for datetimes
+ecg_temp = []  # ecg and datetimes of the portion being processed
 datetime = []
+signal = np.zeros(interval_length)
 ecg_deque = deque(maxlen=stack)  # Variable which will eventually be converted to a numpy array and fed to the model.
 
 for i in range(stack - 1):   # Initializes the values to just be 0's. (The dataset includes and the model has been
@@ -121,8 +120,8 @@ for i in range(stack - 1):   # Initializes the values to just be 0's. (The datas
     ecg_deque.append(np.zeros(datapoints, ))
 
 # Skips through empty lines and comments, in our case comments are '#'
-read = ""
-while len(read) <= 1 or read[0] == "#":
+read = ''
+while len(read) <= 1 or read[0] == '#':
     read = file.readline()
 
 file_loc = file.tell()
@@ -133,17 +132,14 @@ line_size = len(temp_line.encode('utf-8'))  # Gets the average size of the line 
 
 # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
 datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
-b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
-ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-ecg_segment = ecg_segment.flatten()
+ecg_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 ecg_temp = ecg_segment[:interval_length]
 datetime = datetime_segment[:interval_length]
 ecg_segment = ecg_segment[step:]
 datetime_segment = datetime_segment[step:]
 
-with tqdm.tqdm(total=file_size) as pbar:
+with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
+    pbar.set_description('Bytes ')
     iter = 0  # Used for the progress bar to update it every so often.
     while True:
         num_lines = 0
@@ -152,38 +148,19 @@ with tqdm.tqdm(total=file_size) as pbar:
         temp = np.swapaxes(np.asarray(ecg_deque)[np.newaxis, :, :], 1, 2)
         try:
             temp = temp / np.max(np.abs(temp))
-        except FloatingPointError:
+        except FloatingPointError:  # Deals with case of empty data because otherwise there would be a divide by 0 error
             pass
-        # Blocked out code for visualizations on data
-        # plt_temp = temp[0, :, 0]
-        # for j in range(1, stack):
-        #     plt_temp = np.append(plt_temp, temp[0, :, j][datapoints//(interval_length//step):])
-        # plt.plot(plt_temp)
         temp = model(temp, training=False).numpy()
-        # temp = np.zeros(interval_length,)
-        # sig = np.sum(temp.reshape((-1, scale_down)), axis=1) / scale_down
-        # ls = np.asarray([0] * (datapoints // (interval_length // step)) * (stack - 1))
-        # temp_sig = np.append(ls, sig)
-        # plt.plot(temp_sig)
-        # plt.show(block=False)
-        # plt.pause(0.5)
-        # plt.close()
         temp = temp.reshape(interval_length, )
         max_ind = np.argmax(temp)
-        # temp[min(interval_length, max_ind+1):] = 0
-        # temp[:max(0, max_ind-1)] = 0
 
-        # plt.plot(ecg_temp)
-        # plt.plot(temp)
-        # plt.show(block=False)
-        # plt.pause(0.5)
-        # plt.close()
-
-        signal += temp / (interval_length / step)
+        signal += temp / (interval_length / step)  # Since we potentially run through a datapoint multiple times if
+        # step is smaller, we average the model output for each run through
 
         num_lines = write_signal(f, datetime[:step], signal[:step], ecg_temp[:interval_length - step])
         lines += num_lines
 
+        # Steps through all the different buffers, and if the buffer is empty reads more from the file.
         signal[0:interval_length - step] = signal[step:]
         signal[interval_length - step:] = 0
         signal[signal < 0.1] = 0
@@ -199,11 +176,7 @@ with tqdm.tqdm(total=file_size) as pbar:
             datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
             if iter % update_freq == 0:
                 pbar.update(line_size * len(datetime_segment) * update_freq)
-            b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
-            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-            b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-            ecg_segment = filtfilt(b, a, np.asarray(ecg_segment), axis=0)
-            ecg_segment = ecg_segment.flatten()
+            ecg_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
             ecg_temp = ecg_temp[step:]
             ecg_temp = np.append(ecg_temp, ecg_segment[:step])
             datetime = datetime[step:]
@@ -217,12 +190,16 @@ with tqdm.tqdm(total=file_size) as pbar:
             f.close()
 
             f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
+
+# Writes the final few datapoints into the file, and closes it
 write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], ecg_temp[:interval_length - step])
 end = time.time()
+
+
 f.close()
 
 print('elapsed time: ' + str(end - start) + ' seconds')
-input("Press enter to continue")
+input('Press enter to continue')
 
 del model
 tf.keras.backend.clear_session()

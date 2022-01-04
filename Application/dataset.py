@@ -8,7 +8,7 @@ from config import interval_length, step, stack, scale_down, datapoints, \
     lines_per_file, T, fs, low_cutoff, high_cutoff, nyq, order
 
 
-def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack=1):
+def random_sampling(ecg, signal, samples, interval_length, step, scale_down, stack):
     """Randomly creates a sample from somewhere within the data."""
     datapoints = interval_length // scale_down
     x, y = [], []
@@ -58,25 +58,32 @@ def preprocess_ecg(ecg, scale_down):
     return ecg
 
 
+def filters(ecg, order, low_cutoff, high_cutoff, nyq):
+    b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
+    ecg = filtfilt(b, a, np.asarray(ecg))
+    b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
+    ecg = filtfilt(b, a, np.asarray(ecg))
+    return ecg
+
+
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
-    ecg1, s1 = [], []
-    ecg2, s2 = [], []
+    ecg1, s1 = [], []  # Train
+    ecg2, s2 = [], []  # Test
 
-    lines = 100000000
-    samples = 50000
+    lines = 100000000  # Maximum number of lines to read
+    samples = 50000  # Number of samples to create
     counter = 0
 
+    # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
+    # before taking random samples from the data to create the datasets.
     for x in open(os.path.join('..', 'Training', 'ecg1.txt')):
         counter += 1
         ecg1.append(float(re.findall('([-0-9.]+)', x)[-1]))
         if counter >= lines:
             break
 
-    b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low', analog=False)
-    ecg1 = filtfilt(b, a, np.asarray(ecg1))
-    b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-    ecg1 = filtfilt(b, a, np.asarray(ecg1))
+    ecg1 = filters(ecg1, order, low_cutoff, high_cutoff, nyq)
 
     counter = 0
     for x in open(os.path.join('..', 'Training', 'sig1.txt')):
@@ -92,10 +99,7 @@ if __name__ == '__main__':
         if counter >= lines:
             break
 
-    b, a = butter(N=order, Wn=low_cutoff / nyq, btype='low',  analog=False)
-    ecg2 = filtfilt(b, a, np.asarray(ecg2))
-    b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
-    ecg2 = filtfilt(b, a, np.asarray(ecg2))
+    ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
 
     counter = 0
     for x in open(os.path.join('..', 'Training', 'sig6.txt')):
@@ -106,17 +110,15 @@ if __name__ == '__main__':
 
     x_train, y_train = random_sampling(ecg1, s1, samples, interval_length, step, scale_down, stack)
 
-    x_train = np.append(x_train, -x_train, axis=0)
+    x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
+    # dataset by adding more inverted signals
     y_train = np.append(y_train, y_train, axis=0)
 
     x_test, y_test = random_sampling(ecg2, s2, samples // 3, interval_length, step, scale_down, stack)
     x_test = np.append(x_test, -x_test, axis=0)
     y_test = np.append(y_test, y_test, axis=0)
-    del s1
-    del ecg1
-    del ecg2
-    del s2
 
+    # Creates the .npy files containing the data in the Training directory
     np.save(os.path.join('..', 'Training', 'x_train'), x_train)
     np.save(os.path.join('..', 'Training', 'y_train'), y_train)
     np.save(os.path.join('..', 'Training', 'x_test'), x_test)

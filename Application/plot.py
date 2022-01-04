@@ -262,6 +262,7 @@ prev = 0
 
 every_i = 100000
 with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
+    pbar.set_description('Bytes ')
     for i, line in enumerate(file):
         if i % every_i == 0:
             pbar.update(line_size * every_i)
