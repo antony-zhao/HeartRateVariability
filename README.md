@@ -29,11 +29,11 @@ parameters in the other programs.
 Reads from a file containing ECG data and a sheet containing the timestamps of markings,
 and produces 2 files which can be used to create a dataset from.
 #### Inputs
-![Input ECG](t21%20600s.png)\
-![Input Sheet](t21%20input.png)
+![Input ECG](Format Samples/t21-600s.png)\
+![Input Sheet](Format Samples/t21-input.png)
 #### Outputs
-![Output raw ECG](ECG.png)\
-![Output markings](markings%20(training).png)
+![Output raw ECG](Format Samples/ECG.png)\
+![Output markings](Format Samples/markings-(training).png)
 
 ### dataset.py
 Creates .npy files of the train and test datasets, using the outputs from 
@@ -57,7 +57,7 @@ for example, Sample.ascii might be split into Sample001.txt, Sample002.txt, and 
 ### plot.py
 Plots markings produced by model_prediction.py, and allows for user corrections if desired.
 #### Input
-![Input](input%20to%20plot.png)
+![Input](Format Samples/input-to-plot.png)
 #### Plot
 ![Plot](Format Samples/plot.png)
 
