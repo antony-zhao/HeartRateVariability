@@ -29,11 +29,11 @@ parameters in the other programs.
 Reads from a file containing ECG data and a sheet containing the timestamps of markings,
 and produces 2 files which can be used to create a dataset from.
 #### Inputs
-![Input ECG](Format Samples/t21-600s.png)\
-![Input Sheet](Format Samples/t21-input.png)
+![Input ECG](https://i.imgur.com/haLT0uK.png)\
+![Input markings](https://i.imgur.com/e91n1oW.png)
 #### Outputs
-![Output raw ECG](Format Samples/ECG.png)\
-![Output markings](Format Samples/markings-(training).png)
+![Output raw ECG](https://i.imgur.com/MLuHYHI.png)\
+![Output markings](https://i.imgur.com/5QnkC9a.png)
 
 ### dataset.py
 Creates .npy files of the train and test datasets, using the outputs from 
@@ -50,22 +50,22 @@ the markings in case the file is too large so that the plotting program
 won't lag when displaying. These have the convention of inputfilename + number.txt, so
 for example, Sample.ascii might be split into Sample001.txt, Sample002.txt, and Sample003.txt.
 #### Input
-![Input ECG](Format Samples/ascii.png)
+![Input ECG](https://i.imgur.com/TS68fCY.png)
 #### Output
-![Output markings](Format Samples/markings.png)
+![Output markings](https://i.imgur.com/lMnUa1u.png)
 
 ### plot.py
 Plots markings produced by model_prediction.py, and allows for user corrections if desired.
 #### Input
-![Input](Format Samples/input-to-plot.png)
+![Input](https://i.imgur.com/2V9CnZ7.png)
 #### Plot
-![Plot](Format Samples/plot.png)
+![Plot](https://i.imgur.com/wo64PAk.png)
 
 ### post_processing.py
 Converts the markings from model_prediction.py into a sheet of relevant information on the heart rate variability
 on the data. Allows for selecting of multiple files together and joins them afterwards.
 #### Output
-![Sheet](Format Samples/sheet.png)
+![Sheet](https://i.imgur.com/3XuqSBx.png)
 
 
 ## Contact Me
