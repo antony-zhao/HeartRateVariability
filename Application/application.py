@@ -1,6 +1,10 @@
 import tkinter as tk
 import os
 
+"""
+Simple interface, just launches the other programs.
+"""
+
 root = tk.Tk()
 
 
@@ -19,7 +23,7 @@ def excel():
 canvas = tk.Canvas(root, height=100, width=450)
 canvas.pack()
 
-prediction = tk.Button(root, text="Prediction for Signal", padx=2, pady=10,
+prediction = tk.Button(root, text="ECG Markings", padx=2, pady=10,
                        relief="raised", width=15, command=model_predict)
 prediction.place(relx=0.1, rely=0.1)
 

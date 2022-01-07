@@ -1,0 +1,8 @@
+numpy==1.21.2
+matplotlib==3.4.3
+tqdm==4.62.3
+scipy==1.7.1
+tensorflow==2.5.0
+tensorflow-gpu==2.5.0
+xlsxwriter==3.0.1
+xlrd==1.2.0

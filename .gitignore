@@ -151,3 +151,4 @@ cython_debug/
 /Application/.idea/
 .idea/
 /Application/TODO
+*.png
