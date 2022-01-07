@@ -14,13 +14,17 @@ import multiprocessing as mp
 import json
 import tqdm
 from functools import partial
-from config import interval_length
+from config import interval_length, max_dist_percentage
 
 """
 After the model_prediction.py program splits the data into multiple files, this
 program uses multiprocessing to process multiple files in parallel and rejoins the
 final data into a single excel sheet.
 """
+
+min_dist = 1 - max_dist_percentage
+max_double_dist = 2 * min_dist
+max_dist = 1 + max_dist_percentage
 
 
 def process_file(filenames, filename):
@@ -50,13 +54,13 @@ def process_file(filenames, filename):
 
         signal = int(temp[-1])
         if signal == 1:
-            if dist > 0.8 * avg_interval_length or dist == 1 or first:  # This would mean that the signal is correct
+            if dist > min_dist * avg_interval_length or dist == 1 or first:  # This would mean that the signal is correct
                 if dist == 1:  # For the areas where the signal is marked multiple times
                     dist = 0
                 else:
-                    if dist > 1.7 * avg_interval_length:  # This indicates that the gap is too large
+                    if dist > max_double_dist * avg_interval_length:  # This indicates that the gap is too large
                         lines.append((date, ''))  #
-                    elif 1.2 * avg_interval_length < dist < 1.7 * avg_interval_length:  # For when one beat is missed and the
+                    elif 1.2 * avg_interval_length < dist < max_double_dist * avg_interval_length:  # For when one beat is missed and the
                         # next one is also wrong
                         continue
                     else:
@@ -67,7 +71,7 @@ def process_file(filenames, filename):
 
             else:
                 reset = True
-            if 1.2 * avg_interval_length > dist > 0.8 * avg_interval_length:
+            if max_dist * avg_interval_length > dist > min_dist * avg_interval_length:
                 last_few.append(dist)  # Add the distance to the running average
             dist = 0  # Reset distance between last and current signal
             if first:

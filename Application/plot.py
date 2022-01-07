@@ -49,21 +49,21 @@ class Events:
         self.ind_mismarked = -1  # Index of mismarked
         self.unmarked = []  # Indices of the unmarked and mismarked peaks
         self.mismarked = []
-        self.x_right = 6000  # Right and left bounds of window
+        self.default_length = 15 * interval_length
+        self.x_right = 15 * interval_length  # Right and left bounds of window
         self.x_left = 0
         self.actions = []  # Actions to be processed into the file after the plot is closed
         self.adding = False  # Following are toggling which of the modes are on
         self.removing = False
         self.clean = False
-        self.width = 3000  # The window width (number of datapoints)
 
     def next_unmarked(self, event):
         """Jumps to the next unmarked region in the plot"""
         self.ind_unmarked = (self.ind_unmarked + 1) % len(self.unmarked)
         val, dist = self.unmarked[self.ind_unmarked]
-        length = min(2000, dist * 50)
-        if length < 600:
-            length = 200
+        length = min(self.default_length, dist * 50)
+        if length < int(interval_length * 1.5):
+            length = interval_length // 2
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
@@ -79,9 +79,9 @@ class Events:
         """Jumps to next mismarked region in the graph."""
         self.ind_mismarked = (self.ind_mismarked + 1) % len(self.mismarked)
         val, dist = self.mismarked[self.ind_mismarked]
-        length = min(2000, dist * 50)
-        if length < 600:
-            length = 200
+        length = min(self.default_length, dist * 50)
+        if length < int(interval_length * 1.5):
+            length = interval_length // 2
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
@@ -97,9 +97,9 @@ class Events:
         """Jumps to previous unmarked region"""
         self.ind_unmarked = (self.ind_unmarked - 1) % len(self.unmarked)
         val, dist = self.unmarked[self.ind_unmarked]
-        length = min(2000, dist * 50)
-        if length < 600:
-            length = 200
+        length = min(self.default_length, dist * 50)
+        if length < int(interval_length * 1.5):
+            length = interval_length // 2
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
@@ -115,9 +115,9 @@ class Events:
         """Jumps to previous mismarked region"""
         self.ind_mismarked = (self.ind_mismarked - 1) % len(self.mismarked)
         val, dist = self.mismarked[self.ind_mismarked]
-        length = min(2000, dist * 50)
-        if length < 600:
-            length = 200
+        length = min(self.default_length, dist * 50)
+        if length < int(interval_length * 1.5):
+            length = interval_length // 2
         axs.axis([val - length, val + length, -0.5, 1])
         self.x_left = val - length
         self.x_right = val + length
