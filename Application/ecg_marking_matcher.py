@@ -22,11 +22,15 @@ page = wb.sheet_by_index(0)  # The excel page for the relevant data
 row = 1  # The row of the dates in the excel sheet
 
 xl_date = xlrd.xldate_as_datetime(page.cell_value(row, 0), wb.datemode)
+header = True  # For handling if the line is a header or if it is actual data
 
 with open(ascii_file_name, 'r') as ascii_file:
     for line in ascii_file:
-        if line[0] == '#' or len(line) == 1:  # Skips through comments and empty lines in the beginning
+        if header or re.match('\\s*[\\d\\s/:.APM]+,[-\\s\\dx.,]*[-\\s\\dx.]\n', line) is None:
+            # Skips through the header in the beginning, probably need to edit regex to match data.
             continue
+        else:
+            header = False
         reg = re.findall('([0-9:./APMx-]+)', line)
         date = reg[0] + ' ' + reg[1] + ' ' + reg[2]
         date = dt.strptime(date, "%m/%d/%Y %I:%M:%S.%f %p")  # The date, to match with the excel data, and output a

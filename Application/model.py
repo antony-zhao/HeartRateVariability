@@ -78,7 +78,13 @@ model.summary()
 def distance(y_true, y_labels):
     """Distance metric for training, displays the average
     absolute distance between the true and predicted peak."""
-    return K.mean(K.abs(K.argmax(y_true) - K.argmax(y_labels)))
+    return K.mean(K.abs(K.argmax(y_true, axis=0) - K.argmax(y_labels, axis=0)))
+
+
+def magnitude(y_true, y_labels):
+    """Metric for what the magnitudes of the labels are, as having smaller ones
+    can make it harder for model_prediction to work"""
+    return K.mean(K.max(y_labels * y_true, axis=0))
 
 
 def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
@@ -102,7 +108,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     global model
     optim = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
     model.compile(optimizer=optim, loss='binary_crossentropy',
-                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance])
+                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance, magnitude])
     vd = ModelCheckpoint(model_file + '_val_distance.h5', monitor='val_distance', mode='min', verbose=1,
                          save_best_only=True)
     vc = ModelCheckpoint(model_file + '_val_cat_acc.h5', monitor='val_categorical_accuracy', mode='max', verbose=1,
@@ -154,4 +160,4 @@ if __name__ == '__main__':
     x_test = np.load(os.path.join('..', 'Training', 'x_test.npy'))
     y_test = np.load(os.path.join('..', 'Training', 'y_test.npy'))
 
-    train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test)
+    train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)

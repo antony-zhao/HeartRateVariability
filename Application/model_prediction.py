@@ -65,7 +65,12 @@ def read_ecg(ecg_file, count):
         if len(line) == 0:  # Signifies an end of the file
             e = True
             break
-        temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
+        try:
+            temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
+        except IndexError:
+            print(line)
+            input("Press enter to exit")
+            exit()
         # otherwise this just reads the the signal value
         ecg[i] = 0 if temp == 'x' else float(temp)
         datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
@@ -88,7 +93,7 @@ def write_signal(sig_file, datetime, sig, ecg):
         d = datetime[i]
         e = ecg[i]
         s = sig[i]
-        if s > 0.1:  # Minimum value of the signal before other checks.
+        if s > 0.1:  # Minimum value of the signal before other checks. May need to adjust this value.
             if dist < min_dist * np.mean(average_interval):
                 if first:  # The very first signal
                     s = 1
@@ -119,9 +124,10 @@ for i in range(stack - 1):   # Initializes the values to just be 0's. (The datas
     # data)
     ecg_deque.append(np.zeros(datapoints, ))
 
-# Skips through empty lines and comments, in our case comments are '#'
+# Skips through the header if it exists, goes until it reads a line of data (probably need to change regex depending on
+# data)
 read = ''
-while len(read) <= 1 or read[0] == '#':
+while re.match('\\s*[\\d\\s/:.APM]+,[-\\s\\dx.,]*[-\\s\\dx.]\n', read) is None:
     read = file.readline()
 
 file_loc = file.tell()
@@ -199,7 +205,7 @@ end = time.time()
 f.close()
 
 print('elapsed time: ' + str(end - start) + ' seconds')
-input('Press enter to continue')
+input('Press enter to continue (may need 2 times)')
 
 del model
 tf.keras.backend.clear_session()
