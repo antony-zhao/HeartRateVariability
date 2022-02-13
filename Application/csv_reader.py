@@ -9,6 +9,8 @@ class csvReader:
         or through prompting the user.
         :param file: The file which will be read from
         """
+        if isinstance(file, str):
+            file = open(file, 'r+')
         self.file = file
         self.read_header()
         loc = self.file.tell()
@@ -31,8 +33,13 @@ class csvReader:
         :return: The ECG from the line
         """
         line = self.file.readline()
+        if len(line) == 0:
+            raise StopIteration
         items = re.split(',\\s*', line)
-        return float(items[self.column])
+        try:  # Handles the few cases where there might be multiple string labels for columns
+            return float(items[self.column])
+        except ValueError:
+            return self.read_line()
 
     def read_header(self):
         """
@@ -72,12 +79,40 @@ class csvReader:
         print('Data:')
         for line in lines:
             print(line, end='')
-        ecg_column = int(input('Which column contains ECG data (first column as column 1):  '))
+
+        def prompt_helper():
+            """
+            Helper function that deals with misinputs
+            :return: The column that the user selects
+            """
+            try:
+                ecg_column = int(input('Which column contains ECG data (first column as column 1):  '))
+            except ValueError:
+                print("Please input a proper value")
+                ecg_column = prompt_helper()
+            if ecg_column <= 0 or ecg_column > self.columns:
+                print("Please input a proper value")
+                ecg_column = prompt_helper()
+            return ecg_column
+
         self.file.seek(loc)
-        return ecg_column - 1
+        return prompt_helper() - 1
+
+    def __iter__(self):
+        """
+        Returns itself as the iterator object
+        """
+        return self
+
+    def __next__(self):
+        """
+        Returns the next value from the file (for the purpose of an iterator)
+        :return: The next value from the file (as defined by read_line), and raises an StopIteration at end of file.
+        """
+        return self.read_line()
 
 
 if __name__ == '__main__':
-    reader = csvReader(open('../ECG_Data/T21_transition example3_900s.ascii', 'r'))
+    reader = csvReader('../ECG_Data/T21_transition example3_900s.ascii')
     for i in range(20):
         print(reader.read_line())

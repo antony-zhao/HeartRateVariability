@@ -137,7 +137,6 @@ class Events:
             except TypeError:
                 return
             if ind != 0:
-                # rad = int(self.dist[self.ind] // 50 + 3)
                 rad = 8
                 self.actions.append(('delete', ind, rad))
                 remove(ind, radius=rad)
