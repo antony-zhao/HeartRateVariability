@@ -65,12 +65,7 @@ def read_ecg(ecg_file, count):
         if len(line) == 0:  # Signifies an end of the file
             e = True
             break
-        try:
-            temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
-        except IndexError:
-            print(line)
-            input("Press enter to exit")
-            exit()
+        temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
         # otherwise this just reads the the signal value
         ecg[i] = 0 if temp == 'x' else float(temp)
         datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
