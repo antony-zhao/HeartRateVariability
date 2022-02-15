@@ -37,7 +37,6 @@ root.destroy()
 root = tk.Tk()
 root.withdraw()
 folder_selected = filedialog.askdirectory()
-print(folder_selected)
 
 filename = filename[len(filename) - filename[::-1].index('/'):filename.index('.')]  # Gets the name of the file itself
 # without the full path
