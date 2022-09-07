@@ -63,7 +63,7 @@ def filters(ecg, order, low_cutoff, high_cutoff, nyq):
     ecg = filtfilt(b, a, np.asarray(ecg))
     b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high', analog=False)
     ecg = filtfilt(b, a, np.asarray(ecg))
-    return ecg
+    return ecg / np.max(ecg)
 
 
 if __name__ == '__main__':

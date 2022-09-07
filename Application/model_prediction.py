@@ -30,6 +30,8 @@ root.filename = filedialog.askopenfilename(initialdir=str(par) + r'\ECG_Data', t
                                            filetypes=(('ascii files', '*.ascii'), ('txt files', '*.txt'),
                                                       ('all files', '*.*')))
 filename = root.filename
+if len(filename) == 0:
+    exit(0)
 file = open(os.path.join('..', 'ECG_Data', filename), 'r')
 file_size = os.stat(filename).st_size
 root.destroy()

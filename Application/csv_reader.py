@@ -37,6 +37,8 @@ class csvReader:
             raise StopIteration
         items = re.split(',\\s*', line)
         try:  # Handles the few cases where there might be multiple string labels for columns
+            if 'x' in items[self.column]:
+                return 0
             return float(items[self.column])
         except ValueError:
             return self.read_line()

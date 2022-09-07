@@ -231,18 +231,19 @@ plt.show()
 
 file.close()
 
-ecg_file = open(ecg_filepath, 'w+')
-markings_file = open(markings_filepath, 'w+')
+if 1 in signal:
+    ecg_file = open(ecg_filepath, 'w+')
+    markings_file = open(markings_filepath, 'w+')
 
-with tqdm.tqdm(total=len(ecg)) as pbar:
-    pbar.set_description('Lines written ')
-    i = 0
-    for ecg_point, marking in zip(ecg, signal):
-        i += 1
-        if i % every_i == 0:
-            pbar.update(every_i)
-        ecg_file.write(str(ecg_point) + '\n')
-        markings_file.write(str(marking) + '\n')
+    with tqdm.tqdm(total=len(ecg)) as pbar:
+        pbar.set_description('Lines written ')
+        i = 0
+        for ecg_point, marking in zip(ecg, signal):
+            i += 1
+            if i % every_i == 0:
+                pbar.update(every_i)
+            ecg_file.write(str(ecg_point) + '\n')
+            markings_file.write(str(marking) + '\n')
 
-ecg_file.close()
-markings_file.close()
+    ecg_file.close()
+    markings_file.close()

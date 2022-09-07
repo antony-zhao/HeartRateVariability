@@ -12,12 +12,12 @@ import matplotlib
 from pathlib import Path
 import tqdm
 from config import interval_length, low_cutoff, high_cutoff, nyq, order, max_dist_percentage
+from dataset import filters
 
 '''
 Plotting program for ECG signals, also marks some regions where the program might have messed up for optional human 
 review, though the final post_processing.py program skips over the messed up regions.
 '''
-b, a = butter(N=order, Wn=[low_cutoff/nyq, high_cutoff/nyq], btype='bandpass', analog=False)  # Filter parameters
 
 root = tk.Tk()  # Prompts user to select file
 currdir = os.getcwd()
@@ -27,6 +27,8 @@ root.filename = filedialog.askopenfilename(initialdir=signal_dir, title="Select 
                                            filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 matplotlib.use('Qt5Agg')
 filename = root.filename
+if len(filename) == 0:
+    exit(0)
 file_size = os.stat(filename).st_size
 root.destroy()
 
@@ -309,10 +311,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
 plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
          .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))
 
-b, a = butter(N=order, Wn=low_cutoff/nyq, btype='low', analog=False)
-ecg = filtfilt(b, a, np.asarray(ecg))
-b, a = butter(N=order, Wn=high_cutoff/nyq, btype='high', analog=False)
-ecg = filtfilt(b, a, np.asarray(ecg))
+ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
 
 axs.plot(range(len(ecg)), ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
