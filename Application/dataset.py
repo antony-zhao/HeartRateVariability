@@ -1,7 +1,6 @@
 import numpy as np
 import re
 import os
-import json
 import random
 from scipy.signal import filtfilt, butter
 from config import interval_length, step, stack, scale_down, datapoints, \

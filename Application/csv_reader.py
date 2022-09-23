@@ -2,7 +2,7 @@ import re
 
 
 class csvReader:
-    def __init__(self, file):
+    def __init__(self, file, read_line=False):
         """
         Initializes the reader, reading through any potential header,
         and saving the column which contains the ECG data either by the column labels
@@ -13,6 +13,7 @@ class csvReader:
             file = open(file, 'r+')
         self.file = file
         self.read_header()
+        self.read_whole_line = read_line
         loc = self.file.tell()
         temp_line = self.file.readline()
         self.file.seek(loc)
@@ -22,7 +23,7 @@ class csvReader:
         for i in range(self.columns):
             if 'ECG' in temp_items[i] or 'ecg' in temp_items[i]:
                 self.column = i
-        if self.column == -1:
+        if self.column == -1 and not read_line:
             self.ecg_column = self.prompt_user()
         else:
             self.file.readline()
@@ -33,6 +34,8 @@ class csvReader:
         :return: The ECG from the line
         """
         line = self.file.readline()
+        if self.read_whole_line:
+            return line
         if len(line) == 0:
             raise StopIteration
         items = re.split(',\\s*', line)
