@@ -9,7 +9,7 @@ max_dist_percentage = 0.15  # Maximum amount the R peaks can vary
 # https://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html and
 # experimented with to find the current parameters.
 T = 0.1  # Sample Period
-fs = 4000.0  # Sample rate, Hz
+fs = 4000  # Sample rate, Hz
 nyq = fs * 0.5  # Nyquist Frequency
 high_cutoff = 1
 low_cutoff = 30
