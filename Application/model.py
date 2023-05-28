@@ -2,7 +2,7 @@ import os
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
-    Activation, BatchNormalization, Input
+    Activation, BatchNormalization, Input, GRU, Bidirectional, MultiHeadAttention
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
@@ -15,62 +15,29 @@ if len(physical_devices) > 0:
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
-class Res1D(tf.keras.layers.Layer):
-    """Optional 1D Residual layer for Keras."""
-
-    def __init__(self, filters, kernel_size):
-        super(Res1D, self).__init__()
-        self.filters = filters
-        self.kernel_size = kernel_size
-        self.res = Sequential()
-
-    def build(self, input_shape):
-        self.res.add(
-            Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same', input_shape=input_shape[1:]))
-        self.res.add(BatchNormalization(axis=1))
-        self.res.add(Activation('relu'))
-        self.res.add(Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same'))
-        self.res.add(BatchNormalization(axis=1))
-        self.res.add(Activation('relu'))
-        self.res.add(Conv1D(filters=self.filters, kernel_size=self.kernel_size, padding='same'))
-        self.res.add(BatchNormalization(axis=1))
-
-    def call(self, inputs, training=None):
-        x = self.res(inputs, training=training)
-        x += inputs
-        return tf.nn.relu(x)
-
-    def get_config(self):
-        return {'filters': self.filters, 'kernel_size': self.kernel_size}
-
-
 model = Sequential()  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack), filters=stack * 2, kernel_size=datapoints // 25, strides=1, padding='same'))
+    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=datapoints // 25, strides=2, padding='same'))
 model.add(BatchNormalization(axis=1))
 model.add(MaxPooling1D())
-model.add(Conv1D(filters=stack * 4, kernel_size=datapoints // 20, strides=1, padding='same'))
-model.add(BatchNormalization(axis=1))
-model.add(MaxPooling1D())
+model.add(Conv1D(filters=stack * 4, kernel_size=datapoints // 20, strides=2, padding='same'))
+model.add(BatchNormalization())
+model.add(MaxPooling1D(strides=1))
 model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, padding='same'))
 model.add(BatchNormalization(axis=1))
-model.add(MaxPooling1D())
-model.add(Conv1D(filters=stack * 16, kernel_size=datapoints // 20, strides=1, padding='same'))
-model.add(BatchNormalization(axis=1))
-model.add(MaxPooling1D())
+model.add(MaxPooling1D(strides=1))
+# model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, padding='same'))
+# model.add(BatchNormalization(axis=1))
+# model.add(MaxPooling1D())
+model.add(
+    GRU(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
+model.add(Activation('relu'))
+model.add(BatchNormalization())
+model.add(Dropout(0.5))
 model.add(Flatten())
-model.add(
-    Dense(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(
-    Dense(units=datapoints * 2, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(interval_length, use_bias=False, kernel_initializer='glorot_normal'))
+model.add(Dense(interval_length, kernel_initializer='glorot_normal'))
 model.add(Activation('sigmoid'))
+
 
 model.summary()
 
@@ -106,8 +73,8 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
             (default is False)
     """
     global model
-    optim = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
-    model.compile(optimizer=optim, loss='binary_crossentropy',
+    optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optim, loss=['binary_crossentropy'],
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', distance, magnitude])
     vd = ModelCheckpoint(model_file + '_val_distance.h5', monitor='val_distance', mode='min', verbose=1,
                          save_best_only=True)
@@ -121,6 +88,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
                         validation_data=(x_test, y_test), callbacks=[vd, vc, vk, vl, reducelr])
 
+    model.load_weights('model_val_loss.h5')
     if plot:  # Optional plotting to visualize and verify the model.
         plt.plot(history.history['top_k_categorical_accuracy'])
         plt.plot(history.history['val_top_k_categorical_accuracy'])
@@ -138,8 +106,11 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
         plt.show()
 
         for i in range(10):
-            plt.plot(x_test[i, :, -1])
-            sig = model.predict(x_test[i][np.newaxis, :, :])[0]
+            plt.plot(x_train[i, :, -2])
+            sig = model.predict(x_train[i][np.newaxis, :, :])[0]
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+            plt.plot(sig)
+            sig = y_train[i]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
             plt.plot(sig)
             plt.show()
@@ -152,9 +123,9 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 if __name__ == '__main__':
     model_file = 'model'
 
-    epochs = 120
+    epochs = 50
     batch_size = 64
-    learning_rate = 2e-5
+    learning_rate = 1e-4
     x_train = np.load(os.path.join('..', 'Training', 'x_train.npy'))
     y_train = np.load(os.path.join('..', 'Training', 'y_train.npy'))
     x_test = np.load(os.path.join('..', 'Training', 'x_test.npy'))
