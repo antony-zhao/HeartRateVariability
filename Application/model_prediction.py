@@ -4,7 +4,8 @@ import os
 import re
 from scipy.signal import filtfilt, butter
 import tensorflow as tf
-from model import model
+from tensorflow.keras.models import load_model
+
 from dataset import preprocess_ecg, filters
 import time
 from collections import deque
@@ -13,14 +14,15 @@ from tkinter import filedialog
 import tqdm
 from pathlib import Path
 from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, animal, threshold
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
 
 file_num = 1
 update_freq = 10
-model.load_weights('mice_model.h5')
+# model = keras.models.load_model(f'{animal}_model', compile=False)
+model = load_model('model_val_top_k', compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -67,7 +69,7 @@ def read_ecg(ecg_file, count):
             e = True
             break
         temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
-        # otherwise this just reads the the signal value
+        # otherwise this just reads the signal value
         ecg[i] = 0 if temp == 'x' else float(temp)
         datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
         # and transferred to the output file.
@@ -78,9 +80,9 @@ def write_signal(sig_file, datetime, sig, ecg):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
     global dist
     global first
-    # plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
-    # plt.plot(sig)
-    # plt.show()
+    plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
+    plt.plot(sig)
+    plt.show()
     # The maximum amount we think the signal can differ by, our default is 0.2 so we don't believe any 'signal'
     # with a distance of 0.8-1.2 from the previous is real and so we omit it.
     min_dist = 1 - max_dist_percentage
@@ -89,7 +91,7 @@ def write_signal(sig_file, datetime, sig, ecg):
         d = datetime[i]
         e = ecg[i]
         s = sig[i]
-        if s > 0.2:  # Minimum value of the signal before other checks. May need to adjust this value.
+        if s >= threshold:  # Minimum value of the signal before other checks. May need to adjust this value.
             if dist < min_dist * np.mean(average_interval):
                 if first:  # The very first signal
                     s = 1
@@ -184,7 +186,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         signal[signal < 0.1] = 0
         ecg_segment = ecg_segment[step:]
         filtered_ecg_segment = filtered_ecg_segment[step:]
-        if ecg_segment.size > 0:
+        if ecg_segment.size > interval_length:
             curr_segment = ecg_temp[:]
             curr_filt = filtered_temp[:]
             ecg_temp = ecg_temp[step:]
@@ -200,6 +202,8 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
             if iter % update_freq == 0:
                 pbar.update(line_size * len(datetime_segment) * update_freq)
             filtered_ecg_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
+            ecg_segment = np.pad(ecg_segment, (0, interval_length), constant_values=(0, 0))
+            filtered_ecg_segment = np.pad(filtered_ecg_segment, (0, interval_length), constant_values=(0, 0))
             curr_segment = ecg_temp[:]
             curr_filt = filtered_temp[:]
             ecg_deque[-1] = preprocess_ecg(np.asarray(curr_segment), scale_down)
@@ -221,7 +225,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
             f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
 
 # Writes the final few datapoints into the file, and closes it
-write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], ecg_temp[:interval_length - step])
+write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], curr_segment)
 end = time.time()
 
 

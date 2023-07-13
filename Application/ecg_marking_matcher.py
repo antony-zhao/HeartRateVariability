@@ -12,10 +12,10 @@ other containing the R-peaks, each line corresponding to the same line in the ot
 total_count = 10000000  # Maximum lines to copy over
 count = 0  # Current number of lines
 
-xl_file = os.path.join('..', 'Signal', 'RAT #01_2021_baseline_EPOCH DATA.xlsx')  # Data files
-ecg_file_name = os.path.join('..', 'ECG_Data', 'RAT #01_2021_baseline.ascii')
-ecg_file = open(os.path.join('..', 'Training', 'ecg_rat.txt'), 'w')  # Output files
-signal_file = open(os.path.join('..', 'Training', 'sig_rat.txt'), 'w')
+xl_file = os.path.join('..', 'Signal', 'RAT #12_2016_WK4_EPOCH DATA.xlsx')  # Data files
+ecg_file_name = os.path.join('..', 'ECG_Data', 'RAT #12_2016_WK4.ascii')
+ecg_file = open(os.path.join('..', 'Training', 'rat_ecg_val.txt'), 'w')  # Output files
+signal_file = open(os.path.join('..', 'Training', 'rat_sig_val.txt'), 'w')
 
 wb = xlrd.open_workbook(xl_file)
 page = wb.sheet_by_index(6)  # The excel page for the relevant data

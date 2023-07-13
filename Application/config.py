@@ -1,16 +1,44 @@
-interval_length = 400  # The average distance between each R-wave. Also the size of the input given into the model
-stack = 4  # How many signals to stack, effectively adding a temporal dimension
-step = 400  # The amount of data to jump by (before scale_down). For example, (0, 400) -> (200, 600)
-scale_down = 4  # Optional, to reduce the amount of data. Averages every (scale_down) datapoints into one.
-datapoints = interval_length // scale_down  # Resulting number of datapoints per stack
-lines_per_file = 5000000  # The number of lines per file the model_prediction program creates
-max_dist_percentage = 0.15  # Maximum amount the R peaks can vary
-# Remaining are the filter parameters, example from
-# https://scipy-cookbook.readthedocs.io/items/ButterworthBandpass.html and
-# experimented with to find the current parameters.
-T = 0.1  # Sample Period
-fs = 4000  # Sample rate, Hz
-nyq = fs * 0.5  # Nyquist Frequency
-high_cutoff = 10
-low_cutoff = 100
-order = 1  # sin wave can be approx represented as quadratic
+from configparser import SafeConfigParser
+import configparser
+import os
+
+parser = SafeConfigParser()
+parser.read('selector.ini')
+animal = parser.get('Animal', 'animal')
+
+parser.read(f'{animal}_config.ini')
+
+interval_length = int(parser.get('Signal Parameters', 'interval_length'))
+
+stack = int(parser.get('Model Parameters', 'stack'))
+scale_down = int(parser.get('Model Parameters', 'scale_down'))
+datapoints = interval_length // scale_down
+
+step = int(parser.get('Model Prediction Parameters', 'step'))
+lines_per_file = int(parser.get('Model Prediction Parameters', 'lines_per_file'))
+max_dist_percentage = float(parser.get('Model Prediction Parameters', 'max_dist_percentage'))
+threshold = float(parser.get('Model Prediction Parameters', 'threshold'))
+
+T = float(parser.get('Filter Parameters', 'T'))
+fs = int(parser.get('Filter Parameters', 'fs'))
+nyq = fs * 0.5
+high_cutoff = int(parser.get('Filter Parameters', 'high_cutoff'))
+low_cutoff = int(parser.get('Filter Parameters', 'low_cutoff'))
+order = int(parser.get('Filter Parameters', 'order'))
+
+if __name__ == '__main__':
+    # To change the selector
+    cwd = os.getcwd()
+    for file in os.listdir(cwd):
+        if file.endswith('.ini') and not file.startswith('selector'):
+            print(file)
+    print('Existing configs (change the selector to match one of the prefixes)')
+    animal = input()
+    if os.path.exists(f'{animal}_config.ini'):
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read('selector.ini')
+        config.set('Animal', '; Should be the prefix of the config file the program should use, as in {'
+                             'animal}_config.ini is what is loaded by the program')
+        config.set('Animal', 'animal', animal)
+        with open('selector.ini', 'w') as configfile:
+            config.write(configfile)
