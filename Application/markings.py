@@ -12,7 +12,7 @@ import matplotlib
 from pathlib import Path
 import tqdm
 from csv_reader import csvReader
-from config import interval_length, low_cutoff, high_cutoff, nyq, order
+from config import window_size, low_cutoff, high_cutoff, nyq, order
 
 '''
 Base program for adding markings to data. Automatically splits into text files containing only
@@ -56,8 +56,8 @@ signals = []  # Indices of peaks in signals
 class Events:
     """Class for an interactive pyplot to handle click, scroll, etc. events."""
     def __init__(self):
-        self.default_length = 15 * interval_length
-        self.x_right = 15 * interval_length  # Right and left bounds of window
+        self.default_length = 15 * window_size
+        self.x_right = 15 * window_size  # Right and left bounds of window
         self.x_left = 0
         self.adding = False  # Following are toggling which of the modes are on
         self.removing = False

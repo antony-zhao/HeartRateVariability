@@ -12,9 +12,9 @@ interval_length = int(parser.get('Signal Parameters', 'interval_length'))
 
 stack = int(parser.get('Model Parameters', 'stack'))
 scale_down = int(parser.get('Model Parameters', 'scale_down'))
-datapoints = interval_length // scale_down
+window_size = int(parser.get('Model Parameters', 'window_size'))
+datapoints = window_size // scale_down
 
-step = int(parser.get('Model Prediction Parameters', 'step'))
 lines_per_file = int(parser.get('Model Prediction Parameters', 'lines_per_file'))
 max_dist_percentage = float(parser.get('Model Prediction Parameters', 'max_dist_percentage'))
 threshold = float(parser.get('Model Prediction Parameters', 'threshold'))

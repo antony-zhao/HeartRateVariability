@@ -14,7 +14,7 @@ import multiprocessing as mp
 import json
 import tqdm
 from functools import partial
-from config import interval_length, max_dist_percentage
+from config import window_size, max_dist_percentage
 
 """
 After the model_prediction.py program splits the data into multiple files, this

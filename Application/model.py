@@ -10,15 +10,37 @@ import numpy as np
 from matplotlib import pyplot as plt
 import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from config import interval_length, stack, scale_down, datapoints, animal
+from config import window_size, stack, scale_down, datapoints, animal
 import tensorflow.keras.backend as tfb
 from tensorflow.keras.utils import get_custom_objects
+
+import keras_tuner
 
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-POS_WEIGHT = 50  # multiplier for positive targets, needs to be tuned
+POS_WEIGHT = 10  # multiplier for positive targets, needs to be tuned
+
+
+def f1(y_true, y_pred):
+    def recall_m(y_true, y_pred):
+        TP = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        Positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+
+        recall = TP / (Positives + K.epsilon())
+        return recall
+
+    def precision_m(y_true, y_pred):
+        TP = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        Pred_Positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+
+        precision = TP / (Pred_Positives + K.epsilon())
+        return precision
+
+    precision, recall = precision_m(y_true, y_pred), recall_m(y_true, y_pred)
+
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
 def weighted_binary_crossentropy(target, output):
@@ -46,26 +68,60 @@ def weighted_binary_crossentropy(target, output):
 
 model = Sequential()  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=datapoints // 25, strides=2,
-           padding='same', activation='relu'))
-model.add(BatchNormalization(axis=1))
-model.add(MaxPooling1D())
-model.add(Conv1D(filters=stack * 4, kernel_size=datapoints // 20, strides=2, padding='same', kernel_regularizer='l2',
+    Conv1D(input_shape=(datapoints, stack * 2), filters=32, kernel_size=9, strides=2,
+           padding='same', activation='relu',))
+model.add(BatchNormalization())
+model.add(MaxPooling1D(strides=2))
+model.add(Conv1D(filters=64, kernel_size=7, strides=1, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=stack * 8, kernel_size=datapoints // 20, strides=1, padding='same', kernel_regularizer='l2',
+model.add(Conv1D(filters=128, kernel_size=5, strides=1, padding='same',
                  activation='relu'))
-model.add(BatchNormalization(axis=1))
+model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
+model.add(Conv1D(filters=256, kernel_size=3, strides=1, padding='same',
+                 activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling1D(strides=2))
+model.add(Flatten())
 model.add(
-    GRU(units=datapoints, kernel_regularizer='l2', activity_regularizer='l2', kernel_initializer='glorot_normal'))
+    Dense(units=512))
+model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
+model.add(
+    Dense(units=datapoints))
 model.add(Dropout(0.5))
-model.add(Flatten())
-model.add(Dense(interval_length))
-model.add(Activation('sigmoid'))
+model.add(Activation('relu'))
+model.add(BatchNormalization())
+model.add(Dense(window_size))
+
+# model = Sequential()  # The main model used for detecting R peaks.
+# model.add(
+#     Conv1D(input_shape=(datapoints, stack * 2), filters=16, kernel_size=7, strides=2,
+#            padding='same', activation='relu'))
+# model.add(BatchNormalization())
+# model.add(MaxPooling1D(strides=2))
+# model.add(Conv1D(filters=32, kernel_size=5, strides=1, padding='same', kernel_regularizer='l2',
+#                  activation='relu'))
+# model.add(BatchNormalization())
+# model.add(Conv1D(filters=64, kernel_size=3, strides=1, padding='same', kernel_regularizer='l2',
+#                  activation='relu'))
+# model.add(BatchNormalization())
+# model.add(MaxPooling1D(strides=2))
+# model.add(Conv1D(filters=128, kernel_size=3, strides=1, padding='same', kernel_regularizer='l2',
+#                  activation='relu'))
+# model.add(BatchNormalization())
+# model.add(MaxPooling1D(strides=2))
+# model.add(Flatten())
+# model.add(
+#     Dense(units=datapoints, kernel_regularizer='l2', kernel_initializer='glorot_normal', activity_regularizer='l2'))  #
+# model.add(Activation('relu'))
+# model.add(BatchNormalization())
+# model.add(Dropout(0.5))
+# model.add(Dense(window_size))
+# model.add(Activation('sigmoid'))
 
 model.summary()
 
@@ -79,7 +135,8 @@ def distance(y_true, y_labels):
 def magnitude(y_true, y_labels):
     """Metric for what the magnitudes of the labels are, as having smaller ones
     can make it harder for model_prediction to work"""
-    return K.mean(K.max(y_labels * y_true, axis=0))
+    x = K.mean(K.max(y_labels, axis=1) * K.max(y_true, axis=1))
+    return 1 / (1 + K.exp(-x))
 
 
 def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
@@ -102,22 +159,22 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     """
     global model
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy})
-    model.compile(optimizer=optim, loss=weighted_binary_crossentropy,
-                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude])
-    # vd = ModelCheckpoint(model_file + '_val_distance', monitor='val_distance', mode='min', verbose=1,
-    #                      save_best_only=True)
-    # vc = ModelCheckpoint(model_file + '_val_cat_acc', monitor='val_categorical_accuracy', mode='max', verbose=1,
-    #                      save_best_only=True)
+    get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy,
+                                 'magnitude': magnitude, 'distance': distance})
+    model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude,
+                           tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
+    va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
+                         save_best_only=True)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True)
-    vl = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
+    vm = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
                          save_best_only=True)
-    reducelr = ReduceLROnPlateau()
+    reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[vk, reducelr])
+                        validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr], shuffle=True)
 
-    model_top_k = keras.models.load_model('model_val_top_k')
+    model_top_k = keras.models.load_model('model_val_auc')
     if plot:  # Optional plotting to visualize and verify the model.
         plt.plot(history.history['top_k_categorical_accuracy'])
         plt.plot(history.history['val_top_k_categorical_accuracy'])
@@ -134,46 +191,38 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
         plt.legend(['train', 'val'], loc='upper left')
         plt.show()
 
+        def sigmoid(x):
+            return 1 / (1 + np.exp(-x))
+
         for i in range(5):
-            plt.plot(x_test[i, :, -2], label='filtered')
+            plt.plot(x_test[i, :, -stack // 2], label='filtered')
             sig = model.predict(x_test[i][np.newaxis, :, :])[0]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sig, label='prediction')
+            plt.plot(sigmoid(sig), label='prediction')
             sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sig, label='top_k_prediction')
+            plt.plot(sigmoid(sig), label='top_k_prediction')
             sig = y_test[i]
-            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
+            sig /= -np.max(sig) * 2
             plt.plot(sig, label='truth')
             plt.legend()
             plt.show()
 
-        # for i in range(5):
-        #     plt.plot(x_train[i, :, -2], label='filtered')
-        #     sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='prediction')
-        #     sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='top_k_prediction')
-        #     sig = y_train[i]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='truth')
-        #     plt.legend()
-        #     plt.show()
-        #
-        #     plt.plot(x_train[i, :, 3], label='ecg')
-        #     sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='prediction')
-        #     sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='top_k_prediction')
-        #     sig = y_train[i]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(sig, label='truth')
-        #     plt.legend()
-        #     plt.show()
+        for i in range(5):
+            plt.plot(x_train[i, :, -stack // 2], label='filtered')
+            sig = model.predict(x_train[i][np.newaxis, :, :])[0]
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+            plt.plot(sigmoid(sig), label='prediction')
+            sig = model_top_k.predict(x_train[i][np.newaxis, :, :])[0]
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+            plt.plot(sigmoid(sig), label='top_k_prediction')
+            sig = y_train[i]
+            sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
+            sig /= -np.max(sig) * 2
+            plt.plot(sig, label='truth')
+            plt.legend()
+            plt.show()
 
     model.save(model_file)
     del model
@@ -183,9 +232,9 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 if __name__ == '__main__':
     model_file = 'model'
 
-    epochs = 10
-    batch_size = 64
-    learning_rate = 1e-4
+    epochs = 50
+    batch_size = 128
+    learning_rate = 1e-3
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
     y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train.npy'))
     x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))
@@ -193,56 +242,3 @@ if __name__ == '__main__':
 
     train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
 
-    # for i in range(5):
-    #     plt.plot(x_test[i, :, -2], label='filtered')
-    #     # sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='prediction')
-    #     # sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='top_k_prediction')
-    #     sig = y_test[i]
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     plt.plot(sig, label='truth')
-    #     plt.legend()
-    #     plt.show()
-    #
-    #     plt.plot(x_test[i, :, 3], label='ecg')
-    #     # sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='prediction')
-    #     # sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='top_k_prediction')
-    #     sig = y_test[i]
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     plt.plot(sig, label='truth')
-    #     plt.legend()
-    #     plt.show()
-
-    # for i in range(5):
-    #     plt.plot(x_train[i, :, -2], label='filtered')
-    #     # sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='prediction')
-    #     # sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='top_k_prediction')
-    #     sig = y_train[i]
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     plt.plot(sig, label='truth')
-    #     plt.legend()
-    #     plt.show()
-    #
-    #     plt.plot(x_train[i, :, 3], label='ecg')
-    #     # sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='prediction')
-    #     # sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-    #     # sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     # plt.plot(sig, label='top_k_prediction')
-    #     sig = y_train[i]
-    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-    #     plt.plot(sig, label='truth')
-    #     plt.legend()
-    #     plt.show()

@@ -2,27 +2,28 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import re
-from scipy.signal import filtfilt, butter
+from scipy.special import expit
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-from dataset import preprocess_ecg, filters
+from dataset import process_ecg, filters
 import time
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
 import tqdm
 from pathlib import Path
-from config import interval_length, step, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, animal, threshold
+from config import window_size, stack, scale_down, datapoints, \
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
 
 file_num = 1
-update_freq = 10
+update_freq = 1
+loading_size = 100
 # model = keras.models.load_model(f'{animal}_model', compile=False)
-model = load_model('model_val_top_k', compile=False)
+model = load_model('model_val_auc', compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -76,17 +77,24 @@ def read_ecg(ecg_file, count):
     return datetime, ecg, e
 
 
-def write_signal(sig_file, datetime, sig, ecg):
+def write_signal(sig_file, datetime, sig, ecg, lines, activation=None):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
     global dist
     global first
-    plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
-    plt.plot(sig)
-    plt.show()
-    # The maximum amount we think the signal can differ by, our default is 0.2 so we don't believe any 'signal'
-    # with a distance of 0.8-1.2 from the previous is real and so we omit it.
+    # plt.plot(sig)
+    if activation is not None:
+        sig = activation(sig)
+
+    if lines >= 2080000:
+        plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
+        plt.plot(sig)
+        plt.plot([threshold for _ in range(window_size)])
+        plt.show()
+    # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
+    # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
     min_dist = 1 - max_dist_percentage
     max_dist = 1 + max_dist_percentage
+
     for i in range(len(datetime)):
         d = datetime[i]
         e = ecg[i]
@@ -114,15 +122,7 @@ ecg_segment = []  # Acts as a buffer for the ecg signals
 datetime_segment = []  # Similarly for datetimes
 ecg_temp = []  # ecg and datetimes of the portion being processed
 datetime = []
-signal = np.zeros(interval_length)
-ecg_deque = deque(maxlen=stack)  # Variable which will eventually be converted to a numpy array and fed to the model.
-filtered_deque = deque(maxlen=stack)
-
-for i in range(stack - 2):   # Initializes the values to just be 0's. (The dataset includes and the model has been
-    # trained to deal with this, can also be treated the same as if the data were just blank in the case of missing
-    # data)
-    ecg_deque.append(np.zeros(datapoints, ))
-    filtered_deque.append(np.zeros(datapoints, ))
+signal = np.zeros(window_size)
 
 # Skips through the header if it exists, goes until it reads a line of data (probably need to change regex depending on
 # data)
@@ -137,95 +137,92 @@ line_size = len(temp_line.encode('utf-8'))  # Gets the average size of the line 
 # to track approximately where we are within the file.
 
 # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
-datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
-filtered_ecg_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
-ecg_temp = ecg_segment[:interval_length]
-filtered_temp = filtered_ecg_segment[:interval_length]
-datetime = datetime_segment[:interval_length]
-ecg_segment = ecg_segment[step:]
-filtered_ecg_segment = filtered_ecg_segment[step:]
-datetime_segment = datetime_segment[step:]
+datetime_segment, ecg_segment, EOF = read_ecg(file, window_size * loading_size)
+filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 
-ecg_segment = np.pad(ecg_segment, (0, interval_length), constant_values=(0, 0))
-filtered_ecg_segment = np.pad(filtered_ecg_segment, (0, interval_length), constant_values=(0, 0))
+# Pads the data with 0s
+pad = stack // 2
+padding = (pad * window_size, 0)
+ecg_segment = np.pad(ecg_segment, padding, constant_values=(0, 0))
+filtered_segment = np.pad(filtered_segment, padding, constant_values=(0, 0))
 
-curr_segment = ecg_temp[:]
-curr_filt = filtered_temp[:]
-ecg_deque.append(preprocess_ecg(np.asarray(ecg_temp), scale_down))
-filtered_deque.append(preprocess_ecg(np.asarray(filtered_temp), scale_down))
-ecg_segment = ecg_segment[step:]
-filtered_ecg_segment = filtered_ecg_segment[step:]
-ecg_temp = ecg_temp[step:]
-ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-filtered_temp = filtered_temp[step:]
-filtered_temp = np.append(filtered_temp, filtered_ecg_segment[:step])
+# Initializes the temporary variables and slides the window over
+ecg_temp = ecg_segment[:window_size * stack]
+filtered_temp = filtered_segment[:window_size * stack]
+datetime = datetime_segment[:window_size]
+ecg_segment = ecg_segment[window_size:]
+filtered_segment = filtered_segment[window_size:]
+datetime_segment = datetime_segment[window_size:]
 
+ind1 = pad * window_size
+ind2 = (pad + 1) * window_size
+curr_segment = ecg_temp[ind1:ind2]
+curr_filt = filtered_temp[ind1:ind2]
 
 with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
     pbar.set_description('Bytes ')
     iter = 0  # Used for the progress bar to update it every so often.
     while True:
         num_lines = 0
-        ecg_deque.append(preprocess_ecg(np.asarray(ecg_temp), scale_down))
-        filtered_deque.append(preprocess_ecg(np.asarray(filtered_temp), scale_down))
 
-        temp = np.swapaxes(np.concatenate((ecg_deque, filtered_deque))[np.newaxis, :, :], 1, 2)
-        temp = model(temp, training=False).numpy()
-        temp = temp.reshape(interval_length, )
+        temp = process_ecg(ecg_temp, filtered_temp, scale_down, stack, datapoints)
+        temp = temp[np.newaxis, :, :]
+        temp = np.swapaxes(temp, 1, 2)
+        signal = model(temp, training=False).numpy()
+        signal = signal.reshape(window_size, )
         max_ind = np.argmax(temp)
 
-        signal += temp / (interval_length / step)  # Since we potentially run through a datapoint multiple times if
-        # step is smaller, we average the model output for each run through
-
-        num_lines = write_signal(f, datetime[:step], signal[:step], curr_segment)
+        num_lines = write_signal(f, datetime, signal, curr_segment, lines, activation=expit)
         lines += num_lines
 
         # Steps through all the different buffers, and if the buffer is empty reads more from the file.
-        signal[0:interval_length - step] = signal[step:]
-        signal[interval_length - step:] = 0
-        signal[signal < 0.1] = 0
-        ecg_segment = ecg_segment[step:]
-        filtered_ecg_segment = filtered_ecg_segment[step:]
-        if ecg_segment.size > interval_length:
-            curr_segment = ecg_temp[:]
-            curr_filt = filtered_temp[:]
-            ecg_temp = ecg_temp[step:]
-            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-            filtered_temp = filtered_temp[step:]
-            filtered_temp = np.append(filtered_temp, filtered_ecg_segment[:step])
-            datetime_segment = datetime_segment[step:]
-            datetime = datetime[step:]
-            datetime = np.append(datetime, datetime_segment[:step])
+        if ecg_segment.size > stack * window_size:
+            ecg_segment = ecg_segment[window_size:]
+            ecg_temp = ecg_segment[:window_size * stack]
+            filtered_segment = filtered_segment[window_size:]
+            filtered_temp = filtered_segment[:window_size * stack]
+            datetime_segment = datetime_segment[window_size:]
+            datetime = datetime_segment[:window_size]
+            curr_segment = ecg_temp[ind1:ind2]
+            curr_filt = filtered_temp[ind1:ind2]
         elif not EOF:
             iter += 1
-            datetime_segment, ecg_segment, EOF = read_ecg(file, interval_length * 10)
+            read = read_ecg(file, window_size * loading_size)
             if iter % update_freq == 0:
-                pbar.update(line_size * len(datetime_segment) * update_freq)
-            filtered_ecg_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
-            ecg_segment = np.pad(ecg_segment, (0, interval_length), constant_values=(0, 0))
-            filtered_ecg_segment = np.pad(filtered_ecg_segment, (0, interval_length), constant_values=(0, 0))
-            curr_segment = ecg_temp[:]
-            curr_filt = filtered_temp[:]
-            ecg_deque[-1] = preprocess_ecg(np.asarray(curr_segment), scale_down)
-            filtered_deque[-1] = preprocess_ecg(np.asarray(curr_filt), scale_down)
-            ecg_temp = ecg_temp[step:]
-            ecg_temp = np.append(ecg_temp, ecg_segment[:step])
-            filtered_temp = filtered_temp[step:]
-            filtered_temp = np.append(filtered_temp, filtered_ecg_segment[:step])
-            datetime = datetime[step:]
-            datetime = np.append(datetime, datetime_segment[:step])
+                pbar.update(line_size * len(read[0]) * update_freq)
+
+            datetime_segment = read[0]
+            ecg_segment = np.append(ecg_segment, read[1])
+            EOF = read[2]
+
+            filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
+            ecg_segment = np.pad(ecg_segment, padding, constant_values=(0, 0))
+            filtered_segment = np.pad(filtered_segment, padding, constant_values=(0, 0))
+
+            ecg_temp = ecg_segment[:window_size * stack]
+            filtered_temp = filtered_segment[:window_size * stack]
+            datetime = datetime_segment[:window_size]
+            ecg_segment = ecg_segment[window_size:]
+            filtered_segment = filtered_segment[window_size:]
+            datetime_segment = datetime_segment[window_size:]
+
+            ind1 = pad * window_size
+            ind2 = (pad + 1) * window_size
+            curr_segment = ecg_temp[ind1:ind2]
+            curr_filt = filtered_temp[ind1:ind2]
         else:
             break
 
-        if lines >= lines_per_file:  # Creates a new file in case the current one has enough lines.
+        if lines > lines_per_file:  # Creates a new file in case the current one has enough lines.
             lines = 0
             file_num += 1
             f.close()
 
             f = open(os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt'), 'w')
 
+
 # Writes the final few datapoints into the file, and closes it
-write_signal(f, datetime[:interval_length - step], signal[:interval_length - step], curr_segment)
+write_signal(f, datetime, signal, lines, curr_segment)
 end = time.time()
 
 
