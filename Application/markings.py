@@ -11,7 +11,7 @@ from scipy.signal import filtfilt, butter
 import matplotlib
 from pathlib import Path
 import tqdm
-from csv_reader import csvReader
+from csv_reader import csv_reader
 from config import window_size, low_cutoff, high_cutoff, nyq, order
 
 '''
@@ -180,7 +180,7 @@ events = Events()
 last_few = deque(maxlen=8)
 max_lines = 1000000
 
-reader = csvReader(file)
+reader = csv_reader(file)
 every_i = 10000
 
 if load_markings:

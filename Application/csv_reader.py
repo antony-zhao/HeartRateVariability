@@ -1,7 +1,7 @@
 import re
 
 
-class csvReader:
+class csv_reader:
     def __init__(self, file, read_line=False):
         """
         Initializes the reader, reading through any potential header,
@@ -118,6 +118,6 @@ class csvReader:
 
 
 if __name__ == '__main__':
-    reader = csvReader('../ECG_Data/T21_transition example3_900s.ascii')
+    reader = csv_reader('../ECG_Data/T21_transition example3_900s.ascii')
     for i in range(20):
         print(reader.read_line())

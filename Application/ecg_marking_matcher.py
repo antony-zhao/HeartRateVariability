@@ -2,7 +2,7 @@ import xlrd
 import re
 from datetime import datetime as dt
 import os
-from csv_reader import csvReader
+from csv_reader import csv_reader
 
 """
 Reads from the ecg file and the excel file, and creates two new files. One containing the raw ECG signals, and the
@@ -24,7 +24,7 @@ row = 1  # The row of the dates in the excel sheet
 
 xl_date = xlrd.xldate_as_datetime(page.cell_value(row, 0), wb.datemode)
 header = True  # For handling if the line is a header or if it is actual data
-reader = csvReader(ecg_file_name, read_line=True)
+reader = csv_reader(ecg_file_name, read_line=True)
 
 for line in reader:
     # if header or re.match('\\s*[\\d\\s/:.APM]+,[-\\s\\dx.,]*[-\\s\\dx.]\n', line) is None:

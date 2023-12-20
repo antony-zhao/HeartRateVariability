@@ -25,7 +25,8 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
         if ensure_labels:
             if max(y_i) != 1:
                 continue
-        x_i = process_ecg(padded_ecg[ind:ind + int(stack * window_size)], padded_filter[ind:ind + int(stack * window_size)],
+        x_i = process_ecg(padded_ecg[ind:ind + int(stack * window_size)],
+                          padded_filter[ind:ind + int(stack * window_size)],
                           scale_down, stack, datapoints)
         # The label for the (stack - 1)th block, so there is some look ahead and some look behind
         x.append(x_i.T)
@@ -67,6 +68,10 @@ def filters(ecg, order, low_cutoff, high_cutoff, nyq):
     return ecg
 
 
+def filters_from_config(ecg):
+    return filters(ecg, order, low_cutoff, high_cutoff, nyq)
+
+
 def read_file(file_name, lines):
     counter = 0
     temp = []
@@ -88,7 +93,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 20000000  # Maximum number of lines to read
-    samples = 800000  # Number of samples to create
+    samples = 200000  # Number of samples to create
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -106,7 +111,7 @@ if __name__ == '__main__':
 
     sig2 = read_file(f'{animal}_sig_val.txt', lines)
 
-    x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples)
+    x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
 
     # x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
     # dataset by adding more inverted signals

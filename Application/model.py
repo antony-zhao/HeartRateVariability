@@ -68,19 +68,19 @@ def weighted_binary_crossentropy(target, output):
 
 model = Sequential()  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=32, kernel_size=9, strides=2,
+    Conv1D(input_shape=(datapoints, stack * 2), filters=16, kernel_size=9, strides=2,
            padding='same', activation='relu',))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=64, kernel_size=7, strides=1, padding='same',
+model.add(Conv1D(filters=32, kernel_size=7, strides=2, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=128, kernel_size=5, strides=1, padding='same',
+model.add(Conv1D(filters=64, kernel_size=5, strides=1, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=256, kernel_size=3, strides=1, padding='same',
+model.add(Conv1D(filters=128, kernel_size=3, strides=1, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
@@ -234,7 +234,7 @@ if __name__ == '__main__':
 
     epochs = 50
     batch_size = 128
-    learning_rate = 1e-3
+    learning_rate = 5e-4
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
     y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train.npy'))
     x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))

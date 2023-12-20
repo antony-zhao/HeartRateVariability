@@ -23,7 +23,7 @@ file_num = 1
 update_freq = 1
 loading_size = 100
 # model = keras.models.load_model(f'{animal}_model', compile=False)
-model = load_model('model_val_auc', compile=False)
+model = load_model('model_val_top_k', compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -85,11 +85,11 @@ def write_signal(sig_file, datetime, sig, ecg, lines, activation=None):
     if activation is not None:
         sig = activation(sig)
 
-    if lines >= 2080000:
-        plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
-        plt.plot(sig)
-        plt.plot([threshold for _ in range(window_size)])
-        plt.show()
+    # if lines >= 2080000:
+    #     plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
+    #     plt.plot(sig)
+    #     plt.plot([threshold for _ in range(window_size)])
+    #     plt.show()
     # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
     # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
     min_dist = 1 - max_dist_percentage
@@ -228,8 +228,8 @@ end = time.time()
 
 f.close()
 
-print('elapsed time: ' + str(end - start) + ' seconds')
-input('Press enter to continue (may need 2 times)')
+# print('elapsed time: ' + str(end - start) + ' seconds')
+# input('Press enter to continue (may need 2 times)')
 
 del model
 tf.keras.backend.clear_session()
