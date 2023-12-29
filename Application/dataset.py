@@ -93,7 +93,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 20000000  # Maximum number of lines to read
-    samples = 200000  # Number of samples to create
+    samples = 400000  # Number of samples to create
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 

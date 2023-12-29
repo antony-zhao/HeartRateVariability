@@ -76,7 +76,7 @@ model.add(Conv1D(filters=32, kernel_size=7, strides=2, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=64, kernel_size=5, strides=1, padding='same',
+model.add(Conv1D(filters=64, kernel_size=5, strides=2, padding='same',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
@@ -87,11 +87,6 @@ model.add(MaxPooling1D(strides=2))
 model.add(Flatten())
 model.add(
     Dense(units=512))
-model.add(Dropout(0.5))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-model.add(
-    Dense(units=datapoints))
 model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
@@ -174,7 +169,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
                         validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr], shuffle=True)
 
-    model_top_k = keras.models.load_model('model_val_auc')
+    model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
         plt.plot(history.history['top_k_categorical_accuracy'])
         plt.plot(history.history['val_top_k_categorical_accuracy'])
@@ -230,7 +225,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 
 
 if __name__ == '__main__':
-    model_file = 'model'
+    model_file = f'{animal}_model'
 
     epochs = 50
     batch_size = 128

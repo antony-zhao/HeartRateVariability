@@ -311,7 +311,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
 plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
          .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))
 
-# ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
+ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
 
 axs.plot(range(len(ecg)), ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)

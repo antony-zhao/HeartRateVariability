@@ -14,7 +14,7 @@ from tkinter import filedialog
 import tqdm
 from pathlib import Path
 from config import window_size, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
@@ -23,7 +23,7 @@ file_num = 1
 update_freq = 1
 loading_size = 100
 # model = keras.models.load_model(f'{animal}_model', compile=False)
-model = load_model('model_val_top_k', compile=False)
+model = load_model(f'{animal}_model_val_auc', compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -85,7 +85,7 @@ def write_signal(sig_file, datetime, sig, ecg, lines, activation=None):
     if activation is not None:
         sig = activation(sig)
 
-    # if lines >= 2080000:
+    # if lines >= 0:
     #     plt.plot(ecg)  # Just left in, uncomment if you want a visualization of the data for testing purposes.
     #     plt.plot(sig)
     #     plt.plot([threshold for _ in range(window_size)])
