@@ -154,3 +154,5 @@ cython_debug/
 *.png
 *.txt
 *.spec
+/Application/mouse_*
+/Application/rat_*
