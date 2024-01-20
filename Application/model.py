@@ -68,25 +68,22 @@ def weighted_binary_crossentropy(target, output):
 
 model = Sequential()  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=16, kernel_size=9, strides=2,
-           padding='same', activation='relu',))
+    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=32, strides=2,
+           padding='same', kernel_regularizer='l2',
+           activation='relu',))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=32, kernel_size=7, strides=2, padding='same',
+model.add(Conv1D(filters=stack * 8, kernel_size=16, strides=2, padding='same', kernel_regularizer='l2',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=64, kernel_size=5, strides=2, padding='same',
-                 activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=128, kernel_size=3, strides=1, padding='same',
+model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', kernel_regularizer='l2',
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
 model.add(Flatten())
 model.add(
-    Dense(units=512))
+    Dense(units=window_size))
 model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
@@ -158,6 +155,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                                  'magnitude': magnitude, 'distance': distance})
     model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude,
+                           keras.metrics.BinaryCrossentropy(from_logits=True),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
                          save_best_only=True)
@@ -165,6 +163,8 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          save_best_only=True)
     vm = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
                          save_best_only=True)
+    # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
+    #                      save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
                         validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr], shuffle=True)

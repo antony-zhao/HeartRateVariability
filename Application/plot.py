@@ -46,6 +46,7 @@ signals = []  # Indices of peaks in signals
 
 class Events:
     """Class for an interactive pyplot to handle click, scroll, etc. events."""
+
     def __init__(self):
         self.ind_unmarked = -1  # Which error is being viewed (index of unmarked)
         self.ind_mismarked = -1  # Index of mismarked
@@ -247,7 +248,6 @@ def toggle_clean_selector(event):
     else:
         toggle_clean_selector.RS.set_active(False)
 
-
 dist = 0
 num = 0
 events = Events()
@@ -285,7 +285,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
                         unmarked_regions += 1
                         events.unmarked.append((prev + interval_length, interval_length))
                         axs.annotate("*", (prev + interval_length, -0.2))
-                    elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):    # For
+                    elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):  # For
                         # when one beat is missed and the next one is also wrong
                         if i - prev > 1:
                             events.mismarked.append((i, interval_length))
@@ -311,13 +311,40 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
 plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
          .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))
 
-ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
+filtered_ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
 
-axs.plot(range(len(ecg)), ecg, zorder=101)
+ecg_line, = axs.plot(range(len(ecg)), ecg, zorder=101)
+filtered_line, = axs.plot(range(len(filtered_ecg)), filtered_ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
 
-axs.legend(['ECG', 'Signal'], loc='upper left')
+leg = axs.legend(['ECG', 'Filtered_ECG', 'Signal'], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
+
+lines = [ecg_line, filtered_line, line]
+map_legend_to_ax = {}  # Will map legend lines to original lines.
+
+pickradius = 5  # Points (Pt). How close the click needs to be to trigger an event.
+
+for legend_line, ax_line in zip(leg.get_lines(), lines):
+    legend_line.set_picker(pickradius)  # Enable picking on the legend line.
+    map_legend_to_ax[legend_line] = ax_line
+
+def on_pick(event):
+    # On the pick event, find the original line corresponding to the legend
+    # proxy line, and toggle its visibility.
+    legend_line = event.artist
+
+    # Do nothing if the source of the event is not a legend line.
+    if legend_line not in map_legend_to_ax:
+        return
+
+    ax_line = map_legend_to_ax[legend_line]
+    visible = not ax_line.get_visible()
+    ax_line.set_visible(visible)
+    # Change the alpha on the line in the legend, so we can see what lines
+    # have been toggled.
+    legend_line.set_alpha(1.0 if visible else 0.2)
+    fig.canvas.draw()
 
 if len(events.unmarked) > 0:  # Only display unmarked and mismarked buttons if there are unmarked/mismarked signals
     button1 = plt.axes([0.6, 0.01, 0.1, 0.075])
@@ -351,6 +378,7 @@ scroll = fig.canvas.mpl_connect('scroll_event', events.scroll)
 add_click = fig.canvas.mpl_connect('button_press_event', events.add_onclick)
 delete_click = fig.canvas.mpl_connect('button_press_event', events.delete_onclick)
 clean_region = fig.canvas.mpl_connect('button_press_event', toggle_clean_selector)
+fig.canvas.mpl_connect('pick_event', on_pick)
 
 plt.show()
 

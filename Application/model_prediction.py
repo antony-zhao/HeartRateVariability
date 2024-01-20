@@ -14,7 +14,8 @@ from tkinter import filedialog
 import tqdm
 from pathlib import Path
 from config import window_size, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
+    pad_behind
 
 tf.keras.backend.clear_session()
 np.seterr(all='raise')
@@ -23,7 +24,7 @@ file_num = 1
 update_freq = 1
 loading_size = 100
 # model = keras.models.load_model(f'{animal}_model', compile=False)
-model = load_model(f'{animal}_model_val_auc', compile=False)
+model = load_model(f'{animal}_model_val_top_k', compile=False)
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -141,8 +142,7 @@ datetime_segment, ecg_segment, EOF = read_ecg(file, window_size * loading_size)
 filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 
 # Pads the data with 0s
-pad = stack // 2
-padding = (pad * window_size, 0)
+padding = (pad_behind * window_size, 0)
 ecg_segment = np.pad(ecg_segment, padding, constant_values=(0, 0))
 filtered_segment = np.pad(filtered_segment, padding, constant_values=(0, 0))
 
@@ -154,8 +154,8 @@ ecg_segment = ecg_segment[window_size:]
 filtered_segment = filtered_segment[window_size:]
 datetime_segment = datetime_segment[window_size:]
 
-ind1 = pad * window_size
-ind2 = (pad + 1) * window_size
+ind1 = pad_behind * window_size
+ind2 = (pad_behind + 1) * window_size
 curr_segment = ecg_temp[ind1:ind2]
 curr_filt = filtered_temp[ind1:ind2]
 
@@ -206,8 +206,8 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
             filtered_segment = filtered_segment[window_size:]
             datetime_segment = datetime_segment[window_size:]
 
-            ind1 = pad * window_size
-            ind2 = (pad + 1) * window_size
+            ind1 = pad_behind * window_size
+            ind2 = (pad_behind + 1) * window_size
             curr_segment = ecg_temp[ind1:ind2]
             curr_filt = filtered_temp[ind1:ind2]
         else:
