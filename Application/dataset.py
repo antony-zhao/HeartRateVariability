@@ -79,14 +79,16 @@ def filters_from_config(ecg):
 
 def read_file(file_name, lines):
     counter = 0
-    temp = []
+    ecg = []
+    sig = []
     for line in open(os.path.join('..', 'Training', file_name)):
         counter += 1
-        temp.append(float(re.findall('([-\\d.]+)', line)[-1]))
+        ecg.append(float(re.findall('([-\\d.]+)', line)[-2]))
+        sig.append(float(re.findall('([-\\d.]+)', line)[-1]))
         if counter >= lines:
             break
 
-    return temp
+    return ecg, sig
 
 
 def temp_plot(ecg, sig, start=0, size=2000):
@@ -104,17 +106,13 @@ if __name__ == '__main__':
 
     # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
     # before taking random samples from the data to create the datasets.
-    ecg1 = read_file(f'{animal}_ecg.txt', lines)
+    ecg1, sig1 = read_file(f'{animal}_train.txt', lines)
 
     filtered_ecg1 = filters(ecg1, order, low_cutoff, high_cutoff, nyq)
 
-    sig1 = read_file(f'{animal}_sig.txt', lines)
-
-    ecg2 = read_file(f'{animal}_ecg_val.txt', lines)
+    ecg2, sig2 = read_file(f'{animal}_val.txt', lines)
 
     filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
-
-    sig2 = read_file(f'{animal}_sig_val.txt', lines)
 
     x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
 

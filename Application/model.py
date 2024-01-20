@@ -14,8 +14,6 @@ from config import window_size, stack, scale_down, datapoints, animal
 import tensorflow.keras.backend as tfb
 from tensorflow.keras.utils import get_custom_objects
 
-import keras_tuner
-
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 if len(physical_devices) > 0:
     config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -88,7 +86,6 @@ model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(BatchNormalization())
 model.add(Dense(window_size))
-
 # model = Sequential()  # The main model used for detecting R peaks.
 # model.add(
 #     Conv1D(input_shape=(datapoints, stack * 2), filters=16, kernel_size=7, strides=2,

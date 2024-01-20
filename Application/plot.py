@@ -11,7 +11,7 @@ from scipy.signal import filtfilt, butter
 import matplotlib
 from pathlib import Path
 import tqdm
-from config import interval_length, low_cutoff, high_cutoff, nyq, order, max_dist_percentage
+from config import interval_length, low_cutoff, high_cutoff, nyq, order, max_dist_percentage, lines_per_file
 from dataset import filters
 
 '''
@@ -265,6 +265,8 @@ every_i = 100000
 with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
     pbar.set_description('Bytes ')
     for i, line in enumerate(file):
+        if i > lines_per_file:
+            break
         if i % every_i == 0:
             pbar.update(line_size * every_i)
         dist += 1

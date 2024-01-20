@@ -119,5 +119,10 @@ class csv_reader:
 
 if __name__ == '__main__':
     reader = csv_reader('../ECG_Data/T21_transition example3_900s.ascii')
-    for i in range(20):
-        print(reader.read_line())
+    i = 0
+    for line in reader:
+        i += 1
+        if i > 20:
+            break
+        print(line)
+

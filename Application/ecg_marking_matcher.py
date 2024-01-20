@@ -12,13 +12,19 @@ other containing the R-peaks, each line corresponding to the same line in the ot
 total_count = 10000000  # Maximum lines to copy over
 count = 0  # Current number of lines
 
-xl_file = os.path.join('..', 'Signal', 'RAT #12_2016_WK4_EPOCH DATA.xlsx')  # Data files
-ecg_file_name = os.path.join('..', 'ECG_Data', 'RAT #12_2016_WK4.ascii')
-ecg_file = open(os.path.join('..', 'Training', 'rat_ecg_val.txt'), 'w')  # Output files
-signal_file = open(os.path.join('..', 'Training', 'rat_sig_val.txt'), 'w')
+xl_file = os.path.join('..', 'Signal', 'T21 - April 1st 6pm - 2nd 6pm - epoch data - Hand cleaned.xlsx')  # Data files
+ecg_file_name = os.path.join('..', 'ECG_Data', 'T21_transition example3_900s.ascii')
+'''
+Rat Val: 'RAT #12_2016_WK4.ascii'
+Rat Train: RAT #01_2021_baseline.ascii
+
+Mouse Train: T22 - 2 hour data.ascii
+Mouse Val: T21_transition example3_900s.ascii
+'''
+file = open(os.path.join('..', 'Training', 'mouse_val.txt'), 'w')  # Output files
 
 wb = xlrd.open_workbook(xl_file)
-page = wb.sheet_by_index(6)  # The excel page for the relevant data
+page = wb.sheet_by_index(0)  # The excel page for the relevant data
 
 row = 1  # The row of the dates in the excel sheet
 
@@ -32,6 +38,8 @@ for line in reader:
     #     continue
     # else:
     #     header = False
+    if line == '':
+        break
     reg = re.findall('([0-9:./APMx-]+)', line)
     date = reg[0] + ' ' + reg[1] + ' ' + reg[2]
     date = dt.strptime(date, "%m/%d/%Y %I:%M:%S.%f %p")  # The date, to match with the excel data, and output a
@@ -46,14 +54,15 @@ for line in reader:
             break
 
     if ecg == 'x' or ecg == 'PM' or ecg == 'AM':  # Handles when there isn't a proper ECG signal
-        ecg_file.write('0\n')
+        file.write('0')
     else:
-        ecg_file.write(str(ecg) + '\n')
+        file.write(str(ecg))
+    file.write(' ')
 
     if xl_date != date:  # For when there isn't a peak
-        signal_file.write('0\n')
+        file.write('0\n')
     else:
-        signal_file.write('1\n')
+        file.write('1\n')
         row = min(row + 1, page.nrows - 1)
         xl_date = xlrd.xldate_as_datetime(page.cell_value(row, 0), wb.datemode)
 
