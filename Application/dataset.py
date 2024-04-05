@@ -99,8 +99,8 @@ def temp_plot(ecg, sig, start=0, size=2000):
 
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
-    lines = 40000000  # Maximum number of lines to read
-    samples = 400000  # Number of samples to create, won't generate exactly this many however.
+    lines = 80000000  # Maximum number of lines to read
+    samples = 200000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -123,14 +123,15 @@ if __name__ == '__main__':
     x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 3, ensure_labels)
 
     for i in range(10):
-        plt.plot(x_train[i, :, pad_behind], label='filtered')
-        sig = y_train[i]
+        plt.plot(x_test[i, :, pad_forward], label='filtered')
+        sig = y_test[i]
         sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
         sig /= np.max(sig)
         plt.plot(sig)
         plt.show()
-    x_test = np.append(x_test, -x_test, axis=0)
-    y_test = np.append(y_test, y_test, axis=0)
+
+    # x_test = np.append(x_test, -x_test, axis=0)
+    # y_test = np.append(y_test, y_test, axis=0)
 
     # Creates the .npy files containing the data in the Training directory
     np.save(os.path.join('..', 'Training', f'{animal}_x_train'), x_train)

@@ -66,7 +66,7 @@ def weighted_binary_crossentropy(target, output):
 
 model = Sequential()  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=32, strides=2,
+    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=32, strides=4,
            padding='same', kernel_regularizer='l2',
            activation='relu',))
 model.add(BatchNormalization())
