@@ -14,7 +14,9 @@ import multiprocessing as mp
 import json
 import tqdm
 from functools import partial
-from config import window_size, max_dist_percentage
+from config import window_size, stack, scale_down, datapoints, \
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
+    pad_behind
 
 """
 After the model_prediction.py program splits the data into multiple files, this
@@ -49,8 +51,10 @@ def process_file(filenames, filename):
         dist += 1
         temp = re.findall('([-0-9.]+)', line)
         date = line[:line.index(',')]
-
-        date = dt.strptime(date, '\t%m/%d/%Y %I:%M:%S.%f %p')
+        try:
+            date = dt.strptime(date, ' %m/%d/%Y %I:%M:%S.%f %p')
+        except ValueError:
+            date = dt.strptime(date, '%m/%d/%Y %I:%M:%S.%f %p')
 
         signal = int(temp[-1])
         if signal == 1:
@@ -114,10 +118,11 @@ def write_to_excel(lines, sheet, row, formats):
         # the previous data (if possible)
         if line[0] - start_time >= datetime.timedelta(minutes=2):  # The average and standard deviation in the
             # RR-interval in 2 minutes
-            sheet.write(row, 7, np.mean(intervals), interval_format)
-            sheet.write(row, 8, np.std(intervals), interval_format)
-            start_time = line[0]
-            intervals.clear()
+            if len(intervals) > 0:
+                sheet.write(row, 7, np.mean(intervals), interval_format)
+                sheet.write(row, 8, np.std(intervals), interval_format)
+                start_time = line[0]
+                intervals.clear()
         if line[1] != '':
             intervals.append(float(line[1]))
         prev_value = line[1]

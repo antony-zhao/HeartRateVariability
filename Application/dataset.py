@@ -77,18 +77,20 @@ def filters_from_config(ecg):
     return filters(ecg, order, low_cutoff, high_cutoff, nyq)
 
 
-def read_file(file_name, lines):
+def read_file(file, lines):
     counter = 0
     ecg = []
     sig = []
-    for line in open(os.path.join('..', 'Training', file_name)):
+    for line in file:
         counter += 1
         ecg.append(float(re.findall('([-\\d.]+)', line)[-2]))
         sig.append(float(re.findall('([-\\d.]+)', line)[-1]))
         if counter >= lines:
             break
+        if not line:
+            return ecg, sig, True
 
-    return ecg, sig
+    return ecg, sig, False
 
 
 def temp_plot(ecg, sig, start=0, size=2000):
@@ -99,28 +101,48 @@ def temp_plot(ecg, sig, start=0, size=2000):
 
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
-    lines = 80000000  # Maximum number of lines to read
-    samples = 200000  # Number of samples to create, won't generate exactly this many however.
+    lines = 400000  # Maximum number of lines to read
+    samples = 10000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
     # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
     # before taking random samples from the data to create the datasets.
-    ecg1, sig1 = read_file(f'{animal}_train.txt', lines)
+    train_file = open(os.path.join('..', 'Training', f'{animal}_train.txt'))
+    val_file = open(os.path.join('..', 'Training', f'{animal}_val.txt'))
+    eof = False
+    x_train, y_train = None, None
+    x_test, y_test = None, None
+    while not eof:
+        ecg1, sig1, eof = read_file(train_file, lines)
+        filtered_ecg1 = filters(ecg1, order, low_cutoff, high_cutoff, nyq)
+        if x_train is None:
+            x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
+        else:
+            if len(ecg1) < lines // 2:
+                break
+            temp1, temp2 = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
+            if temp1.size == 0:
+                continue
+            x_train = np.append(x_train, temp1, axis=0)
+            y_train = np.append(y_train, temp2, axis=0)
+    eof = False
+    while not eof:
+        ecg2, sig2, eof = read_file(val_file, lines)
+        filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
+        if x_test is None:
+            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 10, ensure_labels)
+        else:
+            if len(ecg2) < lines // 2:
+                break
+            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples // 10, ensure_labels)
+            x_test = np.append(x_test, temp1, axis=0)
+            y_test = np.append(y_test, temp2, axis=0)
 
-    filtered_ecg1 = filters(ecg1, order, low_cutoff, high_cutoff, nyq)
-
-    ecg2, sig2 = read_file(f'{animal}_val.txt', lines)
-
-    filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
-
-    x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
-
-    # x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
+    x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
     # dataset by adding more inverted signals
-    # y_train = np.append(y_train, y_train, axis=0)
+    y_train = np.append(y_train, y_train, axis=0)
 
-    x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 3, ensure_labels)
 
     for i in range(10):
         plt.plot(x_test[i, :, pad_forward], label='filtered')
