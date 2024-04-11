@@ -86,7 +86,7 @@ def process_file(filenames, filename):
     return lines
 
 
-def write_to_excel(lines, sheet, row, formats):
+def write_to_excel(lines, sheet, row, formats, sheet_num):
     """
     Writes the lines to the sheet, as well as calculating some useful data which are
     related to heart rate variability.
@@ -108,6 +108,10 @@ def write_to_excel(lines, sheet, row, formats):
     start_time = lines[0][0]
     intervals = []  # Tracks the last RR-intervals for a certain duration, which we get data from after
     for line in lines:
+        if sheet_num == 1 and (line[0].time() < datetime.time(hour=8) or line[0].time() > datetime.time(hour=20)):
+            continue
+        if sheet_num == 2 and (datetime.time(hour=20) > line[0].time() > datetime.time(hour=8)):
+            continue
         sheet.write_datetime(row, 0, line[0], date_format)  # Splits the datetime value
         sheet.write_datetime(row, 1, line[0], time_format)
         sheet.write(row, 4, row)  # Just the number of the signal (shouldn't be different from the row
@@ -116,12 +120,12 @@ def write_to_excel(lines, sheet, row, formats):
         sheet.write(row, 6, (line[1] - prev_value) ** 2 if not prev_value == '' and not line[1] == '' else '',
                     diff_format)  # The squared difference between the RR-interval of this and
         # the previous data (if possible)
-        if line[0] - start_time >= datetime.timedelta(minutes=2):  # The average and standard deviation in the
-            # RR-interval in 2 minutes
+        if line[0] - start_time >= datetime.timedelta(minutes=5):  # The average and standard deviation in the
+            # RR-interval in 5 minutes
             if len(intervals) > 0:
                 sheet.write(row, 7, np.mean(intervals), interval_format)
                 sheet.write(row, 8, np.std(intervals), interval_format)
-                start_time = line[0]
+                start_time = start_time + datetime.timedelta(minutes=5)
                 intervals.clear()
         if line[1] != '':
             intervals.append(float(line[1]))
@@ -138,6 +142,7 @@ def main():
                                                 filetypes=(("txt files", "*.txt"),
                                                            ("all files", "*.*")))
     filenames = list(root.filename)
+    filenames.sort()
     total_size = 0
     for file_name in filenames:
         total_size += os.stat(file_name).st_size
@@ -163,31 +168,6 @@ def main():
 
     out = os.path.join(signal_dir, saveas)
 
-    # Adds labels to the excel sheet
-    wb = Workbook(out)
-    sheet1 = wb.add_worksheet('Sheet 1')
-    sheet1.set_column(1, 1, 12)
-    sheet1.write(0, 0, 'Date')
-    sheet1.write(0, 1, 'Time')
-    sheet1.write(0, 4, 'Num: ECG')
-    sheet1.write(0, 5, 'RR (ms)')
-    sheet1.set_column(6, 6, 16)
-    sheet1.write(0, 6, 'Squared Diff (ms)')
-    sheet1.set_column(7, 9, 14)
-    sheet1.write(0, 7, 'Avg 2 minutes')
-    sheet1.write(0, 8, 'STD 2 minutes')
-    sheet1.write(0, 9, 'STDev')
-    sheet1.write(1, 9, 'rMSSD')
-    sheet1.write(2, 9, 'STD of Avg')
-    sheet1.write(3, 9, 'Avg of STD')
-    interval_format = wb.add_format({'num_format': '#.00'})  # Formatting for the data
-    date_format = wb.add_format({'num_format': 'm/d/y'})
-    time_format = wb.add_format({'num_format': 'hh:mm:ss.000'})
-    diff_format = wb.add_format({'num_format': '0.00'})
-    formats = (interval_format, date_format, time_format, diff_format)
-
-    row = 1  # Current row in the sheet
-
     # Handles the multiprocessing, and runs multiple instances of the process_file function
     pool = mp.Pool(processes=max(1, multiprocessing.cpu_count() - 2))
     func = partial(process_file, filenames)
@@ -196,15 +176,48 @@ def main():
     pool.close()
     pool.join()
 
-    for result in results:  # At this point results contains the list of tuples for each file, and we write
-        # that data into the sheet.
-        row = write_to_excel(result, sheet1, row, formats)
+    # Adds labels to the excel sheet
+    wb = Workbook(out)
+    sheets = [wb.add_worksheet('All Data'), wb.add_worksheet('Light'), wb.add_worksheet('Dark')]
+    for i, sheet in enumerate(sheets):
+        sheet.set_column(1, 1, 12)
+        sheet.write(0, 0, 'Date')
+        sheet.write(0, 1, 'Time')
+        sheet.write(0, 4, 'Num: ECG')
+        sheet.write(0, 5, 'RR (ms)')
+        sheet.set_column(6, 6, 16)
+        sheet.write(0, 6, 'Squared Diff (ms)')
+        sheet.set_column(7, 9, 14)
+        sheet.write(0, 7, 'Avg 5 minutes')
+        sheet.write(0, 8, 'STD 5 minutes')
+        sheet.write(0, 9, 'Statistics')
+        sheet.write(1, 9, 'STDev')
+        sheet.write(2, 9, 'rMSSD')
+        sheet.write(3, 9, 'STD of Avg (SDANN)')
+        sheet.write(4, 9, 'Avg of STD (SDNNIDX)')
+        sheet.write(5, 9, 'Avg RR Interval')
+        sheet.write(6, 9, 'Total HR Data (Hours Min Sec)')
+        interval_format = wb.add_format({'num_format': '#.00'})  # Formatting for the data
+        date_format = wb.add_format({'num_format': 'm/d/y'})
+        time_format = wb.add_format({'num_format': 'hh:mm:ss.000'})
+        diff_format = wb.add_format({'num_format': '0.00'})
+        formats = (interval_format, date_format, time_format, diff_format)
 
-    # Add formulas to calculate more useful data
-    sheet1.write_formula('K1', '=STDEV(F:F)')
-    sheet1.write_formula('K2', '=SQRT(AVERAGE(G:G))')
-    sheet1.write_formula('K3', '=STDEV(H:H)')
-    sheet1.write_formula('K4', '=AVERAGE(I:I)')
+        row = 1  # Current row in the sheet
+
+        for result in results:  # At this point results contains the list of tuples for each file, and we write
+            # that data into the sheet.
+            row = write_to_excel(result, sheet, row, formats, i)
+
+        # Add formulas to calculate more useful data
+        sheet.set_column(9, 9, 20)
+        sheet.set_column(10, 10, 20)
+        sheet.write_formula('K2', '=STDEV(F:F)')
+        sheet.write_formula('K3', '=SQRT(AVERAGE(G:G))')
+        sheet.write_formula('K4', '=STDEV(H:H)')
+        sheet.write_formula('K5', '=AVERAGE(I:I)')
+        sheet.write_formula('K6', '=AVERAGE(F:F)')
+        sheet.write_formula('K7', '=COUNT(F:F)*K6/(24*60*60*1000)', cell_format=time_format)
 
     end = time.time()
     print('elapsed time: ' + str(end - start))
@@ -216,4 +229,4 @@ if __name__ == "__main__":
     # More handling of multiprocessing
     mp.freeze_support()
     main()
-    input("Press enter to continue")
+    # input("Press enter to continue")
