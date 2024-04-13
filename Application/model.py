@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, \
-    Activation, BatchNormalization, Input, GRU, Bidirectional, MultiHeadAttention
+    Activation, BatchNormalization, Input, GRU, Bidirectional, MultiHeadAttention, LSTM, Permute
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
@@ -79,9 +79,19 @@ model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', k
                  activation='relu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Flatten())
+# model.add(Flatten())
+# model.add(
+#     Bidirectional(LSTM(units=window_size // 2, return_sequences=True)))
+# model.add(Dropout(0.3))
+# model.add(Activation('relu'))
+# model.add(BatchNormalization())
 model.add(
-    Dense(units=window_size))
+    Bidirectional(GRU(units=window_size // 2, return_sequences=False)))
+model.add(Dropout(0.5))
+model.add(Activation('relu'))
+model.add(BatchNormalization())
+model.add(
+    Dense(units=window_size // 2))
 model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(BatchNormalization())

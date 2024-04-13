@@ -102,7 +102,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 10000  # Number of samples to create, won't generate exactly this many however.
+    samples = 5000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -131,11 +131,11 @@ if __name__ == '__main__':
         ecg2, sig2, eof = read_file(val_file, lines)
         filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
         if x_test is None:
-            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 10, ensure_labels)
+            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
         else:
             if len(ecg2) < lines // 2:
                 break
-            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples // 10, ensure_labels)
+            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
             x_test = np.append(x_test, temp1, axis=0)
             y_test = np.append(y_test, temp2, axis=0)
 

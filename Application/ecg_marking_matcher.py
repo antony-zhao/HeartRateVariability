@@ -12,8 +12,8 @@ other containing the R-peaks, each line corresponding to the same line in the ot
 total_count = 10000000  # Maximum lines to copy over
 count = 0  # Current number of lines
 
-xl_file = os.path.join('..', 'Signal', 'RAT #12_2016_WK4_EPOCH DATA.xlsx')  # Data files
-ecg_file_name = os.path.join('..', 'ECG_Data', 'RAT #12_2016_WK4.ascii')
+xl_file = os.path.join('..', 'Signal', 'T21 - April 1st 6pm - 2nd 6pm - epoch data - Hand cleaned.xlsx')  # Data files
+ecg_file_name = os.path.join('..', 'ECG_Data', 'T21_transition example3_900s.ascii')
 '''
 Rat Val: 'RAT #12_2016_WK4.ascii'
 Rat Train: RAT #01_2021_baseline.ascii
@@ -21,10 +21,10 @@ Rat Train: RAT #01_2021_baseline.ascii
 Mouse Train: T22 - 2 hour data.ascii
 Mouse Val: T21_transition example3_900s.ascii
 '''
-file = open(os.path.join('..', 'Training', 'rat_val.txt'), 'w')  # Output files
+file = open(os.path.join('..', 'Training', 'mouse_val.txt'), 'w')  # Output files
 
 wb = xlrd.open_workbook(xl_file)
-page = wb.sheet_by_index(6)  # The excel page for the relevant data
+page = wb.sheet_by_index(0)  # The excel page for the relevant data
 
 row = 1  # The row of the dates in the excel sheet
 

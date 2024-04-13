@@ -3,6 +3,10 @@ import numpy as np
 import os
 import re
 from scipy.special import expit
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"   # see issue #152
+# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
@@ -78,7 +82,7 @@ def read_ecg(ecg_file, count):
     return datetime, ecg, e
 
 
-def write_signal(sig_file, datetime, sig, ecg, lines, activation=None):
+def write_signal(sig_file, datetime, sig, ecg, activation=None):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
     global dist
     global first
@@ -158,6 +162,9 @@ ind1 = pad_behind * window_size
 ind2 = (pad_behind + 1) * window_size
 curr_segment = ecg_temp[ind1:ind2]
 curr_filt = filtered_temp[ind1:ind2]
+batch = []
+datetimes = []
+ecg_segments = []
 
 with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
     pbar.set_description('Bytes ')
@@ -168,12 +175,19 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         temp = process_ecg(ecg_temp, filtered_temp, scale_down, stack, datapoints)
         temp = temp[np.newaxis, :, :]
         temp = np.swapaxes(temp, 1, 2)
-        signal = model(temp, training=False).numpy()
-        signal = signal.reshape(window_size, )
-        max_ind = np.argmax(temp)
+        batch.append(temp)
+        datetimes.append(datetime)
+        ecg_segments.append(curr_segment)
+        if len(batch) == 128:
+            batch = np.array(batch)[:, 0, :, :]
+            signals = model(batch, training=False).numpy()
 
-        num_lines = write_signal(f, datetime, signal, curr_segment, lines, activation=expit)
-        lines += num_lines
+            for signal, datetime_iter, segment in zip(signals, datetimes, ecg_segments):
+                num_lines = write_signal(f, datetime_iter, signal, segment, activation=expit)
+                lines += num_lines
+            batch = []
+            datetimes = []
+            ecg_segments = []
 
         # Steps through all the different buffers, and if the buffer is empty reads more from the file.
         if ecg_segment.size > stack * window_size:
@@ -222,13 +236,14 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
 
 
 # Writes the final few datapoints into the file, and closes it
-write_signal(f, datetime, signal, lines, curr_segment)
+for signal, datetime_iter, segment in zip(signals, datetimes, ecg_segments):
+    num_lines = write_signal(f, datetime_iter, signal, segment, activation=expit)
 end = time.time()
 
 
 f.close()
 
-# print('elapsed time: ' + str(end - start) + ' seconds')
+print('elapsed time: ' + str(end - start) + ' seconds')
 # input('Press enter to continue (may need 2 times)')
 
 del model
