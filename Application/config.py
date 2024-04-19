@@ -1,8 +1,9 @@
-from configparser import SafeConfigParser
+from argparse import ArgumentParser
+from configparser import ConfigParser
 import configparser
 import os
 
-parser = SafeConfigParser()
+parser = ConfigParser()
 parser.read('selector.ini')
 animal = parser.get('Animal', 'animal')
 
@@ -31,12 +32,18 @@ order = int(parser.get('Filter Parameters', 'order'))
 
 if __name__ == '__main__':
     # To change the selector
-    cwd = os.getcwd()
-    for file in os.listdir(cwd):
-        if file.endswith('.ini') and not file.startswith('selector'):
-            print(file)
-    print('Existing configs (change the selector to match one of the prefixes)')
-    animal = input()
+    parser = ArgumentParser()
+    parser.add_argument('--animal', type=str, help='Filename to load', default=None)
+    args = parser.parse_args()
+    animal = args.animal
+    if animal is None:
+        cwd = os.getcwd()
+        for file in os.listdir(cwd):
+            if file.endswith('.ini') and not file.startswith('selector'):
+                print(file)
+        print('Existing configs (change the selector to match one of the prefixes)')
+        animal = input()
+
     if os.path.exists(f'{animal}_config.ini'):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read('selector.ini')

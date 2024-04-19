@@ -80,11 +80,6 @@ model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', k
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
 # model.add(Flatten())
-# model.add(
-#     Bidirectional(LSTM(units=window_size // 2, return_sequences=True)))
-# model.add(Dropout(0.3))
-# model.add(Activation('relu'))
-# model.add(BatchNormalization())
 model.add(
     Bidirectional(GRU(units=window_size // 2, return_sequences=False)))
 model.add(Dropout(0.5))

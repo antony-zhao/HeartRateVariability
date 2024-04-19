@@ -1,4 +1,5 @@
 import multiprocessing
+from argparse import ArgumentParser
 from pathlib import Path
 import numpy as np
 import os
@@ -136,37 +137,54 @@ def write_to_excel(lines, sheet, row, formats, sheet_num):
 
 def main():
     # Handles selecting the file and selecting a place/name for the new file
-    root = tk.Tk()
-    currdir = os.getcwd()
-    root.filename = filedialog.askopenfilenames(initialdir=currdir + "/../ECG_Data", title="Select file",
-                                                filetypes=(("txt files", "*.txt"),
-                                                           ("all files", "*.*")))
-    filenames = list(root.filename)
-    filenames.sort()
-    total_size = 0
-    for file_name in filenames:
-        total_size += os.stat(file_name).st_size
-    root.destroy()
+    parser = ArgumentParser()
+    parser.add_argument('--filename', '-f', type=str, help='Filename to load', default=None)
+    args = parser.parse_args()
+    filename = args.filename
+    if filename is None:
+        root = tk.Tk()
+        currdir = os.getcwd()
+        root.filename = filedialog.askopenfilenames(initialdir=currdir + "/../ECG_Data", title="Select file",
+                                                    filetypes=(("txt files", "*.txt"),
+                                                               ("all files", "*.*")))
+        filenames = list(root.filename)
+        filenames.sort()
+        total_size = 0
+        for file_name in filenames:
+            total_size += os.stat(file_name).st_size
+        root.destroy()
 
-    if len(filenames) == 0:
-        print("Please select files")
-        return
+        if len(filenames) == 0:
+            print("Please select files")
+            return
+        filename = os.path.basename(filenames[0])[:-7]
+    # root = tk.Tk()
+    # currdir = os.getcwd()
+    # par = Path(currdir).parent
+    # signal_dir = str(par) + r"\Signal"
+    # root.filename = filedialog.asksaveasfilename(initialdir=signal_dir,
+    #                                              filetypes=(("excel file", "*.xlsx"),), defaultextension=".xlsx")
+    else:
+        i = 1
+        filename = filename[:filename.index('.')]
+        filenames = []
+        while os.path.exists(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt')):
+            filenames.append(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt'))
+            i += 1
 
-    root = tk.Tk()
-    currdir = os.getcwd()
-    par = Path(currdir).parent
-    signal_dir = str(par) + r"\Signal"
-    root.filename = filedialog.asksaveasfilename(initialdir=signal_dir,
-                                                 filetypes=(("excel file", "*.xlsx"),), defaultextension=".xlsx")
-    saveas = root.filename
+        filenames.sort()
+        total_size = 0
+        for file_name in filenames:
+            total_size += os.stat(file_name).st_size
+    saveas = filename + ".xlsx"
     if saveas == '':
         print("Please input a filename")
         return
-    root.destroy()
+    # root.destroy()
 
     start = time.time()
 
-    out = os.path.join(signal_dir, saveas)
+    out = os.path.join('..', 'Signal', saveas)
 
     # Handles the multiprocessing, and runs multiple instances of the process_file function
     pool = mp.Pool(processes=max(1, multiprocessing.cpu_count() - 2))
