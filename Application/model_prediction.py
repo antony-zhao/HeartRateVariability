@@ -52,7 +52,7 @@ if __name__ == "__main__":
     file = open(os.path.join('..', 'ECG_Data', filename), 'r')
     file_size = os.stat(os.path.join('..', 'ECG_Data', filename)).st_size
 
-    folder_selected = 'Signal'
+    folder_selected = 'ECG_Data'
 
     filename = filename[:filename.index('.')]  # Removes the type of file (i.e. ascii suffix)
     # without the full path
