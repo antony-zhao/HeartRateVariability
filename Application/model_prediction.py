@@ -1,3 +1,4 @@
+import scipy.special
 from matplotlib import pyplot as plt
 import numpy as np
 import os
@@ -29,6 +30,7 @@ update_freq = 1
 loading_size = 100
 # model = keras.models.load_model(f'{animal}_model', compile=False)
 model = load_model(f'{animal}_model_val_top_k', compile=False)
+model.summary()
 
 # Opening file and choosing directory to save code in
 root = tk.Tk()
@@ -60,7 +62,7 @@ start = time.time()
 lines = 0  # Tracks the number of lines for the current file
 dist = 0
 first = True  # For handling the first signal
-average_interval = deque(maxlen=10)  # Last 10 interval lengths, used to find the running average
+average_interval = deque(maxlen=1)  # Last 10 interval lengths, used to find the running average
 average_interval.append(interval_length)
 
 
@@ -100,11 +102,13 @@ def write_signal(sig_file, datetime, sig, ecg, activation=None):
     min_dist = 1 - max_dist_percentage
     max_dist = 1 + max_dist_percentage
 
+    sorted_inds = np.argsort(sig)
+    temp = []
     for i in range(len(datetime)):
         d = datetime[i]
         e = ecg[i]
-        s = sig[i]
-        if s >= threshold:  # Minimum value of the signal before other checks. May need to adjust this value.
+        s_ = sig[i]
+        if i == sorted_inds[-1]:  # Minimum value of the signal before other checks. May need to adjust this value.
             if dist < min_dist * np.mean(average_interval):
                 if first:  # The very first signal
                     s = 1
@@ -118,8 +122,14 @@ def write_signal(sig_file, datetime, sig, ecg, activation=None):
                 dist = 0
         else:
             s = 0
-        sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), int(s)))
+        sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), '{:1.2f}'.format(s_), int(s)))
+        temp.append(s)
         dist += 1
+    temp = np.array(temp)
+    plt.plot(sig)
+    plt.plot(ecg)
+    plt.plot(temp)
+    plt.show()
     return len(datetime)
 
 
@@ -178,12 +188,12 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         batch.append(temp)
         datetimes.append(datetime)
         ecg_segments.append(curr_segment)
-        if len(batch) == 128:
+        if len(batch) == 256:
             batch = np.array(batch)[:, 0, :, :]
             signals = model(batch, training=False).numpy()
 
             for signal, datetime_iter, segment in zip(signals, datetimes, ecg_segments):
-                num_lines = write_signal(f, datetime_iter, signal, segment, activation=expit)
+                num_lines = write_signal(f, datetime_iter, signal, segment, activation=scipy.special.softmax)
                 lines += num_lines
             batch = []
             datetimes = []

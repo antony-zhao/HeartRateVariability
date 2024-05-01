@@ -169,7 +169,7 @@ def main():
     out = os.path.join(signal_dir, saveas)
 
     # Handles the multiprocessing, and runs multiple instances of the process_file function
-    pool = mp.Pool(processes=max(1, multiprocessing.cpu_count() - 2))
+    pool = mp.Pool(processes=max(1, multiprocessing.cpu_count() * 3 // 4))
     func = partial(process_file, filenames)
     results = pool.map(func, filenames)
 

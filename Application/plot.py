@@ -273,8 +273,8 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         temp = re.findall('([-0-9.]+)', line)  # Regex, 2nd to last is the ECG, and last is the signal (others are
         # date values which are kept in for post_processing.py)
         ecg.append(float(temp[-2]))
-        signal.append(int(temp[-1]))
-        if int(temp[-1]) == 1:
+        signal.append(temp[-1])
+        if temp[-1] == 1:
             total_marks += 1
             if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the
                 # signal is correct
@@ -313,6 +313,8 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
 plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
          .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))
 
+# b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high')
+# ecg = filtfilt(b, a, np.asarray(ecg))
 filtered_ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
 
 ecg_line, = axs.plot(range(len(ecg)), ecg, zorder=101)

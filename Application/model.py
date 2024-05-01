@@ -64,21 +64,26 @@ def weighted_binary_crossentropy(target, output):
     return tf.reduce_mean(loss, axis=-1)
 
 
-model = Sequential()  # The main model used for detecting R peaks.
+model = Sequential()
+model.add(keras.layers.GaussianNoise(input_shape=(datapoints, stack * 2), stddev=0.0))  # The main model used for detecting R peaks.
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=32, strides=4,
-           padding='same', kernel_regularizer='l2',
-           activation='relu',))
+    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=64, strides=2,
+           padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+           activation='selu',))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=stack * 8, kernel_size=16, strides=2, padding='same', kernel_regularizer='l2',
-                 activation='relu'))
+model.add(Conv1D(filters=stack * 8, kernel_size=32, strides=2, padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+                 activation='selu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', kernel_regularizer='l2',
-                 activation='relu'))
+model.add(Conv1D(filters=stack * 16, kernel_size=16, strides=2, padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+                 activation='selu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
+model.add(Conv1D(filters=stack * 32, kernel_size=8, strides=2, padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+                 activation='selu'))
+model.add(BatchNormalization())
+# model.add(MaxPooling1D(strides=2))
 # model.add(Flatten())
 # model.add(
 #     Bidirectional(LSTM(units=window_size // 2, return_sequences=True)))
@@ -86,40 +91,15 @@ model.add(MaxPooling1D(strides=2))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
 model.add(
-    Bidirectional(GRU(units=window_size // 2, return_sequences=False)))
-model.add(Dropout(0.5))
-model.add(Activation('relu'))
+    Bidirectional(GRU(units=window_size * 3 // 2, return_sequences=False, dropout=0.5)))
+model.add(Activation('selu'))
 model.add(BatchNormalization())
-model.add(
-    Dense(units=window_size // 2))
-model.add(Dropout(0.5))
-model.add(Activation('relu'))
-model.add(BatchNormalization())
-model.add(Dense(window_size))
-# model = Sequential()  # The main model used for detecting R peaks.
 # model.add(
-#     Conv1D(input_shape=(datapoints, stack * 2), filters=16, kernel_size=7, strides=2,
-#            padding='same', activation='relu'))
-# model.add(BatchNormalization())
-# model.add(MaxPooling1D(strides=2))
-# model.add(Conv1D(filters=32, kernel_size=5, strides=1, padding='same', kernel_regularizer='l2',
-#                  activation='relu'))
-# model.add(BatchNormalization())
-# model.add(Conv1D(filters=64, kernel_size=3, strides=1, padding='same', kernel_regularizer='l2',
-#                  activation='relu'))
-# model.add(BatchNormalization())
-# model.add(MaxPooling1D(strides=2))
-# model.add(Conv1D(filters=128, kernel_size=3, strides=1, padding='same', kernel_regularizer='l2',
-#                  activation='relu'))
-# model.add(BatchNormalization())
-# model.add(MaxPooling1D(strides=2))
-# model.add(Flatten())
-# model.add(
-#     Dense(units=datapoints, kernel_regularizer='l2', kernel_initializer='glorot_normal', activity_regularizer='l2'))  #
+#     Dense(units=window_size // 2))
+# model.add(Dropout(0.3))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
-# model.add(Dropout(0.5))
-# model.add(Dense(window_size))
+model.add(Dense(window_size))
 # model.add(Activation('sigmoid'))
 
 model.summary()
@@ -160,21 +140,23 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy,
                                  'magnitude': magnitude, 'distance': distance})
-    model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True),
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude,
-                           keras.metrics.BinaryCrossentropy(from_logits=True),
+                           # keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
-                         save_best_only=True)
+                         save_best_only=True, intial_value_threshold=0.8)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max', verbose=1,
-                         save_best_only=True)
+                         save_best_only=True, intial_value_threshold=0.5)
     vm = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
-                         save_best_only=True)
+                         save_best_only=True, intial_value_threshold=0.2)
+    vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_categorical_accuracy', mode='max', verbose=1,
+                         save_best_only=True, intial_value_threshold=0.8)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr, vp], shuffle=True)
 
     model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
@@ -234,7 +216,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 if __name__ == '__main__':
     model_file = f'{animal}_model'
 
-    epochs = 50
+    epochs = 80
     batch_size = 128
     learning_rate = 5e-4
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))

@@ -16,10 +16,12 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
     x, y = [], []
     padded_ecg = np.pad(ecg, (int(pad_behind * window_size), int(pad_forward * window_size)), constant_values=(0, 0))
     padded_filter = np.pad(filtered_ecg, (int(pad_behind * window_size), int(pad_forward * window_size)), constant_values=(0, 0))
-    indices = np.random.randint(0, len(ecg) - int(pad_forward * window_size), size=samples)
+    indices = np.random.randint(0, len(ecg) - int(pad_forward * window_size), size=samples * 2)
     for ind in indices:
         # j is the starting index for the block that is being labeled. We include 2 after and 2 before
         # second
+        if len(x) >= samples:
+            break
         y_i = signal[ind:ind + int(1 * window_size)]
         if ensure_labels:
             if max(y_i) != 1:
@@ -46,7 +48,7 @@ def process_ecg(ecg, filtered_ecg, scale_down, stack, datapoints):
     else:
         diff = np.max(ecg) - np.min(ecg)
         if diff != 0:
-            ecg = (ecg - np.min(ecg)) / diff
+            ecg = 2 * (ecg - np.min(ecg)) / diff - 1
 
     filtered_ecg[np.abs(filtered_ecg) < eps] = 0
     filtered_ecg = np.sum(filtered_ecg.reshape((-1, scale_down)), axis=1) / scale_down
@@ -102,7 +104,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 5000  # Number of samples to create, won't generate exactly this many however.
+    samples = 6000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -136,12 +138,13 @@ if __name__ == '__main__':
             if len(ecg2) < lines // 2:
                 break
             temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
-            x_test = np.append(x_test, temp1, axis=0)
-            y_test = np.append(y_test, temp2, axis=0)
+            if len(temp1) > 0:
+                x_test = np.append(x_test, temp1, axis=0)
+                y_test = np.append(y_test, temp2, axis=0)
 
-    x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
+    # x_train = np.append(x_train, -x_train, axis=0)  # In our case we have inverted signals, so we just double the
     # dataset by adding more inverted signals
-    y_train = np.append(y_train, y_train, axis=0)
+    # y_train = np.append(y_train, y_train, axis=0)
 
 
     for i in range(10):
