@@ -252,7 +252,7 @@ dist = 0
 num = 0
 events = Events()
 first = True
-last_few = deque(maxlen=8)
+last_few = deque(maxlen=1)
 x1 = None
 x2 = None
 
@@ -274,7 +274,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         # date values which are kept in for post_processing.py)
         ecg.append(float(temp[-2]))
         signal.append(temp[-1])
-        if temp[-1] == 1:
+        if int(temp[-1]) == 1:
             total_marks += 1
             if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the
                 # signal is correct
@@ -306,7 +306,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
             dist = 0  # Reset distance between last and current signal
             if first:
                 first = False  # handling first signal
-            if len(last_few) == 8:
+            if len(last_few) > 0:
                 interval_length = np.mean(last_few)  # Running average of rr interval
             prev = i
 

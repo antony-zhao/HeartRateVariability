@@ -1,5 +1,6 @@
 import os
 
+import scipy
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
@@ -65,7 +66,11 @@ def weighted_binary_crossentropy(target, output):
 
 
 model = Sequential()
-model.add(keras.layers.GaussianNoise(input_shape=(datapoints, stack * 2), stddev=0.0))  # The main model used for detecting R peaks.
+model.add(Input((datapoints, stack * 2)))
+# model.add(Permute((2, 1)))
+model.add(keras.layers.GaussianNoise(input_shape=(datapoints, stack * 2), stddev=0.05))  # The main model used for detecting R peaks.
+# model.add(Bidirectional(GRU(units=window_size * 2, return_sequences=True, dropout=0.5, kernel_regularizer='l2')))
+# model.add(Permute((2, 1)))
 model.add(
     Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=64, strides=2,
            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
@@ -90,6 +95,7 @@ model.add(BatchNormalization())
 # model.add(Dropout(0.3))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
+# model.add(Permute((2, 1)))
 model.add(
     Bidirectional(GRU(units=window_size * 3 // 2, return_sequences=False, dropout=0.5)))
 model.add(Activation('selu'))
@@ -99,7 +105,7 @@ model.add(BatchNormalization())
 # model.add(Dropout(0.3))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
-model.add(Dense(window_size))
+model.add(Dense(window_size + 1))
 # model.add(Activation('sigmoid'))
 
 model.summary()
@@ -115,7 +121,7 @@ def magnitude(y_true, y_labels):
     """Metric for what the magnitudes of the labels are, as having smaller ones
     can make it harder for model_prediction to work"""
     x = K.mean(K.max(y_labels, axis=1) * K.max(y_true, axis=1))
-    return 1 / (1 + K.exp(-x))
+    return x
 
 
 def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
@@ -148,15 +154,15 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          save_best_only=True, intial_value_threshold=0.8)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True, intial_value_threshold=0.5)
-    vm = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
-                         save_best_only=True, intial_value_threshold=0.2)
+    # vm = ModelCheckpoint(model_file + '_val_mag', monitor='val_magnitude', mode='max', verbose=1,
+    #                      save_best_only=True, intial_value_threshold=0.2)
     vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_categorical_accuracy', mode='max', verbose=1,
-                         save_best_only=True, intial_value_threshold=0.8)
+                         save_best_only=True, intial_value_threshold=0.2)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[va, vk, vm, reducelr, vp], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[va, vk, reducelr, vp], shuffle=True)
 
     model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
@@ -178,29 +184,29 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
         def sigmoid(x):
             return 1 / (1 + np.exp(-x))
 
-        for i in range(5):
-            plt.plot(x_test[i, :, -stack // 2], label='filtered')
-            sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sigmoid(sig), label='prediction')
-            sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-            sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sigmoid(sig), label='top_k_prediction')
-            sig = y_test[i]
-            sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
-            sig /= -np.max(sig) * 2
-            plt.plot(sig, label='truth')
-            plt.legend()
-            plt.show()
+        # for i in range(5):
+        #     plt.plot(x_test[i, :, -stack // 2], label='filtered')
+        #     sig = model.predict(x_test[i][np.newaxis, :, :])[0]
+        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+        #     plt.plot(scipy.special.softmax(sig), label='prediction')
+        #     sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
+        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
+        #     plt.plot(scipy.special.softmax(sig), label='top_k_prediction')
+        #     sig = y_test[i]
+        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
+        #     sig /= -np.max(sig) * 2
+        #     plt.plot(sig, label='truth')
+        #     plt.legend()
+        #     plt.show()
 
-        for i in range(5):
+        for i in np.random.randint(len(x_train), size=10):
             plt.plot(x_train[i, :, -stack // 2], label='filtered')
             sig = model.predict(x_train[i][np.newaxis, :, :])[0]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sigmoid(sig), label='prediction')
+            plt.plot(scipy.special.softmax(sig), label='prediction')
             sig = model_top_k.predict(x_train[i][np.newaxis, :, :])[0]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-            plt.plot(sigmoid(sig), label='top_k_prediction')
+            plt.plot(scipy.special.softmax(sig), label='top_k_prediction')
             sig = y_train[i]
             sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
             sig /= -np.max(sig) * 2

@@ -24,10 +24,6 @@ program uses multiprocessing to process multiple files in parallel and rejoins t
 final data into a single excel sheet.
 """
 
-min_dist = 1 - max_dist_percentage
-max_double_dist = 2 * min_dist
-max_dist = 1 + max_dist_percentage
-
 
 def process_file(filenames, filename):
     """
@@ -38,9 +34,13 @@ def process_file(filenames, filename):
         filename (str): The file to be processed
     """
     global interval_length
+    min_dist = 1 - max_dist_percentage
+    max_double_dist = 2 * min_dist
+    max_dist = 1 + max_dist_percentage
     avg_interval_length = interval_length
     first = True  # For the first signal of the file
-    last_few = deque(maxlen=8)
+    soft_exclusion = False
+    last_few = deque(maxlen=1)
     dist = 0  # Distance from the last peak
     reset = True  # If the gap is too wide and it needs to reset the distance
     file = open(os.path.join('..', 'Signal', filename), 'r+')
@@ -64,23 +64,35 @@ def process_file(filenames, filename):
                 else:
                     if dist > max_double_dist * avg_interval_length:  # This indicates that the gap is too large
                         lines.append((date, ''))  #
-                    elif 1.2 * avg_interval_length < dist < max_double_dist * avg_interval_length:  # For when one beat is missed and the
+                    elif max_dist * avg_interval_length < dist < max_double_dist * avg_interval_length:  # For when one beat is missed and the
                         # next one is also wrong
                         continue
-                    else:
+                    elif dist < max_dist * avg_interval_length:
                         lines.append((date, '' if reset else dist / 4))  # dist/4 because ours is sampled as 4
                         # datapoints per milisecond
                         if reset:
                             reset = False
-
+                            min_dist = 1 - max_dist_percentage
+                            max_double_dist = 2 * min_dist
+                            max_dist = 1 + max_dist_percentage
             else:
                 reset = True
-            if max_dist * avg_interval_length > dist > min_dist * avg_interval_length:
+                max_dist = 1.4
+                min_dist = 0.6
+            if max_dist * avg_interval_length > dist > min_dist * avg_interval_length and not first:
                 last_few.append(dist)  # Add the distance to the running average
             dist = 0  # Reset distance between last and current signal
             if first:
                 first = False  # handling first signal
-            if len(last_few) == 8:
+                soft_exclusion = True
+                max_dist = 1.4
+                min_dist = 0.6
+            elif soft_exclusion:
+                soft_exclusion = False
+                min_dist = 1 - max_dist_percentage
+                max_double_dist = 2 * min_dist
+                max_dist = 1 + max_dist_percentage
+            if len(last_few) > 0:
                 avg_interval_length = np.mean(last_few)  # running average of rr interval
     print("{}/{} file has been completed".format(filenames.index(filename) + 1, len(filenames)))
     return lines

@@ -14,6 +14,7 @@ eps = 1e-9
 def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
     """Randomly creates a sample from somewhere within the data."""
     x, y = [], []
+    count = 0
     padded_ecg = np.pad(ecg, (int(pad_behind * window_size), int(pad_forward * window_size)), constant_values=(0, 0))
     padded_filter = np.pad(filtered_ecg, (int(pad_behind * window_size), int(pad_forward * window_size)), constant_values=(0, 0))
     indices = np.random.randint(0, len(ecg) - int(pad_forward * window_size), size=samples * 2)
@@ -23,9 +24,17 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
         if len(x) >= samples:
             break
         y_i = signal[ind:ind + int(1 * window_size)]
-        if ensure_labels:
+        if ensure_labels or count > 20:
             if max(y_i) != 1:
                 continue
+            else:
+                y_i.append(0)
+        else:
+            if max(y_i) != 1:
+                y_i.append(1)
+                count += 1
+            else:
+                y_i.append(0)
         x_i = process_ecg(padded_ecg[ind:ind + int(stack * window_size)],
                           padded_filter[ind:ind + int(stack * window_size)],
                           scale_down, stack, datapoints)
@@ -57,7 +66,7 @@ def process_ecg(ecg, filtered_ecg, scale_down, stack, datapoints):
     else:
         diff = np.max(filtered_ecg) - np.min(filtered_ecg)
         if diff != 0:
-            filtered_ecg = (filtered_ecg - np.min(filtered_ecg)) / diff
+            filtered_ecg = 2 * (filtered_ecg - np.min(filtered_ecg)) / diff - 1
 
     ecg = np.concatenate((ecg, filtered_ecg))
 
@@ -104,9 +113,9 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 6000  # Number of samples to create, won't generate exactly this many however.
+    samples = 10000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
-    ensure_labels = True  # Only add samples that have an actual beat in them
+    ensure_labels = False  # Only add samples that have an actual beat in them
 
     # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
     # before taking random samples from the data to create the datasets.
@@ -133,11 +142,11 @@ if __name__ == '__main__':
         ecg2, sig2, eof = read_file(val_file, lines)
         filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
         if x_test is None:
-            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
+            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 4, ensure_labels)
         else:
             if len(ecg2) < lines // 2:
                 break
-            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
+            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples // 4, ensure_labels)
             if len(temp1) > 0:
                 x_test = np.append(x_test, temp1, axis=0)
                 y_test = np.append(y_test, temp2, axis=0)
