@@ -27,14 +27,14 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
         if ensure_labels or count > 20:
             if max(y_i) != 1:
                 continue
-            else:
-                y_i.append(0)
-        else:
-            if max(y_i) != 1:
-                y_i.append(1)
-                count += 1
-            else:
-                y_i.append(0)
+            # else:
+            #     y_i.append(0)
+        # else:
+        #     if max(y_i) != 1:
+        #         y_i.append(1)
+        #         count += 1
+        #     else:
+        #         y_i.append(0)
         x_i = process_ecg(padded_ecg[ind:ind + int(stack * window_size)],
                           padded_filter[ind:ind + int(stack * window_size)],
                           scale_down, stack, datapoints)
@@ -70,7 +70,7 @@ def process_ecg(ecg, filtered_ecg, scale_down, stack, datapoints):
 
     ecg = np.concatenate((ecg, filtered_ecg))
 
-    return ecg.reshape((stack * 2, datapoints))
+    return ecg.reshape((2 * stack, datapoints))
 
 
 def filters(ecg, order, low_cutoff, high_cutoff, nyq):
@@ -113,9 +113,9 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 10000  # Number of samples to create, won't generate exactly this many however.
+    samples = 2000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
-    ensure_labels = False  # Only add samples that have an actual beat in them
+    ensure_labels = True  # Only add samples that have an actual beat in them
 
     # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
     # before taking random samples from the data to create the datasets.
@@ -126,27 +126,39 @@ if __name__ == '__main__':
     x_test, y_test = None, None
     while not eof:
         ecg1, sig1, eof = read_file(train_file, lines)
-        filtered_ecg1 = filters(ecg1, order, low_cutoff, high_cutoff, nyq)
-        if x_train is None:
-            x_train, y_train = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
-        else:
-            if len(ecg1) < lines // 2:
-                break
-            temp1, temp2 = random_sampling(ecg1, filtered_ecg1, sig1, samples, ensure_labels)
-            if temp1.size == 0:
-                continue
-            x_train = np.append(x_train, temp1, axis=0)
-            y_train = np.append(y_train, temp2, axis=0)
+        if len(ecg1) < lines // 2:
+            break
+        std = np.std(ecg1)
+        for i in range(0, 20, 2):
+            if i > 0:
+                length = np.pi * 2 * i
+                my_wave = (np.sin(np.linspace(0, length, lines)) * 0.05)
+                gaussian_noise = np.random.normal(0, std / 10, lines)
+                ecg = ecg1 + my_wave + gaussian_noise
+                if np.random.random() > 0.5:
+                    ecg *= -1
+            else:
+                gaussian_noise = np.random.normal(0, np.std(ecg1) / 10, lines)
+                ecg = ecg1 + gaussian_noise
+            filtered_ecg1 = filters(ecg, order, low_cutoff, high_cutoff, nyq)
+            if x_train is None:
+                x_train, y_train = random_sampling(ecg, filtered_ecg1, sig1, samples, ensure_labels)
+            else:
+                temp1, temp2 = random_sampling(ecg, filtered_ecg1, sig1, samples, ensure_labels)
+                if temp1.size == 0:
+                    continue
+                x_train = np.append(x_train, temp1, axis=0)
+                y_train = np.append(y_train, temp2, axis=0)
     eof = False
     while not eof:
         ecg2, sig2, eof = read_file(val_file, lines)
         filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
         if x_test is None:
-            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples // 4, ensure_labels)
+            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
         else:
             if len(ecg2) < lines // 2:
                 break
-            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples // 4, ensure_labels)
+            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
             if len(temp1) > 0:
                 x_test = np.append(x_test, temp1, axis=0)
                 y_test = np.append(y_test, temp2, axis=0)

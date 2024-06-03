@@ -115,7 +115,7 @@ if __name__ == "__main__":
         # for i, peak in enumerate(peaks[1:]):
         #     if min_dist * (peak - current_peak) < peaks[i + 1] - peak:
         #         exclusion.append(peak)
-        offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * window_size
+        offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
         argmax = argmax + offsets
         temp = []
         for i in range(len(datetime)):
@@ -206,12 +206,14 @@ if __name__ == "__main__":
             if len(batch) == 256:
                 batch = np.array(batch)[:, 0, :, :]
                 signals = model(batch, training=False).numpy()
-                signals = scipy.special.softmax(signals, axis=1)
-                argmax = np.argmax(signals, axis=1)
-                signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
+                signals = scipy.special.expit(signals)
+                # signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
 
                 datetime_iter = np.concatenate(datetimes).ravel()
                 signal = np.asarray(signals).flatten()
+                temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1, interval_length)
+                argmax = np.argmax(temp_signals, axis=1)
+
                 segment = np.asarray(ecg_segments).flatten()
                 num_lines = write_signal(f, datetime_iter, signal, segment, argmax)
                 lines += num_lines
@@ -225,8 +227,8 @@ if __name__ == "__main__":
                 ecg_temp = ecg_segment[:window_size * stack]
                 filtered_segment = filtered_segment[window_size:]
                 filtered_temp = filtered_segment[:window_size * stack]
-                datetime_segment = datetime_segment[window_size:]
                 datetime = datetime_segment[:window_size]
+                datetime_segment = datetime_segment[window_size:]
                 curr_segment = ecg_temp[ind1:ind2]
                 curr_filt = filtered_temp[ind1:ind2]
             elif not EOF:
@@ -267,13 +269,15 @@ if __name__ == "__main__":
     # Writes the final few datapoints into the file, and closes it
     batch = np.array(batch)[:, 0, :, :]
     signals = model(batch, training=False).numpy()
-    signals = scipy.special.softmax(signals, axis=1)
-    argmax = np.argmax(signals, axis=1)
-    signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
+    signals = scipy.special.expit(signals)
+    # argmax = np.argmax(signals, axis=1)
+    # signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
 
     datetime_iter = np.concatenate(datetimes).ravel()
     signal = np.asarray(signals).flatten()
     segment = np.asarray(ecg_segments).flatten()
+    temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1, interval_length)
+    argmax = np.argmax(temp_signals, axis=1)
     num_lines = write_signal(f, datetime_iter, signal, segment, argmax)
     lines += num_lines
     end = time.time()

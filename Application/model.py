@@ -22,26 +22,6 @@ if len(physical_devices) > 0:
 POS_WEIGHT = 10  # multiplier for positive targets, needs to be tuned
 
 
-def f1(y_true, y_pred):
-    def recall_m(y_true, y_pred):
-        TP = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        Positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-
-        recall = TP / (Positives + K.epsilon())
-        return recall
-
-    def precision_m(y_true, y_pred):
-        TP = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        Pred_Positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-
-        precision = TP / (Pred_Positives + K.epsilon())
-        return precision
-
-    precision, recall = precision_m(y_true, y_pred), recall_m(y_true, y_pred)
-
-    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
-
-
 def weighted_binary_crossentropy(target, output):
     """
     Weighted binary crossentropy between an output tensor
@@ -68,11 +48,11 @@ def weighted_binary_crossentropy(target, output):
 model = Sequential()
 model.add(Input((datapoints, stack * 2)))
 # model.add(Permute((2, 1)))
-model.add(keras.layers.GaussianNoise(input_shape=(datapoints, stack * 2), stddev=0.05))  # The main model used for detecting R peaks.
+# model.add(keras.layers.GaussianNoise(stddev=0.05))  # The main model used for detecting R peaks.
 # model.add(Bidirectional(GRU(units=window_size * 2, return_sequences=True, dropout=0.5, kernel_regularizer='l2')))
 # model.add(Permute((2, 1)))
 model.add(
-    Conv1D(input_shape=(datapoints, stack * 2), filters=stack * 4, kernel_size=64, strides=2,
+    Conv1D(filters=stack * 4, kernel_size=64, strides=2,
            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
            activation='selu',))
 model.add(BatchNormalization())
@@ -105,7 +85,7 @@ model.add(BatchNormalization())
 # model.add(Dropout(0.3))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
-model.add(Dense(window_size + 1))
+model.add(Dense(window_size))
 # model.add(Activation('sigmoid'))
 
 model.summary()
@@ -146,7 +126,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy,
                                  'magnitude': magnitude, 'distance': distance})
-    model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True),
+    model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True), #from_logits=True
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude,
                            # keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
