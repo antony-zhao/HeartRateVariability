@@ -113,7 +113,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 2000  # Number of samples to create, won't generate exactly this many however.
+    samples = 2500  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -132,11 +132,11 @@ if __name__ == '__main__':
         for i in range(0, 20, 2):
             if i > 0:
                 length = np.pi * 2 * i
-                my_wave = (np.sin(np.linspace(0, length, lines)) * 0.05)
+                my_wave = (np.cos(np.linspace(0, length, lines)) * 0.05)
                 gaussian_noise = np.random.normal(0, std / 10, lines)
                 ecg = ecg1 + my_wave + gaussian_noise
-                if np.random.random() > 0.5:
-                    ecg *= -1
+                # if np.random.random() > 0.5:
+                #     ecg *= -1
             else:
                 gaussian_noise = np.random.normal(0, np.std(ecg1) / 10, lines)
                 ecg = ecg1 + gaussian_noise

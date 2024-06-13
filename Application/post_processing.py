@@ -180,7 +180,7 @@ def main():
         filename = filename[:filename.index('.')]
         filenames = []
         total_size = 0
-        if type == 'ascii':
+        if type == '.ascii':
             i = 1
             while os.path.exists(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt')):
                 filenames.append(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt'))

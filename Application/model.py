@@ -65,7 +65,7 @@ model.add(Conv1D(filters=stack * 16, kernel_size=16, strides=2, padding='same', 
                  activation='selu'))
 model.add(BatchNormalization())
 model.add(MaxPooling1D(strides=2))
-model.add(Conv1D(filters=stack * 32, kernel_size=8, strides=2, padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', kernel_regularizer='l2', activity_regularizer='l2',
                  activation='selu'))
 model.add(BatchNormalization())
 # model.add(MaxPooling1D(strides=2))
@@ -77,7 +77,7 @@ model.add(BatchNormalization())
 # model.add(BatchNormalization())
 # model.add(Permute((2, 1)))
 model.add(
-    Bidirectional(GRU(units=window_size * 3 // 2, return_sequences=False, dropout=0.5)))
+    Bidirectional(GRU(units=window_size // 2, return_sequences=False, dropout=0.5)))
 model.add(Activation('selu'))
 model.add(BatchNormalization())
 # model.add(
@@ -207,6 +207,9 @@ if __name__ == '__main__':
     learning_rate = 5e-4
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
     y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train.npy'))
+    inds = np.random.randint(x_train.shape[0], size=x_train.shape[0] * 3 // 4)
+    x_train = x_train[inds]
+    y_train = y_train[inds]
     x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))
     y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test.npy'))
 
