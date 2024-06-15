@@ -253,10 +253,11 @@ def main():
         sheet.write_formula('K6', '=AVERAGE(F:F)')
         sheet.write_formula('K7', '=COUNT(F:F)*K6/(24*60*60*1000)', cell_format=time_format)
 
+    wb.close()
+
     end = time.time()
     print('elapsed time: ' + str(end - start))
 
-    wb.close()
 
 
 if __name__ == "__main__":

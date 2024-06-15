@@ -270,7 +270,7 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
         if i % every_i == 0:
             pbar.update(line_size * every_i)
         dist += 1
-        temp = re.findall('([-0-9.]+)', line)  # Regex, 2nd to last is the ECG, and last is the signal (others are
+        temp = re.findall('([-0-9.e]+)', line)  # Regex, 2nd to last is the ECG, and last is the signal (others are
         # date values which are kept in for post_processing.py)
         ecg.append(float(temp[-2]))
         signal.append(temp[-1])
