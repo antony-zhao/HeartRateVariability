@@ -4,7 +4,7 @@
 void process_signal(float *sig, int *argmax, int argmax_len, int sig_len, float threshold,
                     float min_dist, float max_dist, float *average_interval, int avg_len,
                     int *processed_sig, bool *first, int *dist) {
-
+    return;
     float average_sum = 0.0;
 
     for (int i = 0; i < avg_len; ++i) {
@@ -24,13 +24,13 @@ void process_signal(float *sig, int *argmax, int argmax_len, int sig_len, float 
         if (is_argmax && sig[i] > threshold) {
             if (*dist < min_dist * average_mean) {
                 if (*first) {
-                    processed_sig[i] = 1;
+//                    processed_sig[i] = 1;
                     *first = false;
                 } else {
-                    processed_sig[i] = 0;
+//                    processed_sig[i] = 0;
                 }
             } else {
-                processed_sig[i] = 1;
+//                processed_sig[i] = 1;
                 if (*dist < max_dist * average_mean) {
                     // Update average_interval
                     average_sum -= average_interval[0];
@@ -44,7 +44,7 @@ void process_signal(float *sig, int *argmax, int argmax_len, int sig_len, float 
                 *dist = 0;
             }
         } else {
-            processed_sig[i] = 0;
+//            processed_sig[i] = 0;
         }
         *dist += 1.0;
     }

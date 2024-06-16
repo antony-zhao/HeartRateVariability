@@ -31,6 +31,7 @@ from config import window_size, stack, scale_down, datapoints, \
 import tracemalloc
 import psutil
 process = psutil.Process()
+import sys
 
 tracemalloc.start()
 
@@ -190,6 +191,7 @@ if __name__ == "__main__":
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
         global dist_c
         global first_c
+        global average_interval_c
         # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
         # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
         min_dist = 1 - max_dist_percentage
@@ -198,9 +200,8 @@ if __name__ == "__main__":
         offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
         argmax = argmax + offsets
         processed_sig = np.zeros(len(sig), dtype=np.int32)
-
         lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
-                           average_interval_c, len(average_interval), processed_sig, ctypes.byref(first_c),
+                           average_interval_c, len(average_interval_c), processed_sig, ctypes.byref(first_c),
                            ctypes.byref(dist_c))
 
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
@@ -383,7 +384,7 @@ if __name__ == "__main__":
     segment = np.asarray(ecg_segments).flatten()
 
     # num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
-    num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
+    num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
     writer.write_csv(f, include_header=False)
     # lines += num_lines
     end = time.time()
