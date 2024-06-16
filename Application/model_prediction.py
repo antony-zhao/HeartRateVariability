@@ -11,6 +11,7 @@ import os
 import polars as pl
 import pandas as pd
 import ctypes
+from process_signal_cython import process_signal_cython
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 # os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -44,7 +45,7 @@ if __name__ == "__main__":
 
     file_num = 1
     update_freq = 1
-    loading_size = 64
+    loading_size = 128
     memory_curr = 0
     net_change = 0
     # model = keras.models.load_model(f'{animal}_model', compile=False)
@@ -53,21 +54,21 @@ if __name__ == "__main__":
     # model3 = load_model(f'{animal}_model_3', compile=False)
     model.summary()
 
-    lib = ctypes.CDLL('./process_signal.so')
-    lib.process_signal.argtypes = [
-        np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # sig
-        np.ctypeslib.ndpointer(ctypes.c_int32, flags="C_CONTIGUOUS"),  # argmax
-        ctypes.c_int,  # argmax_len
-        ctypes.c_int,  # sig_len
-        ctypes.c_float,  # threshold
-        ctypes.c_float,  # min_dist
-        ctypes.c_float,  # max_dist
-        np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # average_interval
-        ctypes.c_int,  # avg_len
-        np.ctypeslib.ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),  # processed_sig
-        ctypes.POINTER(ctypes.c_bool),  #first
-        ctypes.POINTER(ctypes.c_int32), #dist
-    ]
+    # lib = ctypes.CDLL('./process_signal_temp.so')
+    # lib.process_signal.argtypes = [
+    #     np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # sig
+    #     np.ctypeslib.ndpointer(ctypes.c_int32, flags="C_CONTIGUOUS"),  # argmax
+    #     ctypes.c_int,  # argmax_len
+    #     ctypes.c_int,  # sig_len
+    #     ctypes.c_float,  # threshold
+    #     ctypes.c_float,  # min_dist
+    #     ctypes.c_float,  # max_dist
+    #     np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # average_interval
+    #     ctypes.c_int,  # avg_len
+    #     np.ctypeslib.ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),  # processed_sig
+    #     ctypes.POINTER(ctypes.c_bool),  #first
+    #     ctypes.POINTER(ctypes.c_int32), #dist
+    # ]
 
     # Opening file and choosing directory to save code in
     if args.filename is None:
@@ -106,7 +107,7 @@ if __name__ == "__main__":
     average_interval = deque(maxlen=4) #np.array([interval_length] * 4, dtype=np.float32)
     dist_c = ctypes.c_int(0)
     first_c = ctypes.c_bool(True)  # For handling the first signal
-    average_interval_c = np.array([interval_length] * 4, dtype=np.float32)
+    average_interval_c = np.array([interval_length] * 4, dtype=np.int32)
 
 
     def read_ecg(ecg_file, count):
@@ -163,12 +164,14 @@ if __name__ == "__main__":
         offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
         argmax = argmax + offsets
         processed_sig = []
+        curr = time.time()
         for i in range(len(datetime)):
             if i in argmax and sig[i] > threshold:  # Minimum value of the signal before other checks. May need to adjust this value.
                 if dist < min_dist * np.mean(average_interval):
                     if first:  # The very first signal
                         s = 1
                         first = False
+                        dist = 0
                     else:
                         s = 0
                 else:
@@ -181,16 +184,38 @@ if __name__ == "__main__":
             # sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), int(s)))
             processed_sig.append(int(s))
             dist += 1
-
+        print(time.time() - curr, "Time Elapsed")
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
 
         dataframe.vstack(temp_df, in_place=True)
         return len(datetime)
 
+    # def process_signal_ctypes(dataframe, datetime, sig, ecg, argmax):
+    #     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
+    #     global dist_c
+    #     global first_c
+    #     global average_interval_c
+    #     # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
+    #     # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
+    #     min_dist = 1 - max_dist_percentage
+    #     max_dist = 1 + max_dist_percentage
+    #
+    #     offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
+    #     argmax = argmax + offsets
+    #     processed_sig = np.zeros(len(sig), dtype=np.int32)
+    #     lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
+    #                        average_interval_c, len(average_interval_c), processed_sig, ctypes.byref(first_c),
+    #                        ctypes.byref(dist_c))
+    #
+    #     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
+    #
+    #     dataframe.vstack(temp_df, in_place=True)
+    #     return len(datetime)
+
     def process_signal_c(dataframe, datetime, sig, ecg, argmax):
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-        global dist_c
-        global first_c
+        global dist
+        global first
         global average_interval_c
         # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
         # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
@@ -198,11 +223,11 @@ if __name__ == "__main__":
         max_dist = 1 + max_dist_percentage
 
         offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
-        argmax = argmax + offsets
-        processed_sig = np.zeros(len(sig), dtype=np.int32)
-        lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
-                           average_interval_c, len(average_interval_c), processed_sig, ctypes.byref(first_c),
-                           ctypes.byref(dist_c))
+        argmax = (argmax + offsets).astype(np.int32)
+
+        processed_sig, average_interval_c, first, dist = process_signal_cython(sig, len(sig), argmax, len(argmax),
+                                                                               average_interval_c, len(average_interval_c),
+                                                                               threshold, min_dist, max_dist, first, dist)
 
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
 
@@ -277,7 +302,7 @@ if __name__ == "__main__":
             datetimes.append(np.asarray(datetime))
             ecg_segments.append(curr_segment)
             # inc_time += time.time() - curr
-            if len(batch) >= 256:
+            if len(batch) >= 512:
                 # print("Model")
                 # curr = time.time()
                 # memory_curr = process.memory_info().rss
@@ -286,6 +311,7 @@ if __name__ == "__main__":
                 # signals2 = model2(batch, training=False).numpy()
                 # signals3 = model3(batch, training=False).numpy()
                 signals = scipy.special.softmax(signals, axis=0)
+                # signals = scipy.special.expit(signals)
                 # signals2 = scipy.special.softmax(signals2, axis=0)
                 # signals3 = scipy.special.softmax(signals3, axis=0)
                 # print(time.time() - curr, " Model time")
