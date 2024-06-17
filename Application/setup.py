@@ -6,7 +6,7 @@ from distutils.extension import Extension
 ext_modules = [
     Extension("process_signal_cython",
               ["process_signal_cython.pyx"],
-              extra_compile_args=["-ffast-math"])
+              extra_compile_args=["-ffast-math"]),
 ]
 
 setup(

@@ -12,9 +12,9 @@ from datetime import datetime as dt
 import datetime
 import time
 import multiprocessing as mp
-import json
-import tqdm
+import pandas as pd
 from functools import partial
+from post_processing_sig import post_process
 from config import window_size, stack, scale_down, datapoints, \
     lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
     pad_behind
@@ -41,49 +41,52 @@ def process_file(filenames, filename):
     avg_interval_length = interval_length
     first = True  # For the first signal of the file
     soft_exclusion = False
-    last_few = deque(maxlen=1)
     dist = 0  # Distance from the last peak
     reset = True  # If the gap is too wide and it needs to reset the distance
-    file = open(os.path.join('..', 'Signal', filename), 'r+')
+    file = os.path.join('..', 'Signal', filename)
+    reader_pd = pd.read_csv(file, header=None, usecols=[0, 2], engine='c', encoding_errors='ignore')
+
+    dates = reader_pd[0]
+    signals = reader_pd[2]
     lines = []  # Lines that will be later written to the excel sheet,
-    count = 0
     # contains tuples of the datetime, as well as the distance, which is an empty string if it's the first
     # signal of the file, or if the gap was too wide
-    for i, line in enumerate(file):
+    for i, (date, signal) in enumerate(zip(dates, signals)):
         dist += 1
-        temp = re.findall('([-0-9.]+)', line)
-        date = line[:line.index(',')]
-        try:
-            date = dt.strptime(date, ' %m/%d/%Y %I:%M:%S.%f %p')
-        except ValueError:
-            date = dt.strptime(date, '%m/%d/%Y %I:%M:%S.%f %p')
+        # date = date.to_pydatetime()
 
-        signal = int(temp[-1])
         if signal == 1:
-            count += 1
             if dist > min_dist * avg_interval_length or dist == 1 or first:  # This would mean that the signal is correct
+                try:
+                    date = dt.strptime(date, ' %m/%d/%Y %I:%M:%S.%f %p')
+                except ValueError:
+                    date = dt.strptime(date, '%m/%d/%Y %I:%M:%S.%f %p')
                 if dist == 1:  # For the areas where the signal is marked multiple times
                     dist = 0
+                    continue
                 else:
                     if dist > max_double_dist * avg_interval_length:  # This indicates that the gap is too large
-                        lines.append((date, ''))  #
+                        lines += [(date, '')]
                         reset = True
                         max_dist = 1.2
                         min_dist = 0.6
-                        last_few.append(interval_length)
+                        dist = 0
+                        continue
                     elif max_dist * avg_interval_length < dist < max_double_dist * avg_interval_length:  # For when one beat is missed and the
                         # next one is also wrong
+                        dist = 0
                         continue
-                    elif dist < min(max_dist * avg_interval_length, 1.35 * interval_length):
-                        lines.append((date, '' if first else dist / 4))  # dist/4 because ours is sampled as 4
+                    elif min_dist * avg_interval_length < dist < min(max_dist * avg_interval_length, 1.35 * interval_length):
+                        lines += [(date, '' if first else dist / 4)]  # dist/4 because ours is sampled as 4 datapoints per milisecond
                         if not first:
-                            last_few.append(dist)
-                        # datapoints per milisecond
+                            avg_interval_length = dist
                         if reset:
                             reset = False
                             min_dist = 1 - max_dist_percentage
                             max_double_dist = 2 * min_dist
                             max_dist = 1 + max_dist_percentage / 2
+                    else:
+                        continue
 
             dist = 0  # Reset distance between last and current signal
             if first:
@@ -96,8 +99,6 @@ def process_file(filenames, filename):
                 min_dist = 1 - max_dist_percentage
                 max_double_dist = 2 * min_dist
                 max_dist = 1 + max_dist_percentage / 2
-            if len(last_few) > 0:
-                avg_interval_length = np.mean(last_few)  # running average of rr interval
     print("{}/{} file has been completed".format(filenames.index(filename) + 1, len(filenames)))
     return lines
 
@@ -121,6 +122,8 @@ def write_to_excel(lines, sheet, row, formats, sheet_num):
     time_format = formats[2]
     diff_format = formats[3]
     prev_value = ''
+    if len(lines) == 0:
+        return
     start_time = lines[0][0]
     intervals = []  # Tracks the last RR-intervals for a certain duration, which we get data from after
     running_squared_diff = deque(maxlen=50)
