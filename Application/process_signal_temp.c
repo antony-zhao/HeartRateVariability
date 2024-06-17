@@ -2,9 +2,9 @@
 #include <stdbool.h>
 
 void process_signal(float *sig, int *argmax, int argmax_len, int sig_len, float threshold,
-                    float min_dist, float max_dist, float *average_interval, int avg_len,
+                    float min_dist, float max_dist, int *average_interval, int avg_len,
                     int *processed_sig, bool *first, int *dist) {
-    return;
+
     float average_sum = 0.0;
 
     for (int i = 0; i < avg_len; ++i) {

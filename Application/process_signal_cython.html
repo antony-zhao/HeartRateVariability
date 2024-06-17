@@ -331,7 +331,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_memviewslice __pyx_v_sig = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_v_sig_len;
   __Pyx_memviewslice __pyx_v_argmax = { 0, 0, { 0 }, { 0 }, { 0 } };
-  CYTHON_UNUSED int __pyx_v_argmax_len;
+  int __pyx_v_argmax_len;
   __Pyx_memviewslice __pyx_v_average_interval = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_v_average_interval_len;
   float __pyx_v_threshold;
@@ -564,7 +564,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, CYTHON_UNUSED int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist) {
+static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist) {
   int __pyx_v_i;
   int __pyx_v_s;
   int __pyx_v_j;
@@ -777,8 +777,16 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
     *__Pyx_BufPtrStrided1d(int *, __pyx_pybuffernd_processed_sig.rcbuffer-&gt;pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_processed_sig.diminfo[0].strides) = __pyx_v_s;
 </pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">51</span>:         dist += 1</pre>
 <pre class='cython code score-0 '>    __pyx_v_dist = (__pyx_v_dist + 1);
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">52</span>:         if i &gt;= curr_argmax:</pre>
-<pre class='cython code score-0 '>    __pyx_t_11 = (__pyx_v_i &gt;= __pyx_v_curr_argmax);
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">52</span>:         if i &gt;= curr_argmax and curr_ind &lt; argmax_len:</pre>
+<pre class='cython code score-0 '>    __pyx_t_12 = (__pyx_v_i &gt;= __pyx_v_curr_argmax);
+    if (__pyx_t_12) {
+    } else {
+      __pyx_t_11 = __pyx_t_12;
+      goto __pyx_L16_bool_binop_done;
+    }
+    __pyx_t_12 = (__pyx_v_curr_ind &lt; __pyx_v_argmax_len);
+    __pyx_t_11 = __pyx_t_12;
+    __pyx_L16_bool_binop_done:;
     if (__pyx_t_11) {
 /* … */
     }

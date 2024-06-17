@@ -1,4 +1,3 @@
-import gc
 from argparse import ArgumentParser
 
 import scipy.special
@@ -13,9 +12,6 @@ import pandas as pd
 import ctypes
 from process_signal_cython import process_signal_cython
 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
@@ -29,12 +25,6 @@ from pathlib import Path
 from config import window_size, stack, scale_down, datapoints, \
     lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
     pad_behind
-import tracemalloc
-import psutil
-process = psutil.Process()
-import sys
-
-tracemalloc.start()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -46,13 +36,6 @@ if __name__ == "__main__":
     file_num = 1
     update_freq = 1
     loading_size = 128
-    memory_curr = 0
-    net_change = 0
-    # model = keras.models.load_model(f'{animal}_model', compile=False)
-    model = load_model(f'{animal}_model_1', compile=False)
-    # model2 = load_model(f'{animal}_model_2', compile=False)
-    # model3 = load_model(f'{animal}_model_3', compile=False)
-    model.summary()
 
     # lib = ctypes.CDLL('./process_signal_temp.so')
     # lib.process_signal.argtypes = [
@@ -96,15 +79,20 @@ if __name__ == "__main__":
     f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt')  # Opens the first of the
     # files of which the data will be saved into. Whenever the number of lines reaches a certain point, file_num gets
     # incremented and a new file with the new number is created.
-    writer = pl.DataFrame([[], []])
+    writer = pl.DataFrame()
 
     # Start timer (displays time elapsed in the end)
     start = time.time()
+    # model = keras.models.load_model(f'{animal}_model', compile=False)
+    model = load_model(f'{animal}_model_1', compile=False)
+    # model2 = load_model(f'{animal}_model_2', compile=False)
+    # model3 = load_model(f'{animal}_model_3', compile=False)
+    model.summary()
 
     lines = 0  # Tracks the number of lines for the current file
-    dist = 0 #ctypes.c_int(0)
-    first = True #ctypes.c_bool(True)  # For handling the first signal
-    average_interval = deque(maxlen=4) #np.array([interval_length] * 4, dtype=np.float32)
+    dist = 0  #ctypes.c_int(0)
+    first = True  #ctypes.c_bool(True)  # For handling the first signal
+    average_interval = deque([interval_length] * 4, maxlen=4)  #np.array([interval_length] * 4, dtype=np.float32)
     dist_c = ctypes.c_int(0)
     first_c = ctypes.c_bool(True)  # For handling the first signal
     average_interval_c = np.array([interval_length] * 4, dtype=np.int32)
@@ -142,6 +130,7 @@ if __name__ == "__main__":
         batches = batches[0].to_numpy()
         return batches[:, 0], batches[:, 1].astype(np.double), False
 
+
     def read_ecg_pandas(reader, count):
         try:
             batches = next(reader)
@@ -163,54 +152,77 @@ if __name__ == "__main__":
 
         offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
         argmax = argmax + offsets
-        processed_sig = []
-        curr = time.time()
-        for i in range(len(datetime)):
-            if i in argmax and sig[i] > threshold:  # Minimum value of the signal before other checks. May need to adjust this value.
-                if dist < min_dist * np.mean(average_interval):
+        # curr = time.time()
+        average_interval_len = len(average_interval)
+        sig_len = len(sig)
+        curr_argmax = argmax[0]
+        curr_ind = 1
+        processed_sig = np.zeros(sig_len, dtype=np.int32)
+        argmax_len = len(argmax)
+
+        avg = np.mean(average_interval) / average_interval_len
+
+        for i in range(sig_len):
+            if i == curr_argmax and sig[
+                i] > threshold:  # Minimum value of the signal before other checks. May need to adjust this value.
+                if dist < min_dist * avg:
                     if first:  # The very first signal
                         s = 1
-                        first = False
+                        first = 0
                         dist = 0
                     else:
                         s = 0
                 else:
                     s = 1
-                    if dist < np.mean(average_interval) * max_dist:
-                        average_interval.append(dist)
+                    if dist < avg * max_dist:
+                        avg *= average_interval_len
+                        avg -= average_interval[0]
+                        avg += dist
+                        avg /= average_interval_len
+
+                        for j in range(1, average_interval_len):
+                            average_interval[j - 1] = average_interval[j]
+                        average_interval[average_interval_len - 1] = dist
+
                     dist = 0
             else:
                 s = 0
-            # sig_file.write('{},{:>8},{}\n'.format(d, '{:2.5f}'.format(e), int(s)))
-            processed_sig.append(int(s))
+
+            processed_sig[i] = int(s)
             dist += 1
-        print(time.time() - curr, "Time Elapsed")
+            if i >= curr_argmax and curr_ind < argmax_len:
+                curr_argmax = argmax[curr_ind]
+                curr_ind += 1
+
+        # print(time.time() - curr, "Time Elapsed")
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
 
         dataframe.vstack(temp_df, in_place=True)
         return len(datetime)
 
-    # def process_signal_ctypes(dataframe, datetime, sig, ecg, argmax):
-    #     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-    #     global dist_c
-    #     global first_c
-    #     global average_interval_c
-    #     # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
-    #     # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
-    #     min_dist = 1 - max_dist_percentage
-    #     max_dist = 1 + max_dist_percentage
-    #
-    #     offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
-    #     argmax = argmax + offsets
-    #     processed_sig = np.zeros(len(sig), dtype=np.int32)
-    #     lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
-    #                        average_interval_c, len(average_interval_c), processed_sig, ctypes.byref(first_c),
-    #                        ctypes.byref(dist_c))
-    #
-    #     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
-    #
-    #     dataframe.vstack(temp_df, in_place=True)
-    #     return len(datetime)
+
+    def process_signal_ctypes(dataframe, datetime, sig, ecg, argmax):
+        """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
+        global dist_c
+        global first_c
+        global average_interval_c
+        # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
+        # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
+        min_dist = 1 - max_dist_percentage
+        max_dist = 1 + max_dist_percentage
+
+        offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
+        argmax = argmax + offsets
+        processed_sig = np.zeros(len(sig), dtype=np.int32)
+        lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
+                           average_interval_c.astype(np.float32), len(average_interval_c), processed_sig, ctypes.byref(first_c),
+                           ctypes.byref(dist_c))
+
+        temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
+
+        dataframe.vstack(temp_df, in_place=True)
+        return len(datetime)
+
 
     def process_signal_c(dataframe, datetime, sig, ecg, argmax):
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
@@ -226,8 +238,10 @@ if __name__ == "__main__":
         argmax = (argmax + offsets).astype(np.int32)
 
         processed_sig, average_interval_c, first, dist = process_signal_cython(sig, len(sig), argmax, len(argmax),
-                                                                               average_interval_c, len(average_interval_c),
-                                                                               threshold, min_dist, max_dist, first, dist)
+                                                                               average_interval_c,
+                                                                               len(average_interval_c),
+                                                                               threshold, min_dist, max_dist, first,
+                                                                               dist)
 
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
 
@@ -301,11 +315,7 @@ if __name__ == "__main__":
             batch.append(temp)
             datetimes.append(np.asarray(datetime))
             ecg_segments.append(curr_segment)
-            # inc_time += time.time() - curr
             if len(batch) >= 512:
-                # print("Model")
-                # curr = time.time()
-                # memory_curr = process.memory_info().rss
                 batch = np.array(batch)[:, 0, :, :].astype(np.float32)
                 signals = model(batch, training=False).numpy()
                 # signals2 = model2(batch, training=False).numpy()
@@ -314,8 +324,6 @@ if __name__ == "__main__":
                 # signals = scipy.special.expit(signals)
                 # signals2 = scipy.special.softmax(signals2, axis=0)
                 # signals3 = scipy.special.softmax(signals3, axis=0)
-                # print(time.time() - curr, " Model time")
-                # curr = time.time()
                 # signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
 
                 datetime_iter = np.concatenate(datetimes).ravel()
@@ -323,13 +331,14 @@ if __name__ == "__main__":
                 # signals = np.where(signals2 > threshold, signals, 0)
                 # signals = np.where(signals3 > threshold, signals, 0)
                 signal = np.asarray(signals).flatten()
-                temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1, interval_length)
+                temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1,
+                                                                                                                    interval_length)
                 argmax = np.argmax(temp_signals, axis=1)
                 segment = np.asarray(ecg_segments).flatten()
 
-                # num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
-                num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-                del datetime_iter, signal, segment, argmax
+                num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
+                # num_lines = process_signal_ctypes(writer, datetime_iter, signal, segment, argmax)
+                # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
                 lines += num_lines
                 batch = []
                 datetimes = []
@@ -337,7 +346,6 @@ if __name__ == "__main__":
 
             # Steps through all the different buffers, and if the buffer is empty reads more from the file.
             if ecg_segment.size > stack * window_size * 2:
-                # curr = time.time()
                 ecg_segment = ecg_segment[window_size:]
                 ecg_temp = ecg_segment[:window_size * stack]
                 filtered_segment = filtered_segment[window_size:]
@@ -346,7 +354,6 @@ if __name__ == "__main__":
                 datetime_segment = datetime_segment[window_size:]
                 curr_segment = ecg_temp[ind1:ind2]
                 curr_filt = filtered_temp[ind1:ind2]
-                # inc_time += time.time() - curr
             elif not EOF:
                 iter += 1
                 # temp_datetime, temp_ecg, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
@@ -360,8 +367,6 @@ if __name__ == "__main__":
                     pbar.update(line_size * len(datetime_segment) * update_freq)
 
                 filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
-                # ecg_segment = np.pad(ecg_segment, padding, constant_values=(0, 0))
-                # filtered_segment = np.pad(filtered_segment, padding, constant_values=(0, 0))
 
                 ecg_temp = ecg_segment[:window_size * stack]
                 filtered_temp = filtered_segment[:window_size * stack]
@@ -372,17 +377,13 @@ if __name__ == "__main__":
 
                 curr_segment = ecg_temp[ind1:ind2]
                 curr_filt = filtered_temp[ind1:ind2]
-                # print(time.time() - curr, " Read time")
-                # print(inc_time, "Increment time")
                 inc_time = 0
             else:
                 break
 
             if lines > lines_per_file:  # Creates a new file in case the current one has enough lines.
                 writer.write_csv(f, include_header=False)
-                del writer
                 writer = pl.DataFrame()
-                gc.collect()
                 lines = 0
                 file_num += 1
 
@@ -409,8 +410,9 @@ if __name__ == "__main__":
     argmax = np.argmax(temp_signals, axis=1)
     segment = np.asarray(ecg_segments).flatten()
 
+    num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
     # num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
-    num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
+    # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
     writer.write_csv(f, include_header=False)
     # lines += num_lines
     end = time.time()

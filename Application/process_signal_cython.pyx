@@ -49,7 +49,7 @@ def process_signal_cython(float[:] sig, int sig_len, int[:] argmax, int argmax_l
 
         processed_sig[i] = int(s)
         dist += 1
-        if i >= curr_argmax:
+        if i >= curr_argmax and curr_ind < argmax_len:
             curr_argmax = argmax[curr_ind]
             curr_ind += 1
 

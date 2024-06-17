@@ -3410,7 +3410,7 @@ static void __pyx_memoryviewslice___pyx_pf_15View_dot_MemoryView_16_memoryviewsl
 static PyObject *__pyx_pf___pyx_memoryviewslice___reduce_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf___pyx_memoryviewslice_2__setstate_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_15View_dot_MemoryView___pyx_unpickle_Enum(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, CYTHON_UNUSED int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist); /* proto */
+static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist); /* proto */
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_memoryview(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -19217,7 +19217,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_memviewslice __pyx_v_sig = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_v_sig_len;
   __Pyx_memviewslice __pyx_v_argmax = { 0, 0, { 0 }, { 0 }, { 0 } };
-  CYTHON_UNUSED int __pyx_v_argmax_len;
+  int __pyx_v_argmax_len;
   __Pyx_memviewslice __pyx_v_average_interval = { 0, 0, { 0 }, { 0 }, { 0 } };
   int __pyx_v_average_interval_len;
   float __pyx_v_threshold;
@@ -19450,7 +19450,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, CYTHON_UNUSED int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist) {
+static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_UNUSED PyObject *__pyx_self, __Pyx_memviewslice __pyx_v_sig, int __pyx_v_sig_len, __Pyx_memviewslice __pyx_v_argmax, int __pyx_v_argmax_len, __Pyx_memviewslice __pyx_v_average_interval, int __pyx_v_average_interval_len, float __pyx_v_threshold, float __pyx_v_min_dist, float __pyx_v_max_dist, int __pyx_v_first, int __pyx_v_dist) {
   int __pyx_v_i;
   int __pyx_v_s;
   int __pyx_v_j;
@@ -19859,7 +19859,7 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
  * 
  *         processed_sig[i] = int(s)             # <<<<<<<<<<<<<<
  *         dist += 1
- *         if i >= curr_argmax:
+ *         if i >= curr_argmax and curr_ind < argmax_len:
  */
     __pyx_t_7 = __pyx_v_i;
     *__Pyx_BufPtrStrided1d(int *, __pyx_pybuffernd_processed_sig.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_processed_sig.diminfo[0].strides) = __pyx_v_s;
@@ -19868,7 +19868,7 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
  * 
  *         processed_sig[i] = int(s)
  *         dist += 1             # <<<<<<<<<<<<<<
- *         if i >= curr_argmax:
+ *         if i >= curr_argmax and curr_ind < argmax_len:
  *             curr_argmax = argmax[curr_ind]
  */
     __pyx_v_dist = (__pyx_v_dist + 1);
@@ -19876,16 +19876,24 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
     /* "process_signal_cython.pyx":52
  *         processed_sig[i] = int(s)
  *         dist += 1
- *         if i >= curr_argmax:             # <<<<<<<<<<<<<<
+ *         if i >= curr_argmax and curr_ind < argmax_len:             # <<<<<<<<<<<<<<
  *             curr_argmax = argmax[curr_ind]
  *             curr_ind += 1
  */
-    __pyx_t_11 = (__pyx_v_i >= __pyx_v_curr_argmax);
+    __pyx_t_12 = (__pyx_v_i >= __pyx_v_curr_argmax);
+    if (__pyx_t_12) {
+    } else {
+      __pyx_t_11 = __pyx_t_12;
+      goto __pyx_L16_bool_binop_done;
+    }
+    __pyx_t_12 = (__pyx_v_curr_ind < __pyx_v_argmax_len);
+    __pyx_t_11 = __pyx_t_12;
+    __pyx_L16_bool_binop_done:;
     if (__pyx_t_11) {
 
       /* "process_signal_cython.pyx":53
  *         dist += 1
- *         if i >= curr_argmax:
+ *         if i >= curr_argmax and curr_ind < argmax_len:
  *             curr_argmax = argmax[curr_ind]             # <<<<<<<<<<<<<<
  *             curr_ind += 1
  * 
@@ -19894,7 +19902,7 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
       __pyx_v_curr_argmax = (*((int *) ( /* dim=0 */ (__pyx_v_argmax.data + __pyx_t_7 * __pyx_v_argmax.strides[0]) )));
 
       /* "process_signal_cython.pyx":54
- *         if i >= curr_argmax:
+ *         if i >= curr_argmax and curr_ind < argmax_len:
  *             curr_argmax = argmax[curr_ind]
  *             curr_ind += 1             # <<<<<<<<<<<<<<
  * 
@@ -19905,7 +19913,7 @@ static PyObject *__pyx_pf_21process_signal_cython_process_signal_cython(CYTHON_U
       /* "process_signal_cython.pyx":52
  *         processed_sig[i] = int(s)
  *         dist += 1
- *         if i >= curr_argmax:             # <<<<<<<<<<<<<<
+ *         if i >= curr_argmax and curr_ind < argmax_len:             # <<<<<<<<<<<<<<
  *             curr_argmax = argmax[curr_ind]
  *             curr_ind += 1
  */
