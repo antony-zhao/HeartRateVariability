@@ -13,6 +13,7 @@ from pathlib import Path
 import tqdm
 from config import interval_length, low_cutoff, high_cutoff, nyq, order, max_dist_percentage, lines_per_file
 from dataset import filters
+import pandas as pd
 
 '''
 Plotting program for ECG signals, also marks some regions where the program might have messed up for optional human 
@@ -32,6 +33,8 @@ if len(filename) == 0:
 file_size = os.stat(filename).st_size
 root.destroy()
 
+reader_pd = pd.read_csv(filename, header=None, usecols=[1, 2], engine='c', encoding_errors='ignore')
+
 file = open(filename, 'r+')  # Gets an average line size for the progress bar
 fig, axs = plt.subplots()
 file_loc = file.tell()
@@ -39,10 +42,10 @@ temp_line = file.readline()
 file.seek(file_loc)
 line_size = len(temp_line.encode('utf-8'))
 
-ecg = []  # Raw ECG signal
-signal = []  # Raw signal (0 for non-peak and 1 for peak)
+ecg = np.array(reader_pd[1])  # Raw ECG signal
+ecg = np.nan_to_num(ecg)
 signals = []  # Indices of peaks in signals
-
+signal = reader_pd[2]  # Raw signal (0 for non-peak and 1 for peak)
 
 class Events:
     """Class for an interactive pyplot to handle click, scroll, etc. events."""
@@ -260,55 +263,53 @@ total_marks = 0  # Counts of how many marks there are (as well as errors)
 mismarked = 0
 unmarked_regions = 0
 prev = 0
+ones = np.where(signal == 1)
 
 every_i = 100000
 with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
     pbar.set_description('Bytes ')
-    for i, line in enumerate(file):
+    for i, sig in enumerate(signal):
         if i > lines_per_file:
             break
         if i % every_i == 0:
             pbar.update(line_size * every_i)
         dist += 1
-        temp = re.findall('([-0-9.e]+)', line)  # Regex, 2nd to last is the ECG, and last is the signal (others are
-        # date values which are kept in for post_processing.py)
-        ecg.append(float(temp[-2]))
-        signal.append(temp[-1])
-        if int(temp[-1]) == 1:
-            total_marks += 1
-            if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the
-                # signal is correct
-                if dist == 1:  # For the areas where the signal is marked multiple times
-                    dist = 0
-                    total_marks -= 1
-                else:
-                    if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too
-                        # large
-                        unmarked_regions += 1
-                        events.unmarked.append((prev + interval_length, interval_length))
-                        axs.annotate("*", (prev + interval_length, -0.2))
-                    elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):  # For
-                        # when one beat is missed and the next one is also wrong
-                        if i - prev > 1:
-                            events.mismarked.append((i, interval_length))
-                            axs.annotate("#", (i, -0.2))
-                            mismarked += 1
-                        prev = i
-                        continue
-                    signals.append(i)  # Indices of signals
-
+        if int(sig) == 0:
+            continue
+        total_marks += 1
+        if dist > (1 - max_dist_percentage) * interval_length or dist == 1 or first:  # This would mean that the
+            # signal is correct
+            if dist == 1:  # For the areas where the signal is marked multiple times
+                dist = 0
+                total_marks -= 1
             else:
-                events.mismarked.append((i, dist))  # These are the mismarked signals
-                axs.annotate("#", (i, -0.2))
-                mismarked += 1
-            if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
-                last_few.append(dist)  # Add the distance to the running average
-            dist = 0  # Reset distance between last and current signal
-            if first:
-                first = False  # handling first signal
-            if len(last_few) > 0:
-                interval_length = np.mean(last_few)  # Running average of rr interval
-            prev = i
+                if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too
+                    # large
+                    unmarked_regions += 1
+                    events.unmarked.append((prev + interval_length, interval_length))
+                    axs.annotate("*", (prev + interval_length, -0.2))
+                elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):  # For
+                    # when one beat is missed and the next one is also wrong
+                    if i - prev > 1:
+                        events.mismarked.append((i, interval_length))
+                        axs.annotate("#", (i, -0.2))
+                        mismarked += 1
+                    prev = i
+                    continue
+                signals.append(i)  # Indices of signals
+
+        else:
+            events.mismarked.append((i, dist))  # These are the mismarked signals
+            axs.annotate("#", (i, -0.2))
+            mismarked += 1
+        if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
+            last_few.append(dist)  # Add the distance to the running average
+        dist = 0  # Reset distance between last and current signal
+        if first:
+            first = False  # handling first signal
+        if len(last_few) > 0:
+            interval_length = np.mean(last_few)  # Running average of rr interval
+        prev = i
 
 plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
          .format(mismarked, unmarked_regions, total_marks), bbox=dict(facecolor='red', alpha=0.5))

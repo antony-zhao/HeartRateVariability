@@ -11,7 +11,7 @@ def process_signal_cython(float[:] sig, int sig_len, int[:] argmax, int argmax_l
                           float min_dist, float max_dist, bint first, int dist):
     cdef int i, s, j
     cdef float avg = 0
-    cdef np.ndarray[int, ndim=1] processed_sig = np.zeros(sig_len, dtype=np.int32)
+    cdef list processed_sig = [0] * sig_len
     cdef int curr_argmax = argmax[0]
     cdef int curr_ind = 1
 
