@@ -154,11 +154,11 @@ if __name__ == '__main__':
         ecg2, sig2, eof = read_file(val_file, lines)
         filtered_ecg2 = filters(ecg2, order, low_cutoff, high_cutoff, nyq)
         if x_test is None:
-            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
+            x_test, y_test = random_sampling(ecg2, filtered_ecg2, sig2, samples * 3, ensure_labels)
         else:
             if len(ecg2) < lines // 2:
                 break
-            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples, ensure_labels)
+            temp1, temp2 = random_sampling(ecg2, filtered_ecg2, sig2, samples * 3, ensure_labels)
             if len(temp1) > 0:
                 x_test = np.append(x_test, temp1, axis=0)
                 y_test = np.append(y_test, temp2, axis=0)

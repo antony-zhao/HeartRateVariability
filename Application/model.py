@@ -69,21 +69,21 @@ model.add(Conv1D(filters=stack * 16, kernel_size=8, strides=2, padding='same', k
                  activation='selu'))
 model.add(BatchNormalization())
 # model.add(MaxPooling1D(strides=2))
-# model.add(Flatten())
+model.add(Flatten())
 # model.add(
 #     Bidirectional(LSTM(units=window_size // 2, return_sequences=True)))
 # model.add(Dropout(0.3))
 # model.add(Activation('relu'))
 # model.add(BatchNormalization())
 # model.add(Permute((2, 1)))
-model.add(
-    Bidirectional(GRU(units=window_size // 2, return_sequences=False, dropout=0.5)))
-model.add(Activation('selu'))
-model.add(BatchNormalization())
 # model.add(
-#     Dense(units=window_size // 2))
-# model.add(Dropout(0.3))
-# model.add(Activation('relu'))
+#     Bidirectional(GRU(units=window_size // 2, return_sequences=False, dropout=0.5)))
+# model.add(Activation('selu'))
+# model.add(BatchNormalization())
+model.add(
+    Dense(units=window_size // 2))
+model.add(Dropout(0.5))
+model.add(Activation('relu'))
 # model.add(BatchNormalization())
 model.add(Dense(window_size))
 # model.add(Activation('sigmoid'))
@@ -127,7 +127,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy,
                                  'magnitude': magnitude, 'distance': distance})
     model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True), #from_logits=True
-                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy', magnitude,
+                  metrics=['categorical_accuracy', 'top_k_categorical_accuracy',
                            # keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,

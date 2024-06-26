@@ -53,8 +53,6 @@ def process_file(filenames, filename):
     # signal of the file, or if the gap was too wide
     for i, (date, signal) in enumerate(zip(dates, signals)):
         dist += 1
-        # date = date.to_pydatetime()
-
         if signal == 1:
             if dist > min_dist * avg_interval_length or dist == 1 or first:  # This would mean that the signal is correct
                 try:
@@ -126,7 +124,7 @@ def write_to_excel(lines, sheet, row, formats, sheet_num):
         return
     start_time = lines[0][0]
     intervals = []  # Tracks the last RR-intervals for a certain duration, which we get data from after
-    running_squared_diff = deque(maxlen=50)
+    # running_squared_diff = deque(maxlen=50)
     for line in lines:
         if sheet_num == 1 and (line[0].time() < datetime.time(hour=8) or line[0].time() > datetime.time(hour=20)):
             continue
@@ -141,6 +139,7 @@ def write_to_excel(lines, sheet, row, formats, sheet_num):
                     and abs(line - prev_value) < interval_length // 4,
                     diff_format)  # The squared difference between the RR-interval of this and
         # the previous data (if possible)
+        # print(line[0] - start_time)
         if line[0] - start_time >= datetime.timedelta(minutes=5):  # The average and standard deviation in the
             # RR-interval in 5 minutes
             if len(intervals) > 0:

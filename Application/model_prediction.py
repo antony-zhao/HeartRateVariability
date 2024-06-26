@@ -6,8 +6,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import os
 import re
-from scipy.special import expit
-import os
+from keras import backend as K
 import polars as pl
 import pandas as pd
 import ctypes
@@ -37,22 +36,6 @@ if __name__ == "__main__":
     file_num = 1
     update_freq = 1
     loading_size = 128
-
-    # lib = ctypes.CDLL('./process_signal_temp.so')
-    # lib.process_signal.argtypes = [
-    #     np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # sig
-    #     np.ctypeslib.ndpointer(ctypes.c_int32, flags="C_CONTIGUOUS"),  # argmax
-    #     ctypes.c_int,  # argmax_len
-    #     ctypes.c_int,  # sig_len
-    #     ctypes.c_float,  # threshold
-    #     ctypes.c_float,  # min_dist
-    #     ctypes.c_float,  # max_dist
-    #     np.ctypeslib.ndpointer(ctypes.c_float, flags="C_CONTIGUOUS"),  # average_interval
-    #     ctypes.c_int,  # avg_len
-    #     np.ctypeslib.ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),  # processed_sig
-    #     ctypes.POINTER(ctypes.c_bool),  #first
-    #     ctypes.POINTER(ctypes.c_int32), #dist
-    # ]
 
     # Opening file and choosing directory to save code in
     if args.filename is None:
@@ -85,10 +68,35 @@ if __name__ == "__main__":
     # Start timer (displays time elapsed in the end)
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
-    model = load_model(f'{animal}_model_1', compile=False)
-    # model2 = load_model(f'{animal}_model_2', compile=False)
-    # model3 = load_model(f'{animal}_model_3', compile=False)
-    model.summary()
+    K.clear_session()
+    model1 = load_model(f'{animal}_model_conv_1', compile=False)
+    K.clear_session()
+    model2 = load_model(f'{animal}_model_conv_2', compile=False)
+    K.clear_session()
+    model3 = load_model(f'{animal}_model_conv_3', compile=False)
+    K.clear_session()
+    model4 = load_model(f'{animal}_model_conv_4', compile=False)
+    K.clear_session()
+    model5 = load_model(f'{animal}_model_conv_5', compile=False)
+    ensemble = [model1, model2, model3, model4, model5]
+    model1.summary()
+
+
+    def ensemble_predict(batch):
+        signals = []
+        argmaxes = []
+        for model in ensemble:
+            signal = model(batch, training=False).numpy()
+            signal = scipy.special.softmax(signal, axis=1)
+            signal = np.asarray(signal).flatten()
+            temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1,
+                                                                                                                interval_length)
+            argmax = np.argmax(temp_signals, axis=1)[:batch.shape[0]]
+            argmax = argmax + np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
+
+            argmaxes.append(argmax)
+            signals.append(signal)
+        return signals, argmaxes
 
     lines = 0  # Tracks the number of lines for the current file
     dist = 0  #ctypes.c_int(0)
@@ -98,24 +106,8 @@ if __name__ == "__main__":
     first_c = ctypes.c_bool(True)  # For handling the first signal
     average_interval_c = np.array([interval_length] * 4, dtype=np.int32)
 
-
-    def read_ecg(ecg_file, count):
-        """Reads 'count' lines from the ecg_file and returns them"""
-        eof = False  # End of file
-        ecg = np.zeros(count)
-        datetime = []
-        for i in range(count):
-            line = ecg_file.readline()
-            if len(line) == 0:  # Signifies an end of the file 
-                eof = True
-                break
-            temp = re.findall('([-0-9.x]+)', line)[-1]  # Sometimes x is in our data which is just an empty value,
-            # otherwise this just reads the signal value
-            ecg[i] = 0 if temp == 'x' else float(temp)
-            datetime.append(line[:line.index(',')])  # The time value, used for post_processing later so it is preserved
-            # and transferred to the output file.
-
-        return datetime, ecg, eof
+    interval = None
+    curr_ind = None
 
 
     def read_ecg_polars(reader, count):
@@ -130,16 +122,6 @@ if __name__ == "__main__":
         # batches.fill_null(0)
         batches = batches[0].to_numpy()
         return batches[:, 0], batches[:, 1].astype(np.double), False
-
-
-    def read_ecg_pandas(reader, count):
-        try:
-            batches = next(reader)
-        except StopIteration:
-            return None, None, True
-
-        batches = batches.to_numpy()
-        return batches[:, 0], batches[:, 1].astype(np.float32), False
 
 
     def process_signal(dataframe, datetime, sig, ecg, argmax):
@@ -159,7 +141,7 @@ if __name__ == "__main__":
         sig_len = len(sig)
         curr_argmax = argmax[0]
         curr_ind = 1
-        processed_sig = [0] * sig_len #np.zeros(sig_len, dtype=np.int32)
+        processed_sig = [0] * sig_len  #np.zeros(sig_len, dtype=np.int32)
         argmax_len = len(argmax)
 
         avg = np.mean(average_interval) / average_interval_len
@@ -203,30 +185,6 @@ if __name__ == "__main__":
         return sig_len
 
 
-    # def process_signal_ctypes(dataframe, datetime, sig, ecg, argmax):
-    #     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-    #     global dist_c
-    #     global first_c
-    #     global average_interval_c
-    #     # The maximum amount we think the signal can differ by, our default is 0.2, so we don't believe any 'signal'
-    #     # with a distance of 0.8-1.2 from the previous is real, and so we omit it.
-    #     min_dist = 1 - max_dist_percentage
-    #     max_dist = 1 + max_dist_percentage
-    #
-    #     offsets = np.arange(argmax.size) * np.prod(argmax.shape[1:]) * interval_length
-    #     argmax = argmax + offsets
-    #     processed_sig = np.zeros(len(sig), dtype=np.int32)
-    #     lib.process_signal(sig, argmax.astype(np.int32), len(argmax), len(sig), threshold, min_dist, max_dist,
-    #                        average_interval_c.astype(np.float32), len(average_interval_c), processed_sig, ctypes.byref(first_c),
-    #                        ctypes.byref(dist_c))
-    #
-    #     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": processed_sig})
-    #
-    #     dataframe.vstack(temp_df, in_place=True)
-    #     return len(datetime)
-    #
-    #
-
     def process_signal_c(dataframe, datetime, sig, ecg, argmax):
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
         global dist
@@ -252,11 +210,98 @@ if __name__ == "__main__":
         return len(datetime)
 
 
+    def process_signal_v2(dataframe, datetime, sig, ecg, argmax):
+        """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
+        global interval
+        global curr_ind
+        curr_ind = None
+        interval = None
+
+        ecg_len = len(ecg)
+        processed_sig = [0] * ecg_len
+        argmax = np.asarray(argmax, dtype=np.int32)
+
+        for i in range(len(argmax[0])):
+            if interval is None:
+                candidates = find_candidates(argmax[:, i], sig, None)
+            else:
+                approximate_ind = curr_ind + interval
+                candidates = find_candidates(argmax[:, i], sig, approximate_ind)
+
+            for (candidate_ind, candidate_val, num_supporters) in candidates:
+                # Figure out how to determine if there is too much disagreement in a section and just ignore it
+                # Examples, multiple 0.2 or multiple 0.4s
+
+                if (num_supporters >= len(ensemble) // 2): #or
+                #(candidate_val > threshold and num_supporters > len(ensemble) // 2)):
+                    # processed_sig[candidate_ind] = candidate_val
+                    if curr_ind is None:
+                        processed_sig[candidate_ind] = 1
+                        curr_ind = candidate_ind
+                    elif interval is None:
+                        curr_length = candidate_ind - curr_ind
+                        if curr_length < 0.6 * interval_length:
+                            continue
+                        elif curr_length > 1.3 * interval_length:
+                            curr_ind = None
+                            interval = None
+                        else:
+                            processed_sig[candidate_ind] = 1
+                            curr_ind = candidate_ind
+                            interval = curr_length
+                    else:
+                        curr_length = candidate_ind - curr_ind
+                        if curr_length < 0.8 * interval:
+                            continue
+                        elif curr_length > 1.2 * interval:
+                            curr_ind = None
+                            interval = None
+                        else:
+                            processed_sig[candidate_ind] = 1
+                            interval = curr_length
+                            curr_ind = candidate_ind
+
+        # print(time.time() - curr, "Time Elapsed")
+        temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32), "signal": np.array(processed_sig, dtype=np.float32)})
+
+        dataframe.vstack(temp_df, in_place=True)
+        return ecg_len
+
+
+    def find_candidates(argmaxes, signals, candidate_index, support_dist=1):
+        '''
+        :param argmaxes:
+        :param candidate_index:
+        :return: A list of tuples. Each tuple consists of the candidate index as well as a list of which argmaxes are
+        supporting it .
+        '''
+        candidates = []
+        if candidate_index is None:
+            candidate_index = np.median(argmaxes)
+        argsort_ind = np.argsort(np.abs(argmaxes - candidate_index))
+        sorted_by_dist = argmaxes[argsort_ind]
+        processed_ind = set()
+        for i, ind in enumerate(sorted_by_dist):
+            if i in processed_ind:
+                continue
+            processed_ind.add(i)
+            num_supporters = 1
+            supporting = signals[argsort_ind[i]][ind]
+            for j, support_ind in enumerate(sorted_by_dist):
+                if i == j or j in processed_ind:
+                    continue
+                elif abs(ind - support_ind) < support_dist:
+                    supporting += signals[argsort_ind[j]][support_ind]
+                    processed_ind.add(j)
+                    num_supporters += 1
+            candidates.append((ind, supporting, num_supporters))
+        return candidates
+
+
     ecg_segment = []  # Acts as a buffer for the ecg signals
     datetime_segment = []  # Similarly for datetimes
     ecg_temp = []  # ecg and datetimes of the portion being processed
     datetime = []
-    signal = np.zeros(window_size)
 
     # Skips through the header if it exists, goes until it reads a line of data (probably need to change regex depending on
     # data)
@@ -278,8 +323,8 @@ if __name__ == "__main__":
     # to track approximately where we are within the file.
 
     # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
-    datetime_segment, ecg_segment, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
-    # datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
+    # datetime_segment, ecg_segment, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
+    datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
     # datetime_segment, ecg_segment, EOF = `read_ecg(file, window_size * loading_size)
     filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 
@@ -320,27 +365,13 @@ if __name__ == "__main__":
             ecg_segments.append(curr_segment)
             if len(batch) >= 512:
                 batch = np.array(batch)[:, 0, :, :].astype(np.float32)
-                signals = model(batch, training=False).numpy()
-                # signals2 = model2(batch, training=False).numpy()
-                # signals3 = model3(batch, training=False).numpy()
-                signals = scipy.special.softmax(signals, axis=0)
-                # signals = scipy.special.expit(signals)
-                # signals2 = scipy.special.softmax(signals2, axis=0)
-                # signals3 = scipy.special.softmax(signals3, axis=0)
-                # signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
+                signals, argmaxes = ensemble_predict(batch)
 
                 datetime_iter = np.concatenate(datetimes).ravel()
-                # signals = (signals + signals2 + signals3) / 3
-                # signals = np.where(signals2 > threshold, signals, 0)
-                # signals = np.where(signals3 > threshold, signals, 0)
-                signal = np.asarray(signals).flatten()
-                temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1,
-                                                                                                                    interval_length)
-                argmax = np.argmax(temp_signals, axis=1)
                 segment = np.asarray(ecg_segments).flatten()
 
-                num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-                # num_lines = process_signal_ctypes(writer, datetime_iter, signal, segment, argmax)
+                # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
+                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes)
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
                 lines += num_lines
                 batch = []
@@ -359,8 +390,8 @@ if __name__ == "__main__":
                 curr_filt = filtered_temp[ind1:ind2]
             elif not EOF:
                 iter += 1
-                temp_datetime, temp_ecg, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
-                # temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
+                # temp_datetime, temp_ecg, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
+                temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
                 # temp_datetime, temp_ecg, EOF = read_ecg(file, window_size * loading_size)
                 datetime_segment = np.append(datetime_segment, temp_datetime)
                 ecg_segment = np.append(ecg_segment, temp_ecg)
@@ -395,27 +426,13 @@ if __name__ == "__main__":
 
     # # Writes the final few datapoints into the file, and closes it
     batch = np.array(batch)[:, 0, :, :].astype(np.float32)
-    signals = model(batch, training=False).numpy()
-    # signals2 = model2(batch, training=False).numpy()
-    # signals3 = model3(batch, training=False).numpy()
-    signals = scipy.special.softmax(signals)
-    # signals2 = scipy.special.softmax(signals2)
-    # signals3 = scipy.special.softmax(signals3)
-
-    # signals = np.where((signals[:, -1] > 0.8)[:, None], np.zeros_like(ecg_segments), signals[:, :-1])
+    signals, argmaxes = ensemble_predict(batch)
 
     datetime_iter = np.concatenate(datetimes).ravel()
-    # signals = (signals + signals2 + signals3) / 3
-    # signals = np.where(signals2 > threshold, signals, 0)
-    # signals = np.where(signals3 > threshold, signals, 0)
-    signal = np.asarray(signals).flatten()
-    temp_signals = np.append(signal, np.zeros(interval_length - signal.size % interval_length)).reshape(-1,
-                                                                                                        interval_length)
-    argmax = np.argmax(temp_signals, axis=1)
     segment = np.asarray(ecg_segments).flatten()
 
-    num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-    # num_lines = process_signal(writer, datetime_iter, signal, segment, argmax)
+    # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
+    num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes)
     # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
     writer.write_csv(f, include_header=False)
     # lines += num_lines
