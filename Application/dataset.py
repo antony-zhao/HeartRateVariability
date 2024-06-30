@@ -39,7 +39,8 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
                           padded_filter[ind:ind + int(stack * window_size)],
                           scale_down, stack, datapoints)
         # The label for the (stack - 1)th block, so there is some look ahead and some look behind
-        x.append(x_i.T)
+        # x_i = x_i.reshape(-1, x_i.shape[1] * 4)
+        x.append(x_i)
         y.append(y_i)
 
     x = np.asarray(x)
@@ -68,9 +69,7 @@ def process_ecg(ecg, filtered_ecg, scale_down, stack, datapoints):
         if diff != 0:
             filtered_ecg = 2 * (filtered_ecg - np.min(filtered_ecg)) / diff - 1
 
-    ecg = np.concatenate((ecg, filtered_ecg))
-
-    return ecg.reshape((2 * stack, datapoints))
+    return np.stack((ecg, filtered_ecg, np.gradient(ecg), np.gradient(filtered_ecg))).transpose()
 
 
 def filters(ecg, order, low_cutoff, high_cutoff, nyq):
@@ -113,7 +112,7 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 2500  # Number of samples to create, won't generate exactly this many however.
+    samples = 2000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
     ensure_labels = True  # Only add samples that have an actual beat in them
 
@@ -168,13 +167,13 @@ if __name__ == '__main__':
     # y_train = np.append(y_train, y_train, axis=0)
 
 
-    for i in range(10):
-        plt.plot(x_test[i, :, pad_forward], label='filtered')
-        sig = y_test[i]
-        sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
-        sig /= np.max(sig)
-        plt.plot(sig)
-        plt.show()
+    # for i in range(10):
+    #     plt.plot(x_test[i, :, pad_forward], label='filtered')
+    #     sig = y_test[i]
+    #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
+    #     sig /= np.max(sig)
+    #     plt.plot(sig)
+    #     plt.show()
 
     # x_test = np.append(x_test, -x_test, axis=0)
     # y_test = np.append(y_test, y_test, axis=0)
