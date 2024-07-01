@@ -126,7 +126,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     get_custom_objects().update({"weighted_binary_crossentropy": weighted_binary_crossentropy,
                                  'magnitude': magnitude, 'distance': distance})
-    model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True), #from_logits=True
+    model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True), #from_logits=True
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy',
                            # keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])

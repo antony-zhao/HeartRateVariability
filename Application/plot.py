@@ -33,7 +33,7 @@ if len(filename) == 0:
 file_size = os.stat(filename).st_size
 root.destroy()
 
-reader_pd = pd.read_csv(filename, header=None, usecols=[1, 2], engine='c', encoding_errors='ignore')
+reader_pd = pd.read_csv(filename, header=None, usecols=[1, 2, 3], engine='c', encoding_errors='ignore')
 
 file = open(filename, 'r+')  # Gets an average line size for the progress bar
 fig, axs = plt.subplots()
@@ -45,7 +45,9 @@ line_size = len(temp_line.encode('utf-8'))
 ecg = np.array(reader_pd[1])  # Raw ECG signal
 ecg = np.nan_to_num(ecg)
 signals = []  # Indices of peaks in signals
-signal = reader_pd[2]  # Raw signal (0 for non-peak and 1 for peak)
+ensemble = reader_pd[2]  # Raw signal (0 for non-peak and 1 for peak)
+signal = reader_pd[3]
+# print(np.nonzero(ensemble.to_numpy()))
 
 class Events:
     """Class for an interactive pyplot to handle click, scroll, etc. events."""
@@ -321,11 +323,12 @@ filtered_ecg = filters(ecg, order, low_cutoff, high_cutoff, nyq)
 ecg_line, = axs.plot(range(len(ecg)), ecg, zorder=101)
 filtered_line, = axs.plot(range(len(filtered_ecg)), filtered_ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
+ensemble_line, = axs.plot(range(len(ensemble)), ensemble)
 
-leg = axs.legend(['ECG', 'Filtered_ECG', 'Signal'], loc='upper left')
+leg = axs.legend(['ECG', 'Filtered_ECG', 'Signal', 'ensemble'], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 
-lines = [ecg_line, filtered_line, line]
+lines = [ecg_line, filtered_line, line, ensemble_line]
 map_legend_to_ax = {}  # Will map legend lines to original lines.
 
 pickradius = 5  # Points (Pt). How close the click needs to be to trigger an event.

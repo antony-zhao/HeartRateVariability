@@ -78,7 +78,7 @@ if __name__ == "__main__":
     model4 = load_model(f'{animal}_model_conv_4', compile=False)
     K.clear_session()
     model5 = load_model(f'{animal}_model_conv_5', compile=False)
-    ensemble = [model1, model2, model3, model5]
+    ensemble = [model1, model2, model3]
     model1.summary()
 
 
@@ -102,12 +102,11 @@ if __name__ == "__main__":
     dist = 0  #ctypes.c_int(0)
     first = True  #ctypes.c_bool(True)  # For handling the first signal
     average_interval = deque([interval_length] * 4, maxlen=4)  #np.array([interval_length] * 4, dtype=np.float32)
-    dist_c = ctypes.c_int(0)
-    first_c = ctypes.c_bool(True)  # For handling the first signal
-    average_interval_c = np.array([interval_length] * 4, dtype=np.int32)
 
     interval = None
     curr_ind = None
+    curr_ind_final = None
+    interval_final = None
 
 
     def read_ecg_polars(reader, count):
@@ -205,14 +204,16 @@ if __name__ == "__main__":
         return len(datetime)
 
 
-    def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=100):
+    def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-        global interval
-        global curr_ind
+        # global interval
+        # global curr_ind
+        # global curr_ind_final
+        # global interval_final
+        interval = None
+        curr_ind = None
         curr_ind_final = None
         interval_final = None
-        curr_ind = None
-        interval = None
 
         ecg_len = len(ecg)
         processed_sig_1 = [0] * ecg_len
@@ -230,14 +231,14 @@ if __name__ == "__main__":
                 # Figure out how to determine if there is too much disagreement in a section and just ignore it
                 # Examples, multiple 0.2 or multiple 0.4s
                 processed_sig_1[candidate_ind] = num_supporters / len(ensemble)
-                if candidate_val > 0.4:
+                if candidate_val >= 0.4:
                     if curr_ind is None:
                         curr_ind = candidate_ind
                     elif interval is None:
                         curr_length = candidate_ind - curr_ind
                         if curr_length < 0.6 * interval_length:
                             continue
-                        elif curr_length > 1.3 * interval_length:
+                        elif curr_length > 1.4 * interval_length:
                             curr_ind = None
                             interval = None
                         else:
@@ -256,43 +257,52 @@ if __name__ == "__main__":
 
         markings = np.nonzero(processed_sig_1)[0]
         for i, ind in enumerate(markings):
-            if processed_sig_1[ind] >= 2 / len(ensemble):
+            # if ind > 11_000:
+            #     print('hi')
+            if interval_final is not None and interval_final * 1.2 < ind - curr_ind_final:
+                curr_ind_final = None
+                interval_final = None
+            if processed_sig_1[ind] >= threshold:
                 offset = 1
                 nearby = 0
                 while True:
                     if i + offset < len(markings) and abs(markings[i + offset] - ind) < radius \
                             and processed_sig_1[ind] - processed_sig_1[markings[i + offset]] < 0.6:
+                        if processed_sig_1[ind] <= processed_sig_1[markings[i + offset]]: #penalize it harder for this case
+                            nearby += 3
                         nearby += 1
                         offset += 1
-                        if processed_sig_1[ind] < processed_sig_1[markings[i + offset]]: #penalize it harder for this case
-                            nearby += 1
                     else:
                         break
                 offset = 1
                 while True:
                     if i - nearby > 0 and abs(markings[i - offset] - ind) < radius \
                             and processed_sig_1[ind] - processed_sig_1[markings[i - offset]] < 0.6:
+                        if processed_sig_1[ind] == processed_sig_1[markings[i - offset]]: #penalize it harder for this case
+                            nearby += 3
                         nearby += 1
                         offset += 1
                     else:
                         break
 
-                if nearby > 4:
-                    break
+                if nearby > 2:
+                    continue
 
                 if curr_ind_final is None:
                     processed_sig_final[ind] = 1
+                    # print(ind)
                     curr_ind_final = ind
                 else:
                     curr_length = ind - curr_ind_final
                     if interval_final is None:
                         if curr_length < 0.6 * interval_length:
                             continue
-                        elif curr_length > 1.3 * interval_length:
+                        elif curr_length > 1.4 * interval_length:
                             curr_ind_final = None
                             interval_final = None
                         else:
                             processed_sig_final[ind] = 1
+                            # print(ind)
                             curr_ind_final = ind
                             interval_final = curr_length
                     else:
@@ -303,18 +313,20 @@ if __name__ == "__main__":
                             interval_final = None
                         else:
                             processed_sig_final[ind] = 1
+                            # print(ind)
                             interval_final = curr_length
                             curr_ind_final = ind
 
         # print(time.time() - curr, "Time Elapsed")
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                                "signal": np.array(processed_sig_final, dtype=np.float32)})
+                                # "ensemble": np.array(processed_sig_1, dtype=np.float32),
+                                "signal": np.array(processed_sig_final, dtype=np.int32)})
 
         dataframe.vstack(temp_df, in_place=True)
         return ecg_len
 
 
-    def find_candidates(argmaxes, signals, candidate_index, support_dist=2):
+    def find_candidates(argmaxes, signals, candidate_index, support_dist=3):
         '''
         :param argmaxes:
         :param candidate_index:
