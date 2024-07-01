@@ -30,8 +30,10 @@ n_layer = 4
 class FeedForward(Model):
     def __init__(self):
         super().__init__()
-        self.conv1 = Dense(n_embed * 4, activation='relu')  # Conv1D(filters=n_embed * 4, kernel_size=1, activation='relu', kernel_regularizer='l2', activity_regularizer='l2')
-        self.conv2 = Dense(n_embed)  # Conv1D(filters=n_embed, kernel_size=1, kernel_regularizer='l2', activity_regularizer='l2')
+        self.conv1 = Dense(n_embed * 4,
+                           activation='relu')  # Conv1D(filters=n_embed * 4, kernel_size=1, activation='relu', kernel_regularizer='l2', activity_regularizer='l2')
+        self.conv2 = Dense(
+            n_embed)  # Conv1D(filters=n_embed, kernel_size=1, kernel_regularizer='l2', activity_regularizer='l2')
         self.dropout = Dropout(dropout)
 
     def call(self, inputs, training=False):
@@ -115,13 +117,15 @@ conv2 = Conv1D(filters=stack * 8, kernel_size=17, strides=2,
                activation='relu')(maxpool1)
 maxpool2 = MaxPooling1D(2)(conv2)
 conv3 = Conv1D(filters=n_embed, kernel_size=9, strides=2,
-           padding='same', kernel_regularizer='l2', activity_regularizer='l2',
-           activation='relu')(maxpool2)
-gpt1 = Block().call(conv3)
+               padding='same', kernel_regularizer='l2', activity_regularizer='l2',
+               activation='relu')(maxpool2)
+maxpool3 = MaxPooling1D(2)(conv3)
+gpt1 = Block().call(maxpool3)
 gpt2 = Block().call(gpt1)
 gpt3 = Block().call(gpt2)
-gpt4 = Block().call(gpt3)
-bi_lstm1 = Bidirectional(LSTM(n_embed, return_sequences=False, dropout=0.5))(gpt2)
+# gpt4 = Block().call(gpt3)
+bi_lstm1 = keras.layers.GlobalAveragePooling1D()(
+    gpt3)  #Bidirectional(LSTM(n_embed, return_sequences=False, dropout=0.5))(gpt2)
 dense_out = Dense(window_size)(bi_lstm1)
 model = Model(inputs=inputs, outputs=dense_out)
 model.summary()
@@ -138,6 +142,13 @@ def magnitude(y_true, y_labels):
     can make it harder for model_prediction to work"""
     x = K.mean(K.max(y_labels, axis=1) * K.max(y_true, axis=1))
     return x
+
+
+def scheduler(epoch, lr):
+    if epoch < 10:
+        return lr
+    else:
+        return lr * 10
 
 
 def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, plot=False):
@@ -173,11 +184,12 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     #                      save_best_only=True, intial_value_threshold=0.2)
     vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True, intial_value_threshold=0.2)
+    callback = tf.keras.callbacks.LearningRateScheduler(scheduler)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[reducelr, vp], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[reducelr], shuffle=True)
 
     model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
