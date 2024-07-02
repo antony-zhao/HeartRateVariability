@@ -69,16 +69,16 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_conv_1', compile=False)
+    model1 = load_model(f'{animal}_model_val_cat', compile=False)
     K.clear_session()
-    model2 = load_model(f'{animal}_model_conv_2', compile=False)
+    model2 = load_model(f'{animal}_model_val_top_k', compile=False)
     K.clear_session()
     model3 = load_model(f'{animal}_model_conv_3', compile=False)
     K.clear_session()
     model4 = load_model(f'{animal}_model_conv_4', compile=False)
     K.clear_session()
     model5 = load_model(f'{animal}_model_conv_5', compile=False)
-    ensemble = [model1, model2, model3]
+    ensemble = [model1, model2]#, model3]
     model1.summary()
 
 
@@ -319,7 +319,7 @@ if __name__ == "__main__":
 
         # print(time.time() - curr, "Time Elapsed")
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                                # "ensemble": np.array(processed_sig_1, dtype=np.float32),
+                                "ensemble": np.array(processed_sig_1, dtype=np.float32),
                                 "signal": np.array(processed_sig_final, dtype=np.int32)})
 
         dataframe.vstack(temp_df, in_place=True)
