@@ -5,7 +5,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, BatchNormalization, \
-    Activation, BatchNormalization, Input, GRU, Bidirectional, MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D
+    Activation, LayerNormalization, Input, GRU, Bidirectional, MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
@@ -24,79 +24,32 @@ def build_cnn(filters, kernel):
     return keras.Sequential([
         keras.layers.Conv1D(filters, kernel[0], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
         keras.layers.Conv1D(filters, kernel[1], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
         keras.layers.Conv1D(filters, kernel[2], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
     ])
 
 
-# inputs = Input((datapoints, stack * 4))
-# # x = build_cnn(stack * 4, [67, 65, 63])(inputs) + inputs
-# x = Conv1D(filters=stack * 8, kernel_size=61, strides=2,
-#            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
-#            activation='relu',)(inputs)
-# x = BatchNormalization()(x)
-# x = MaxPooling1D(strides=2)(x)
-# # x = build_cnn(stack * 8, [37, 35, 33])(x) + x
-# x = Conv1D(filters=stack * 16, kernel_size=31, strides=2, padding='same', kernel_regularizer='l2',
-#            activity_regularizer='l2',
-#            activation='relu')(x)
-# x = BatchNormalization()(x)
-# x = MaxPooling1D(strides=2)(x)
-# # x = build_cnn(stack * 16, [21, 19, 17])(x) + x
-# x = Conv1D(filters=stack * 32, kernel_size=15, strides=2, padding='same', kernel_regularizer='l2',
-#            activity_regularizer='l2',
-#            activation='relu')(x)
-# x = BatchNormalization()(x)
-# x = MaxPooling1D(strides=2)(x)
-# # x = build_cnn(stack * 32, [13, 11, 9])(x) + x
-# x = Conv1D(filters=stack * 64, kernel_size=7, strides=2, padding='same', kernel_regularizer='l2',
-#            activity_regularizer='l2',
-#            activation='relu')(x)
-# x = BatchNormalization()(x)
-# x = MaxPooling1D(strides=2)(x)
-# x = Flatten()(x)
-# x = Dense(units=window_size // 2, activation='relu')(x)
-# x = Dropout(0.5)(x)
-# x = BatchNormalization()(x)
-# out = Dense(window_size)(x)
-# model = Model(inputs, out)
-
 inputs = Input((datapoints, stack * 4))
-x = Conv1D(filters=stack * 8, kernel_size=61, strides=2,
+x = Conv1D(filters=stack * 16, kernel_size=61, strides=4,
            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
-           activation='relu')(inputs)
-x = BatchNormalization()(x)
-x = MaxPooling1D(strides=2)(x)
-x = Conv1D(filters=stack * 16, kernel_size=31, strides=1, padding='same', kernel_regularizer='l2',
-           activity_regularizer='l2',
-           activation='relu')(x)
-x = BatchNormalization()(x)
-x = MaxPooling1D(strides=2)(x)
-x = Conv1D(filters=stack * 32, kernel_size=15, strides=1, padding='same', kernel_regularizer='l2',
-           activity_regularizer='l2',
-           activation='relu')(x)
-x = BatchNormalization()(x)
-x = MaxPooling1D(strides=2)(x)
-x = Conv1D(filters=stack * 64, kernel_size=7, strides=1, padding='same', kernel_regularizer='l2',
-           activity_regularizer='l2',
-           activation='relu')(x)
-x = BatchNormalization()(x)
-x = MaxPooling1D(strides=2)(x)
-x = MultiHeadAttention(8, stack * 64, dropout=0.5)(x, x) + x
-x = BatchNormalization()(x)
-x = Dense(units=stack * 64, activation='relu')(x) + x
+           activation='relu',)(inputs)
+x = LayerNormalization()(x)
+x = MaxPooling1D(strides=4)(x)
+x = MultiHeadAttention(8, stack * 16, dropout=0.5)(x, x) + x
+x = LayerNormalization()(x)
+x = Dense(units=stack * 16, activation='relu')(x) + x
 x = Dropout(0.5)(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = Flatten()(x)
 x = Dense(units=window_size // 2, activation='relu')(x)
 x = Dropout(0.5)(x)
-x = BatchNormalization()(x)
-out = Dense(window_size)(x)
+x = LayerNormalization()(x)
+out = Dense(1)(x)
 model = Model(inputs, out)
 
 model.summary()
@@ -137,7 +90,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     get_custom_objects().update({'magnitude': magnitude, 'distance': distance})
     model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True),  #from_logits=True
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy',
-                           # keras.metrics.BinaryAccuracy(),
+                           keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
                          save_best_only=True, intial_value_threshold=0.8)
@@ -147,11 +100,11 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     #                      save_best_only=True, intial_value_threshold=0.2)
     vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True, intial_value_threshold=0.2)
-    # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
-    #                      save_best_only=True)
+    vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_accuracy', mode='max', verbose=1,
+                         save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[vk, vp, reducelr], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[va, vm, reducelr], shuffle=True)
 
     model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
@@ -206,17 +159,17 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 
 
 if __name__ == '__main__':
-    model_file = f'{animal}_model'
+    model_file = f'{animal}_model_mask'
 
     epochs = 60
     batch_size = 64
     learning_rate = 1e-4
-    x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
-    y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train.npy'))
-    # inds = np.random.randint(x_train.shape[0], size=x_train.shape[0] * 3 // 4)
-    # x_train = x_train[inds]
-    # y_train = y_train[inds]
-    x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))
-    y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test.npy'))
+    x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train_mask.npy'))
+    y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train_mask.npy'))
+    inds = np.random.randint(x_train.shape[0], size=x_train.shape[0] * 3 // 4)
+    x_train = x_train[inds]
+    y_train = y_train[inds]
+    x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test_mask.npy'))
+    y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test_mask.npy'))
 
     train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)

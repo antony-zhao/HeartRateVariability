@@ -9,13 +9,14 @@ import re
 from keras import backend as K
 import polars as pl
 import pandas as pd
+from scipy.fft import fft, fftfreq
 import ctypes
 from process_signal_cython import process_signal_cython
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-from dataset import process_ecg, filters
+from dataset import process_ecg, cascaded_filters, bandpass_filter
 import time
 from collections import deque
 import tkinter as tk
@@ -36,6 +37,13 @@ if __name__ == "__main__":
     file_num = 1
     update_freq = 1
     loading_size = 128
+
+
+    def signaltonoise(a, axis=0, ddof=0):
+        a = np.asanyarray(a)
+        m = a.mean(axis)
+        sd = a.std(axis=axis, ddof=ddof)
+        return np.where(sd == 0, 0, m / sd)
 
     # Opening file and choosing directory to save code in
     if args.filename is None:
@@ -69,15 +77,16 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_val_cat', compile=False)
+    model1 = load_model(f'{animal}_model_att_1', compile=False)
     K.clear_session()
-    model2 = load_model(f'{animal}_model_val_top_k', compile=False)
+    model2 = load_model(f'{animal}_model_att_2', compile=False)
     K.clear_session()
-    model3 = load_model(f'{animal}_model_conv_3', compile=False)
-    K.clear_session()
-    model4 = load_model(f'{animal}_model_conv_4', compile=False)
-    K.clear_session()
-    model5 = load_model(f'{animal}_model_conv_5', compile=False)
+    # model3 = load_model(f'{animal}_model_conv_3', compile=False)
+    # K.clear_session()
+    # model4 = load_model(f'{animal}_model_conv_4', compile=False)
+    # K.clear_session()
+    # model5 = load_model(f'{animal}_model_conv_5', compile=False)
+    model_mask = load_model(f'{animal}_model_mask_val_bce', compile=False)
     ensemble = [model1, model2]#, model3]
     model1.summary()
 
@@ -204,7 +213,7 @@ if __name__ == "__main__":
         return len(datetime)
 
 
-    def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
+    def process_signal_v2(dataframe, datetime, sig, ecg, argmax, mask, radius=200):
         """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
         # global interval
         # global curr_ind
@@ -317,10 +326,23 @@ if __name__ == "__main__":
                             interval_final = curr_length
                             curr_ind_final = ind
 
-        # print(time.time() - curr, "Time Elapsed")
+        filtered = cascaded_filters(ecg, order, 10, 0, nyq)
+        filtered_reshaped = (np.append(filtered, np.zeros(interval_length - ecg.size % interval_length))
+                        .reshape(-1, interval_length))
+        ecg_reshaped = (np.append(ecg, np.zeros(interval_length - ecg.size % interval_length))
+                             .reshape(-1, interval_length))
+        diff = np.abs(filtered_reshaped - ecg_reshaped)
+        k = 25
+        diff = np.take_along_axis(diff, np.argpartition(diff, axis=1, kth=k), axis=1)[:, :-k]
+        # diff = diff / np.repeat(np.max(diff, axis=1), interval_length - k).reshape(-1, interval_length - k)
+        snr = np.sqrt(np.sum(diff, axis=1) / window_size) #signaltonoise(ecg_reshaped, axis=1)
+        snr = np.abs(snr)
+        snr = np.repeat(snr, interval_length)[:ecg_len]
+        # print(np.percentile(snr, 97))
+        snr = snr > 0.17
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                                "ensemble": np.array(processed_sig_1, dtype=np.float32),
-                                "signal": np.array(processed_sig_final, dtype=np.int32)})
+                                "ensemble": np.array(snr, dtype=np.int32),
+                                "signal": np.array(processed_sig_1, dtype=np.float32)})
 
         dataframe.vstack(temp_df, in_place=True)
         return ecg_len
@@ -384,7 +406,7 @@ if __name__ == "__main__":
     # datetime_segment, ecg_segment, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
     datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
     # datetime_segment, ecg_segment, EOF = `read_ecg(file, window_size * loading_size)
-    filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
+    filtered_segment = bandpass_filter(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 
     # Pads the data with 0s
     padding = (pad_behind * window_size, 0)
@@ -426,12 +448,14 @@ if __name__ == "__main__":
                 # if lines >= 1.7e6:
                 #     print('hi')
                 signals, argmaxes = ensemble_predict(batch)
+                mask = model_mask(batch, training=False).numpy()
+                mask = np.repeat(mask >= 0, window_size)
 
                 datetime_iter = np.concatenate(datetimes).ravel()
                 segment = np.asarray(ecg_segments).flatten()
 
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes)
+                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes, mask)
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
                 lines += num_lines
                 batch = []
@@ -460,7 +484,7 @@ if __name__ == "__main__":
                 if iter % update_freq == 0:
                     pbar.update(line_size * len(datetime_segment) * update_freq)
 
-                filtered_segment = filters(ecg_segment, order, low_cutoff, high_cutoff, nyq)
+                filtered_segment = bandpass_filter(ecg_segment, order, low_cutoff, high_cutoff, nyq)
 
                 ecg_temp = ecg_segment[:window_size * stack]
                 filtered_temp = filtered_segment[:window_size * stack]

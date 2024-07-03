@@ -24,7 +24,8 @@ threshold = float(parser.get('Model Prediction Parameters', 'threshold'))
 
 T = float(parser.get('Filter Parameters', 'T'))
 fs = int(parser.get('Filter Parameters', 'fs'))
-nyq = fs * 0.5
+nyq_mul = float(parser.get('Filter Parameters', 'nyq_mul'))
+nyq = fs * nyq_mul
 high_cutoff = float(parser.get('Filter Parameters', 'high_cutoff'))
 low_cutoff = float(parser.get('Filter Parameters', 'low_cutoff'))
 order = int(parser.get('Filter Parameters', 'order'))
