@@ -34,21 +34,17 @@ def build_cnn(filters, kernel):
     ])
 
 
-inputs = Input((datapoints, stack * 4))
-x = Conv1D(filters=stack * 16, kernel_size=61, strides=4,
+inputs = Input((30, 100))
+x = Conv1D(filters=100, kernel_size=1,  # data_format='channels_first',
            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
-           activation='relu',)(inputs)
+           activation='relu')(inputs)
 x = LayerNormalization()(x)
-x = MaxPooling1D(strides=4)(x)
-x = MultiHeadAttention(8, stack * 16, dropout=0.5)(x, x) + x
+x = MultiHeadAttention(8, 100, dropout=0.5)(x, x) + x
 x = LayerNormalization()(x)
-x = Dense(units=stack * 16, activation='relu')(x) + x
+x = Dense(units=100, activation='relu')(x) + x
 x = Dropout(0.5)(x)
 x = LayerNormalization()(x)
 x = Flatten()(x)
-x = Dense(units=window_size // 2, activation='relu')(x)
-x = Dropout(0.5)(x)
-x = LayerNormalization()(x)
 out = Dense(1)(x)
 model = Model(inputs, out)
 
@@ -104,7 +100,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=5)
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2,
-                        validation_data=(x_test, y_test), callbacks=[va, vm, reducelr], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[reducelr, vm], shuffle=True)
 
     model_top_k = keras.models.load_model(f'{animal}_model_val_top_k')
     if plot:  # Optional plotting to visualize and verify the model.
@@ -123,36 +119,6 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
         plt.legend(['train', 'val'], loc='upper left')
         plt.show()
 
-        # for i in range(5):
-        #     plt.plot(x_test[i, :, -stack // 2], label='filtered')
-        #     sig = model.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(scipy.special.softmax(sig), label='prediction')
-        #     sig = model_top_k.predict(x_test[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(scipy.special.softmax(sig), label='top_k_prediction')
-        #     sig = y_test[i]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
-        #     sig /= -np.max(sig) * 2
-        #     plt.plot(sig, label='truth')
-        #     plt.legend()
-        #     plt.show()
-
-        # for i in np.random.randint(len(x_train), size=10):
-        #     plt.plot(x_train[i, :, -stack // 2], label='filtered')
-        #     sig = model.predict(x_train[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(scipy.special.softmax(sig), label='prediction')
-        #     sig = model_top_k.predict(x_train[i][np.newaxis, :, :])[0]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1) / scale_down
-        #     plt.plot(scipy.special.softmax(sig), label='top_k_prediction')
-        #     sig = y_train[i]
-        #     sig = np.sum(sig.reshape((-1, scale_down)), axis=1)
-        #     sig /= -np.max(sig) * 2
-        #     plt.plot(sig, label='truth')
-        #     plt.legend()
-        #     plt.show()
-
     model.save(model_file)
     del model
     tf.keras.backend.clear_session()
@@ -166,9 +132,6 @@ if __name__ == '__main__':
     learning_rate = 1e-4
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train_mask.npy'))
     y_train = np.load(os.path.join('..', 'Training', f'{animal}_y_train_mask.npy'))
-    inds = np.random.randint(x_train.shape[0], size=x_train.shape[0] * 3 // 4)
-    x_train = x_train[inds]
-    y_train = y_train[inds]
     x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test_mask.npy'))
     y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test_mask.npy'))
 

@@ -49,33 +49,6 @@ def random_sampling(ecg, filtered_ecg, signal, samples, ensure_labels=False):
     return x, y
 
 
-def random_sampling_masking(ecg, filtered_ecg, signal, samples):
-    """Randomly creates a sample from somewhere within the data."""
-    x, y = [], []
-    count = 0
-    padded_ecg = np.pad(ecg, (int(pad_behind * window_size), int(pad_forward * window_size)), constant_values=(0, 0))
-    padded_filter = np.pad(filtered_ecg, (int(pad_behind * window_size), int(pad_forward * window_size)),
-                           constant_values=(0, 0))
-    indices = np.random.randint(0, len(ecg) - int(pad_forward * window_size), size=samples * 2)
-    for ind in indices:
-        # j is the starting index for the block that is being labeled. We include 2 after and 2 before
-        # second
-        if len(x) >= samples:
-            break
-        y_i = 1 if np.count_nonzero(signal[ind:ind + int(1 * window_size)]) > 0 else 0
-        x_i = process_ecg(padded_ecg[ind:ind + int(stack * window_size)],
-                          padded_filter[ind:ind + int(stack * window_size)],
-                          scale_down, stack, datapoints)
-        # The label for the (stack - 1)th block, so there is some look ahead and some look behind
-        x.append(x_i.T)
-        y.append(y_i)
-
-    x = np.asarray(x)
-
-    y = np.asarray(y)
-    return x, y
-
-
 def process_ecg(ecg, filtered_ecg, scale_down, stack, datapoints):
     """Sets the baseline to be 0, and also averages every 'scale_down' datapoints to reduce the total amount of data
     per sample """
@@ -151,9 +124,9 @@ def temp_plot(ecg, sig, start=0, size=2000):
 if __name__ == '__main__':
     """Creates the train and test datasets for the model to be trained on."""
     lines = 400000  # Maximum number of lines to read
-    samples = 1500  # Number of samples to create, won't generate exactly this many however.
+    samples = 2000  # Number of samples to create, won't generate exactly this many however.
     counter = 0
-    ensure_labels = False  # Only add samples that have an actual beat in them
+    ensure_labels = True  # Only add samples that have an actual beat in them
 
     # Reads the data from the ecg and sig files (containing the ecg and markings). Then runs them through the filter,
     # before taking random samples from the data to create the datasets.

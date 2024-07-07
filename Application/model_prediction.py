@@ -77,9 +77,9 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_att_1', compile=False)
+    model1 = load_model(f'{animal}_model_val_cat', compile=False)
     K.clear_session()
-    model2 = load_model(f'{animal}_model_att_2', compile=False)
+    model2 = load_model(f'{animal}_model_val_top_k', compile=False)
     K.clear_session()
     # model3 = load_model(f'{animal}_model_conv_3', compile=False)
     # K.clear_session()
@@ -339,10 +339,10 @@ if __name__ == "__main__":
         snr = np.abs(snr)
         snr = np.repeat(snr, interval_length)[:ecg_len]
         # print(np.percentile(snr, 97))
-        snr = snr > 0.17
+        snr = snr < 0.17
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
                                 "ensemble": np.array(snr, dtype=np.int32),
-                                "signal": np.array(processed_sig_1, dtype=np.float32)})
+                                "signal": np.array(processed_sig_final * snr, dtype=np.float32)})
 
         dataframe.vstack(temp_df, in_place=True)
         return ecg_len

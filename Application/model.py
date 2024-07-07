@@ -4,8 +4,8 @@ import scipy
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, BatchNormalization, \
-    Activation, BatchNormalization, Input, GRU, Bidirectional, MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D
+from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, MaxPooling1D, LayerNormalization, \
+    Activation, LayerNormalization, Input, GRU, Bidirectional, MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
@@ -24,13 +24,13 @@ def build_cnn(filters, kernel):
     return keras.Sequential([
         keras.layers.Conv1D(filters, kernel[0], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
         keras.layers.Conv1D(filters, kernel[1], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
         keras.layers.Conv1D(filters, kernel[2], padding='same', activation='relu', kernel_regularizer='l2',
                             activity_regularizer='l2'),
-        keras.layers.BatchNormalization(),
+        keras.layers.LayerNormalization(),
     ])
 
 
@@ -39,30 +39,30 @@ def build_cnn(filters, kernel):
 # x = Conv1D(filters=stack * 8, kernel_size=61, strides=2,
 #            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
 #            activation='relu',)(inputs)
-# x = BatchNormalization()(x)
+# x = LayerNormalization()(x)
 # x = MaxPooling1D(strides=2)(x)
 # # x = build_cnn(stack * 8, [37, 35, 33])(x) + x
 # x = Conv1D(filters=stack * 16, kernel_size=31, strides=2, padding='same', kernel_regularizer='l2',
 #            activity_regularizer='l2',
 #            activation='relu')(x)
-# x = BatchNormalization()(x)
+# x = LayerNormalization()(x)
 # x = MaxPooling1D(strides=2)(x)
 # # x = build_cnn(stack * 16, [21, 19, 17])(x) + x
 # x = Conv1D(filters=stack * 32, kernel_size=15, strides=2, padding='same', kernel_regularizer='l2',
 #            activity_regularizer='l2',
 #            activation='relu')(x)
-# x = BatchNormalization()(x)
+# x = LayerNormalization()(x)
 # x = MaxPooling1D(strides=2)(x)
 # # x = build_cnn(stack * 32, [13, 11, 9])(x) + x
 # x = Conv1D(filters=stack * 64, kernel_size=7, strides=2, padding='same', kernel_regularizer='l2',
 #            activity_regularizer='l2',
 #            activation='relu')(x)
-# x = BatchNormalization()(x)
+# x = LayerNormalization()(x)
 # x = MaxPooling1D(strides=2)(x)
 # x = Flatten()(x)
 # x = Dense(units=window_size // 2, activation='relu')(x)
 # x = Dropout(0.5)(x)
-# x = BatchNormalization()(x)
+# x = LayerNormalization()(x)
 # out = Dense(window_size)(x)
 # model = Model(inputs, out)
 
@@ -70,32 +70,32 @@ inputs = Input((datapoints, stack * 4))
 x = Conv1D(filters=stack * 8, kernel_size=61, strides=2,
            padding='same', kernel_regularizer='l2', activity_regularizer='l2',
            activation='relu')(inputs)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = MaxPooling1D(strides=2)(x)
 x = Conv1D(filters=stack * 16, kernel_size=31, strides=1, padding='same', kernel_regularizer='l2',
            activity_regularizer='l2',
            activation='relu')(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = MaxPooling1D(strides=2)(x)
 x = Conv1D(filters=stack * 32, kernel_size=15, strides=1, padding='same', kernel_regularizer='l2',
            activity_regularizer='l2',
            activation='relu')(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = MaxPooling1D(strides=2)(x)
 x = Conv1D(filters=stack * 64, kernel_size=7, strides=1, padding='same', kernel_regularizer='l2',
            activity_regularizer='l2',
            activation='relu')(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = MaxPooling1D(strides=2)(x)
 x = MultiHeadAttention(8, stack * 64, dropout=0.5)(x, x) + x
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = Dense(units=stack * 64, activation='relu')(x) + x
 x = Dropout(0.5)(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 x = Flatten()(x)
 x = Dense(units=window_size // 2, activation='relu')(x)
 x = Dropout(0.5)(x)
-x = BatchNormalization()(x)
+x = LayerNormalization()(x)
 out = Dense(window_size)(x)
 model = Model(inputs, out)
 
@@ -135,7 +135,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     global model
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     get_custom_objects().update({'magnitude': magnitude, 'distance': distance})
-    model.compile(optimizer=optim, loss=keras.losses.BinaryCrossentropy(from_logits=True),  #from_logits=True
+    model.compile(optimizer=optim, loss=keras.losses.CategoricalCrossentropy(from_logits=True),  #from_logits=True
                   metrics=['categorical_accuracy', 'top_k_categorical_accuracy',
                            # keras.metrics.BinaryAccuracy(),
                            tf.keras.metrics.AUC(from_logits=True, multi_label=True)])
