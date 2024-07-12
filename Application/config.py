@@ -22,7 +22,6 @@ lines_per_file = int(parser.get('Model Prediction Parameters', 'lines_per_file')
 max_dist_percentage = float(parser.get('Model Prediction Parameters', 'max_dist_percentage'))
 threshold = float(parser.get('Model Prediction Parameters', 'threshold'))
 
-T = float(parser.get('Filter Parameters', 'T'))
 fs = int(parser.get('Filter Parameters', 'fs'))
 nyq_mul = float(parser.get('Filter Parameters', 'nyq_mul'))
 nyq = fs * nyq_mul

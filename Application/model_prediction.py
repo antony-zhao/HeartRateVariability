@@ -26,6 +26,8 @@ from pathlib import Path
 from config import window_size, stack, scale_down, datapoints, \
     lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
     pad_behind
+import scipy.integrate as integrate
+from scipy.fft import fft, ifft
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -38,12 +40,6 @@ if __name__ == "__main__":
     update_freq = 1
     loading_size = 128
 
-
-    def signaltonoise(a, axis=0, ddof=0):
-        a = np.asanyarray(a)
-        m = a.mean(axis)
-        sd = a.std(axis=axis, ddof=ddof)
-        return np.where(sd == 0, 0, m / sd)
 
     # Opening file and choosing directory to save code in
     if args.filename is None:
@@ -87,7 +83,7 @@ if __name__ == "__main__":
     # K.clear_session()
     # model5 = load_model(f'{animal}_model_conv_5', compile=False)
     model_mask = load_model(f'{animal}_model_mask_val_bce', compile=False)
-    ensemble = [model1, model2]#, model3]
+    ensemble = [model1, model2]  #, model3]
     model1.summary()
 
 
@@ -106,6 +102,40 @@ if __name__ == "__main__":
             argmaxes.append(argmax)
             signals.append(signal)
         return signals, argmaxes
+
+
+    def fft_filter(ecg, axis=1):
+        fft_signal = fft(ecg, axis=axis)
+
+        # Identify noise frequencies and mask them out
+        # For example, setting frequencies with too high amplitude to zero
+        n_samples = ecg.shape[0]
+        amplitudes = 2 / n_samples * np.abs(fft_signal)
+        frequencies = np.fft.fftfreq(n_samples) * n_samples
+
+        ecg = ifft(fft_signal)
+        return ecg, amplitudes, frequencies
+
+
+    def pad_to_match(array, width):
+        return (np.append(array, np.zeros(width - len(array) % width))
+                .reshape(-1, width))
+
+
+    def absmaxND(a, axis=None):
+        amax = a.max(axis)
+        amin = a.min(axis)
+        return np.where(-amin > amax, amin, amax)
+
+
+    def standardize(array, width=5000):
+        array_len = len(array)
+        array_ = pad_to_match(array, width)
+        sign = absmaxND(array_, axis=1)
+        std = np.std(array_, axis=1)
+        array /= np.repeat(sign, width)[:array_len]
+        return array
+
 
     lines = 0  # Tracks the number of lines for the current file
     dist = 0  #ctypes.c_int(0)
@@ -277,7 +307,8 @@ if __name__ == "__main__":
                 while True:
                     if i + offset < len(markings) and abs(markings[i + offset] - ind) < radius \
                             and processed_sig_1[ind] - processed_sig_1[markings[i + offset]] < 0.6:
-                        if processed_sig_1[ind] <= processed_sig_1[markings[i + offset]]: #penalize it harder for this case
+                        if processed_sig_1[ind] <= processed_sig_1[
+                            markings[i + offset]]:  #penalize it harder for this case
                             nearby += 3
                         nearby += 1
                         offset += 1
@@ -287,7 +318,8 @@ if __name__ == "__main__":
                 while True:
                     if i - nearby > 0 and abs(markings[i - offset] - ind) < radius \
                             and processed_sig_1[ind] - processed_sig_1[markings[i - offset]] < 0.6:
-                        if processed_sig_1[ind] == processed_sig_1[markings[i - offset]]: #penalize it harder for this case
+                        if processed_sig_1[ind] == processed_sig_1[
+                            markings[i - offset]]:  #penalize it harder for this case
                             nearby += 3
                         nearby += 1
                         offset += 1
@@ -326,29 +358,22 @@ if __name__ == "__main__":
                             interval_final = curr_length
                             curr_ind_final = ind
 
-        filtered = cascaded_filters(ecg, order, 10, 0, nyq)
-        filtered_reshaped = (np.append(filtered, np.zeros(interval_length - ecg.size % interval_length))
-                        .reshape(-1, interval_length))
-        ecg_reshaped = (np.append(ecg, np.zeros(interval_length - ecg.size % interval_length))
-                             .reshape(-1, interval_length))
-        diff = np.abs(filtered_reshaped - ecg_reshaped)
-        k = 25
-        diff = np.take_along_axis(diff, np.argpartition(diff, axis=1, kth=k), axis=1)[:, :-k]
-        # diff = diff / np.repeat(np.max(diff, axis=1), interval_length - k).reshape(-1, interval_length - k)
-        snr = np.sqrt(np.sum(diff, axis=1) / window_size) #signaltonoise(ecg_reshaped, axis=1)
-        snr = np.abs(snr)
-        snr = np.repeat(snr, interval_length)[:ecg_len]
-        # print(np.percentile(snr, 97))
-        snr = snr < 0.17
+        filtered = cascaded_filters(ecg, order, 400, 10, nyq)
+        standardized = standardize(filtered)
+        _, amp, freq = fft_filter(pad_to_match(standardized, width=interval_length))
+        mask = integrate.simps(amp[:, 10:100]) < np.percentile(integrate.simps(amp[:, 10:100]), 97)
+        mask = np.repeat(mask, interval_length)[:ecg_len]
+
+
         temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                                "ensemble": np.array(snr, dtype=np.int32),
-                                "signal": np.array(processed_sig_final * snr, dtype=np.float32)})
+                                "signal": np.array(processed_sig_final * mask, dtype=np.int32),
+                                "ensemble": np.array(processed_sig_1, dtype=np.float32)})
 
         dataframe.vstack(temp_df, in_place=True)
         return ecg_len
 
 
-    def find_candidates(argmaxes, signals, candidate_index, support_dist=3):
+    def find_candidates(argmaxes, signals, candidate_index, support_dist=5):
         '''
         :param argmaxes:
         :param candidate_index:
@@ -448,14 +473,14 @@ if __name__ == "__main__":
                 # if lines >= 1.7e6:
                 #     print('hi')
                 signals, argmaxes = ensemble_predict(batch)
-                mask = model_mask(batch, training=False).numpy()
-                mask = np.repeat(mask >= 0, window_size)
+                # mask = model_mask(batch, training=False).numpy()
+                # mask = np.repeat(mask >= 0, window_size)
 
                 datetime_iter = np.concatenate(datetimes).ravel()
                 segment = np.asarray(ecg_segments).flatten()
 
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes, mask)
+                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes, None)
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
                 lines += num_lines
                 batch = []
