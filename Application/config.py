@@ -10,9 +10,7 @@ parser.read(f'{animal}_config.ini')
 
 interval_length = int(parser.get('Signal Parameters', 'interval_length'))
 
-pad_behind = int(parser.get('Model Parameters', 'pad_behind'))
-pad_forward = int(parser.get('Model Parameters', 'pad_forward'))
-stack = pad_behind + pad_forward + 1
+stack = int(parser.get('Model Parameters', 'stack'))
 scale_down = int(parser.get('Model Parameters', 'scale_down'))
 window_size = int(parser.get('Model Parameters', 'window_size'))
 mean_std_normalize = parser.get('Model Parameters', 'mean_std_normalize') == 'True'

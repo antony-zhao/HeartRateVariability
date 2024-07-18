@@ -11,7 +11,7 @@ import matplotlib
 from pathlib import Path
 import tqdm
 from config import interval_length, low_cutoff, high_cutoff, nyq, order, max_dist_percentage, lines_per_file
-from dataset import cascaded_filters, bandpass_filter
+from dataset import highpass_filter, bandpass_filter
 import pandas as pd
 
 '''
@@ -373,8 +373,7 @@ rad = plt.axes([0.4, 0.01, 0.1, 0.075])  # Other interactive stuff, (buttons, sl
 width_slider_pos = plt.axes([0.2, 0.9, 0.65, 0.03])
 position_slider_pos = plt.axes([0.2, 0.95, 0.65, 0.03])
 stat = RadioButtons(rad, ('Browse', 'Add', 'Delete', 'Clean Region'))
-toggle_clean_selector.RS = RectangleSelector(axs, events.clean_region, drawtype='box', button=1,
-                                             rectprops=dict(facecolor='gray'))
+toggle_clean_selector.RS = RectangleSelector(axs, events.clean_region, button=1)
 stat.on_clicked(events.change_mode)
 width_slider = Slider(width_slider_pos, 'Width', 200, 10000, valinit=3000)
 width_slider.on_changed(events.set_width)

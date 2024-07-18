@@ -4,15 +4,18 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, \
-    MaxPooling1D, LayerNormalization, TimeDistributed, Reshape, \
-    Activation, LayerNormalization, Input, GRU, Bidirectional, \
-    MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D
+    MaxPooling1D, BatchNormalization, TimeDistributed, Reshape, \
+    Activation, LayerNormalization, Input, GRU, Bidirectional, Concatenate, \
+    MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D, Embedding
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
 import tensorflow.keras.backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from config import window_size, stack, scale_down, datapoints, animal
+import pandas as pd
+from dataset import bandpass_filter, process_ecg
+from config import *
 
 
 def weighted_crossentropy(weight):
@@ -22,30 +25,46 @@ def weighted_crossentropy(weight):
     return loss
 
 
+embedding_dim = 256
+num_heads = 8
+dropout = 0.5
+
+
 def attention_layer(x):
-    x = MultiHeadAttention(8, embedding_dim, dropout=0.5, kernel_regularizer='l2',
-                           activity_regularizer='l2')(x, x) + x
-    x = LayerNormalization()(x)
-    x_expand = Dense(units=embedding_dim * 4, activation='relu')(x)
-    x_expand = Dropout(0.5)(x_expand)
-    x = Dense(units=embedding_dim, activation='relu')(x_expand) + x
-    x = Dropout(0.5)(x)
-    x = LayerNormalization()(x)
+    x_skip = x
+    x_norm = LayerNormalization()(x)
+    x = MultiHeadAttention(num_heads, embedding_dim // num_heads, dropout=dropout)(x_norm, x_norm)
+    x = x_skip = Dense(embedding_dim)(x) + x_skip
+    x_norm = LayerNormalization()(x)
+    x_expand = Dense(units=embedding_dim * 4, activation='relu')(x_norm)
+    x_expand = Dropout(dropout)(x_expand)
+    x = Dense(units=embedding_dim)(x_expand)
+    x = Dropout(dropout)(x) + x_skip
     return x
 
 
-embedding_dim = 128
-x = inputs = Input((stack * 2, datapoints))
-x = LSTM(embedding_dim, dropout=0.5, return_sequences=True, kernel_regularizer='l2',
-         activity_regularizer='l2')(x)
-x = LayerNormalization()(x)
-for _ in range(4):
+# positions = K.variable(range(stack))
+# positions = K.repeat_elements(positions, rep=64, axis=0)
+# cons_input = Input(tensor=positions)
+x = inputs = Input((stack * window_size, 1))
+x = Conv1D(filters=8, kernel_size=31, padding='same', strides=5, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Conv1D(filters=16, kernel_size=25, padding='same', strides=5, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Conv1D(filters=32, kernel_size=13, padding='same', strides=5, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Conv1D(filters=64, kernel_size=7, padding='same', strides=4, activation='relu')(x)
+x = BatchNormalization()(x)
+x = Conv1D(filters=embedding_dim, kernel_size=5, padding='same', strides=1)(x)
+# pos = Embedding(stack, embedding_dim // 2)(cons_input)
+# x = Concatenate()([x, pos])
+for _ in range(8):
     x = attention_layer(x)
-x = Conv1D(filters=embedding_dim, kernel_size=3, strides=2, padding='same', kernel_regularizer='l2',
-           activity_regularizer='l2')(x)
-x = TimeDistributed(Dense(window_size + 1))(x)
-out = Reshape((stack, datapoints + 1))(x)
-model = Model(inputs, out)
+x = LayerNormalization()(x)
+x = TimeDistributed(Dense(window_size // 4))(x)
+out = Flatten()(x)
+# out = Reshape((stack, datapoints))(x)
+model = Model([inputs], out)
 
 model.summary()
 
@@ -72,38 +91,35 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     global model
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optim,
-                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
-                  #weighted_crossentropy(weight=1),  # tf.keras.losses.BinaryCrossentropy(from_logits=True),
-                  metrics=[keras.metrics.AUC(from_logits=True), keras.metrics.CategoricalAccuracy(),
-                           keras.metrics.TopKCategoricalAccuracy(k=4)])  # ], keras.metrics.AUC(from_logits=True)]
+                  loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                  metrics=[keras.metrics.BinaryAccuracy(),
+                           keras.metrics.AUC(curve='PR', from_logits=True, multi_label=True),
+                           keras.metrics.AUC(from_logits=True, multi_label=True)])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.95)
+                         save_best_only=True, initial_value_threshold=0.15)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max',
                          verbose=1,
                          save_best_only=True, initial_value_threshold=0.9)
     vc = ModelCheckpoint(model_file + '_val_bin', monitor='val_binary_accuracy', mode='max', verbose=1,
                          save_best_only=True, initial_value_threshold=0.2)
-    vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_categorical_accuracy', mode='max', verbose=1,
+    vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_sparse_categorical_accuracy', mode='max', verbose=1,
                          save_best_only=True, initial_value_threshold=0.2)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
-    reducelr = ReduceLROnPlateau(patience=5)
-    eary_stop = EarlyStopping(patience=8)
-    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, verbose=2, sample_weight=sample_weights,
-                        validation_data=(x_test, y_test), callbacks=[va, vk, vp, reducelr, eary_stop], shuffle=True)
+    reducelr = ReduceLROnPlateau(patience=10)
+    eary_stop = EarlyStopping(monitor='val_auc', patience=30)
+    history = model.fit(x_train, y_train, batch_size=None, epochs=epochs, verbose=2, sample_weight=sample_weight,
+                        validation_data=(x_test, y_test), callbacks=[va, reducelr], shuffle=True)
 
     def plot(i):
-        plt.plot(x_test[i].flatten()[:3000])
-        # plt.plot(-y_test[i].flatten())
+        plt.plot(x_test[i, :, 0])
         plt.show()
 
     for _ in range(20):
         i = np.random.randint(x_test.shape[0])
         y_pred = model.predict(x_test[i][np.newaxis, :, :])[0]
-        y_pred = scipy.special.softmax(y_pred, axis=-1)
-        y_pred_masked = y_pred[:, :-1] * np.repeat(1 - y_pred[:, -1], window_size).reshape(y_pred.shape[0], window_size)
+        y_pred = np.repeat(scipy.special.expit(y_pred), 4)
         plt.plot(y_pred.flatten())
-        plt.plot(y_pred_masked.flatten())
         plot(i)
 
     model.save(model_file)
@@ -113,24 +129,67 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 
 if __name__ == '__main__':
     from sklearn.utils.class_weight import compute_class_weight
+    from tensorflow.keras.models import load_model
 
     model_file = f'{animal}_model'
 
+
+    # model = load_model(model_file + '_val_auc')
+
+    def data_generator(X, y, batch_size=128, steps_per_epoch=500):
+        shuffle = True
+        filtered_X = bandpass_filter(X, order, low_cutoff, high_cutoff, nyq)
+        while True:
+            if shuffle:
+                shuffle = False  # This loop is used to run the generator indefinitely.
+                random_inds = np.random.randint(0, len(X) - stack * window_size, batch_size * 2 * steps_per_epoch)
+                random_inds = random_inds.reshape(steps_per_epoch, batch_size * 2)
+            else:
+                for inds in random_inds:
+                    data = []
+                    labels = []
+                    for ind in inds:
+                        y_i = y[ind:ind + int(stack * window_size)]
+                        if np.count_nonzero(y_i) < 3:
+                            continue
+                        y_i = np.array(y_i).reshape((stack, datapoints // 4, 4))
+                        y_i = np.max(y_i, axis=-1)
+
+                        y_i = np.concatenate((y_i, 1 - np.max(y_i, axis=1).reshape(-1, 1)), axis=1)
+                        y_i = np.argmax(y_i, axis=-1)
+
+                        x_i = np.stack((X[ind:ind + int(stack * window_size)],
+                                        filtered_X[ind:ind + int(stack * window_size)]), axis=1)
+
+                        data.append(x_i)
+                        labels.append(y_i)
+
+                    data = np.stack(data)
+                    labels = np.stack(labels)
+                    # labels = np.concatenate((labels, 1 - np.max(labels, axis=-1)[:, :, np.newaxis]), axis=-1)
+                    # labels = np.argmax(labels, axis=-1)
+
+                    diff = np.max(data, axis=1) - np.min(data, axis=1)
+                    data = data / diff[:, np.newaxis, :]
+                    yield np.stack(data), np.stack(labels)
+                shuffle = True
+
+
     epochs = 150
-    batch_size = 64
-    learning_rate = 2e-4
+    batch_size = 128
+    learning_rate = 1e-4
     x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
     y_train = np.load(
         os.path.join('..', 'Training', f'{animal}_y_train.npy'))  #.reshape(-1, stack * 2, datapoints // 2)
 
-    y_one_hot = y_train.argmax(axis=-1).flatten()
-    class_weights = compute_class_weight(class_weight="balanced", classes=np.unique(y_one_hot), y=y_one_hot)
+    # y_one_hot = y_train.argmax(axis=-1).flatten()
+    # class_weights = compute_class_weight(class_weight="balanced", classes=np.unique(y_one_hot), y=y_one_hot)
     # class_weights = dict(enumerate(class_weights))
-    sample_weights = y_train @ class_weights
+    # sample_weights = y_train @ class_weights
     # inds = np.random.randint(x_train.shape[0], size=x_train.shape[0] * 3 // 4)
     # x_train = x_train[inds]
     # y_train = y_train[inds]
     x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))
     y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test.npy'))  #.reshape(-1, stack * 2, datapoints // 2)
 
-    train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True, sample_weights)
+    train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
