@@ -1,8 +1,8 @@
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 import configparser
 import os
 
-parser = SafeConfigParser()
+parser = ConfigParser()
 parser.read('selector.ini')
 animal = parser.get('Animal', 'animal')
 

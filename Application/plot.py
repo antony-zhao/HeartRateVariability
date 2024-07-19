@@ -317,7 +317,7 @@ plt.text(0.5, -0.3, 'Mismarked: {} \n Unmarked Regions : {} \n Total: {}'
 
 # b, a = butter(N=order, Wn=high_cutoff / nyq, btype='high')
 # ecg = filtfilt(b, a, np.asarray(ecg))
-filtered_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
+filtered_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
 
 ecg_line, = axs.plot(range(len(ecg)), ecg, zorder=101)
 filtered_line, = axs.plot(range(len(filtered_ecg)), filtered_ecg, zorder=101)

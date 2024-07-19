@@ -30,9 +30,9 @@ def random_sampling(ecg, filtered_ecg, cleaned_ecg, signal, samples):
         #     continue
         # y_i = np.concatenate((y_i, 1 - np.max(y_i, axis=1).reshape(-1, 1)), axis=1)
         # y_i = np.argmax(y_i, axis=-1)
-        x_i = process_ecg(np.array(ecg[ind:ind + int(stack * window_size)]),
-                          np.array(filtered_ecg[ind:ind + int(stack * window_size)]),
-                          np.array(cleaned_ecg[ind:ind + int(stack * window_size)]))
+        x_i = process_sample(np.array(ecg[ind:ind + int(stack * window_size)]),
+                             np.array(filtered_ecg[ind:ind + int(stack * window_size)]),
+                             np.array(cleaned_ecg[ind:ind + int(stack * window_size)]))
         x.append(x_i)
         y.append(y_i)
 
@@ -42,28 +42,25 @@ def random_sampling(ecg, filtered_ecg, cleaned_ecg, signal, samples):
     return x, y
 
 
-def process_ecg(ecg, filtered_ecg, cleaned_ecg):
+def process_sample(ecg):
     """Sets the baseline to be 0, and also averages every 'scale_down' datapoints to reduce the total amount of data
     per sample """
-    cleaned_ecg[np.abs(cleaned_ecg) < eps] = 0
     if mean_std_normalize:
-        cleaned_ecg = (cleaned_ecg - np.mean(cleaned_ecg)) / (np.std(cleaned_ecg) + 1e-5)
+        ecg = (ecg - np.mean(ecg, axis=0)) / (np.std(ecg, axis=0) + 1e-5)
     else:
-        diff = np.max(cleaned_ecg) - np.min(cleaned_ecg)
-        if diff != 0:
-            cleaned_ecg = (cleaned_ecg - np.mean(cleaned_ecg)) / diff
+        diff = np.max(ecg, axis=0) - np.min(ecg, axis=0)
+        ecg = (ecg - np.mean(ecg, axis=0)) / (diff + 1e-5)
 
-    filtered_ecg[np.abs(filtered_ecg) < eps] = 0
-    if mean_std_normalize:
-        filtered_ecg = (filtered_ecg - np.mean(filtered_ecg)) / (np.std(filtered_ecg) + 1e-5)
-    else:
-        diff = np.max(filtered_ecg) - np.min(filtered_ecg)
-        if diff != 0:
-            filtered_ecg = (filtered_ecg - np.mean(filtered_ecg)) / diff
+    return ecg
 
-    ecg = np.stack((cleaned_ecg))
 
-    return ecg.T
+def process_segment(ecg):
+    cleaned_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
+    bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
+    deriv_ecg = np.gradient(bandpass_ecg)
+    squared_ecg = np.power(deriv_ecg, 2)
+    moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
+    return np.array([ecg, cleaned_ecg, bandpass_ecg, deriv_ecg, squared_ecg, moving_avg_ecg]).T
 
 
 def bandpass_filter(ecg, order, lowcut, highcut, nyq):
@@ -134,7 +131,7 @@ if __name__ == '__main__':
     x_test, y_test = [], []
     while not eof:
         ecg, sig, eof = read_file(train_file, lines)
-        cleaned_ecg = highpass_filter(ecg, 1, 5, nyq)
+        cleaned_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
         if eof:
             break
         print(count)
@@ -156,7 +153,7 @@ if __name__ == '__main__':
         count = sum(1 for _ in f)
     while not eof:
         ecg, sig, eof = read_file(val_file, lines)
-        cleaned_ecg = highpass_filter(ecg, 1, 5, nyq)
+        cleaned_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
 
         if eof or len(ecg) == 0:
             break

@@ -16,19 +16,20 @@ from process_signal_cython import process_signal_cython
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-from dataset import process_ecg, highpass_filter, bandpass_filter
+from dataset import process_sample, highpass_filter, bandpass_filter, process_segment
 import time
 from collections import deque
 import tkinter as tk
 from tkinter import filedialog
 import tqdm
 from pathlib import Path
-from config import window_size, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
-    pad_behind
+from config import *
 import scipy.integrate as integrate
 from scipy.fft import fft, ifft
 
+
+signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f = (None, None, None,
+                                                                                          None, None, None)
 
 def ensemble_predict(batch):
     signals = []
@@ -101,130 +102,49 @@ def process_signal_c(dataframe, datetime, sig, ecg, argmax):
     return len(datetime)
 
 
-def process_signal_v2(dataframe, datetime, sig, ecg, argmax, mask, radius=200):
+def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-    # global interval
-    # global curr_ind
-    # global curr_ind_final
-    # global interval_final
-    interval = None
+    global signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f
     curr_ind = None
-    curr_ind_final = None
-    interval_final = None
-
     ecg_len = len(ecg)
-    processed_sig_1 = sig[0]  #[0] * ecg_len
-    processed_sig_final = [0] * ecg_len
-    # argmax = np.asarray(argmax, dtype=np.int32)
-    #
-    # for i in range(len(argmax[0])):
-    #     if interval is None or curr_ind is None:
-    #         candidates = find_candidates(argmax[:, i], sig, None)
-    #     else:
-    #         approximate_ind = curr_ind + interval
-    #         candidates = find_candidates(argmax[:, i], sig, approximate_ind)
-    #
-    #     for (candidate_ind, candidate_val, num_supporters) in candidates:
-    #         # Figure out how to determine if there is too much disagreement in a section and just ignore it
-    #         # Examples, multiple 0.2 or multiple 0.4s
-    #         processed_sig_1[candidate_ind] = num_supporters / len(ensemble)
-    #         if candidate_val >= 0.4:
-    #             if curr_ind is None:
-    #                 curr_ind = candidate_ind
-    #             elif interval is None:
-    #                 curr_length = candidate_ind - curr_ind
-    #                 if curr_length < 0.6 * interval_length:
-    #                     continue
-    #                 elif curr_length > 1.4 * interval_length:
-    #                     curr_ind = None
-    #                     interval = None
-    #                 else:
-    #                     curr_ind = candidate_ind
-    #                     interval = curr_length
-    #             else:
-    #                 curr_length = candidate_ind - curr_ind
-    #                 if curr_length < 0.8 * interval:
-    #                     continue
-    #                 elif curr_length > 1.2 * interval:
-    #                     curr_ind = None
-    #                     interval = None
-    #                 else:
-    #                     interval = curr_length
-    #                     curr_ind = candidate_ind
-    #
-    # markings = np.nonzero(processed_sig_1)[0]
-    # for i, ind in enumerate(markings):
-    #     # if ind > 11_000:
-    #     #     print('hi')
-    #     if interval_final is not None and interval_final * 1.2 < ind - curr_ind_final:
-    #         curr_ind_final = None
-    #         interval_final = None
-    #     if processed_sig_1[ind] >= threshold:
-    #         offset = 1
-    #         nearby = 0
-    #         while True:
-    #             if i + offset < len(markings) and abs(markings[i + offset] - ind) < radius \
-    #                     and processed_sig_1[ind] - processed_sig_1[markings[i + offset]] < 0.6:
-    #                 if processed_sig_1[ind] <= processed_sig_1[
-    #                     markings[i + offset]]:  #penalize it harder for this case
-    #                     nearby += 3
-    #                 nearby += 1
-    #                 offset += 1
-    #             else:
-    #                 break
-    #         offset = 1
-    #         while True:
-    #             if i - nearby > 0 and abs(markings[i - offset] - ind) < radius \
-    #                     and processed_sig_1[ind] - processed_sig_1[markings[i - offset]] < 0.6:
-    #                 if processed_sig_1[ind] == processed_sig_1[
-    #                     markings[i - offset]]:  #penalize it harder for this case
-    #                     nearby += 3
-    #                 nearby += 1
-    #                 offset += 1
-    #             else:
-    #                 break
-    #
-    #         if nearby > 2:
-    #             continue
-    #
-    #         if curr_ind_final is None:
-    #             processed_sig_final[ind] = 1
-    #             # print(ind)
-    #             curr_ind_final = ind
-    #         else:
-    #             curr_length = ind - curr_ind_final
-    #             if interval_final is None:
-    #                 if curr_length < 0.6 * interval_length:
-    #                     continue
-    #                 elif curr_length > 1.4 * interval_length:
-    #                     curr_ind_final = None
-    #                     interval_final = None
-    #                 else:
-    #                     processed_sig_final[ind] = 1
-    #                     # print(ind)
-    #                     curr_ind_final = ind
-    #                     interval_final = curr_length
-    #             else:
-    #                 if curr_length < 0.8 * interval_final:
-    #                     continue
-    #                 elif curr_length > 1.2 * interval_final:
-    #                     curr_ind_final = None
-    #                     interval_final = None
-    #                 else:
-    #                     processed_sig_final[ind] = 1
-    #                     # print(ind)
-    #                     interval_final = curr_length
-    #                     curr_ind_final = ind
-    #
-    # filtered = cascaded_filters(ecg, order, 400, 10, nyq)
-    # standardized = standardize(filtered)
-    # _, amp, freq = fft_filter(pad_to_match(standardized, width=interval_length))
-    # mask = integrate.simps(amp[:, 10:100]) < np.percentile(integrate.simps(amp[:, 10:100]), 97)
-    # mask = np.repeat(mask, interval_length)[:ecg_len]
+    sig = (sig[0] > 0.2).astype(np.int32)
+    sig[1:][sig[:-1] == sig[1:]] = 0
+    signal_inds = np.flatnonzero(sig)
+    processed_sig_final = np.zeros(ecg_len)
+
+    bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
+    deriv_ecg = np.gradient(bandpass_ecg)
+    squared_ecg = np.power(deriv_ecg, 2)
+    moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
+
+    if signal_level_i is None:
+        first_8 = signal_inds[:8]
+        signal_inds = signal_inds[8:]
+        signal_level_i = np.max(moving_avg_ecg[first_8]) * 0.5
+        noise_level_i = np.mean(moving_avg_ecg[first_8]) * 0.5
+        threshold_i = noise_level_i + 0.25 * (signal_level_i - noise_level_i)
+        signal_level_f = np.max(bandpass_ecg[first_8]) * 0.5
+        noise_level_f = np.mean(bandpass_ecg[first_8]) * 0.5
+        threshold_f = noise_level_f + 0.25 * (signal_level_f - noise_level_f)
+
+    for ind in signal_inds:
+        peak_i = moving_avg_ecg[ind]
+        peak_f = bandpass_ecg[ind]
+        if peak_i > threshold_i:
+            signal_level_i = 0.125 * peak_i + 0.875 * signal_level_i
+            if peak_f > threshold_f:
+                signal_level_f = 0.125 * peak_f + 0.875 * signal_level_f
+                processed_sig_final[ind] = 1
+            else:
+                noise_level_f = 0.125 * peak_f + 0.875 * noise_level_f
+        else:
+            noise_level_i = 0.125 * peak_i + 0.875 * noise_level_i
+            if peak_f < threshold_f:
+                noise_level_f = 0.125 * peak_f + 0.875 * noise_level_f
 
     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                            "signal": np.array(processed_sig_final, dtype=np.int32),
-                            "ensemble": np.array(processed_sig_1, dtype=np.float32)})
+                            "signal": np.array(sig, dtype=np.int32),
+                            "ensemble": np.array(sig, dtype=np.int32)})
 
     dataframe.vstack(temp_df, in_place=True)
     return ecg_len
@@ -370,9 +290,8 @@ if __name__ == "__main__":
 
     # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
     datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
-    cleaned_segment = highpass_filter(ecg_segment, 1, 5, nyq)
-    filtered_segment = bandpass_filter(ecg_segment, order, low_cutoff, high_cutoff, nyq)
-    segments = [ecg_segment, cleaned_segment, filtered_segment, datetime_segment]  # Last element will always be
+    processed_segment = process_segment(ecg_segment)
+    segments = [processed_segment, datetime_segment]  # Last element will always be
     # datetime and first element the ecg data, other elements are data to pass into the model.
 
     # offsets = [np.pad(ecg_segment, (256 * i, 0), constant_values=(0, 0)) for i in range(num_offsets)]
@@ -391,13 +310,13 @@ if __name__ == "__main__":
             # curr = time.time()
             num_lines = 0
 
-            temp = process_ecg(*batch[:-1])
+            temp = process_sample(*batch[:-1])
             batches.append(temp)
             datetimes.append(batch[-1])
-            ecg_segments.append(batch[0])
-            if len(batch) >= batch_size:
-                batch = np.array(batch).astype(np.float32)
-                signals, argmaxes = ensemble_predict(batches)
+            ecg_segments.append(batch[0][:, 0])
+            if len(batches) >= batch_size:
+                batch = np.array(batches).astype(np.float32)[:, :]
+                signals, argmaxes = ensemble_predict(batch)
 
                 datetime_iter = np.concatenate(datetimes).ravel()
                 segment = np.asarray(ecg_segments).flatten()
@@ -411,7 +330,7 @@ if __name__ == "__main__":
                 ecg_segments = []
 
             # Steps through all the different buffers, and if the buffer is empty reads more from the file.
-            if segments[0].size > stack * window_size * 2:
+            if len(segments[0]) > stack * window_size * 2:
                 batch = step_through_data(segments)
             elif not EOF:
                 iter += 1
@@ -419,15 +338,14 @@ if __name__ == "__main__":
                 temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
                 # temp_datetime, temp_ecg, EOF = read_ecg(file, window_size * loading_size)
                 datetime_segment = np.append(segments[-1], temp_datetime)
-                ecg_segment = np.append(segments[0], temp_ecg)
+                ecg_segment = np.append(segments[0][:, 0], temp_ecg)
                 if EOF:
                     break
                 if iter % update_freq == 0:
                     pbar.update(line_size * len(datetime_segment) * update_freq)
 
-                cleaned_segment = highpass_filter(ecg_segment, 1, 5, nyq)
-                filtered_segment = bandpass_filter(ecg_segment, order, low_cutoff, high_cutoff, nyq)
-                segments = [ecg_segment, cleaned_segment, filtered_segment, datetime_segment]
+                processed_segment = process_segment(ecg_segment)
+                segments = [processed_segment, datetime_segment]
 
                 batch = step_through_data(segments)
             else:
@@ -443,7 +361,7 @@ if __name__ == "__main__":
                 f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt')
 
     # # Writes the final few datapoints into the file, and closes it
-    batch = np.array(batch)[:, 0, :, :].astype(np.float32)
+    batch = np.array(batches).astype(np.float32)[:, :]
     signals, argmaxes = ensemble_predict(batch)
 
     datetime_iter = np.concatenate(datetimes).ravel()

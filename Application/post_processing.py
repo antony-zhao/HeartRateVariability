@@ -14,10 +14,8 @@ import time
 import multiprocessing as mp
 import pandas as pd
 from functools import partial
-from post_processing_sig import post_process
 from config import window_size, stack, scale_down, datapoints, \
-    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal, \
-    pad_behind
+    lines_per_file, max_dist_percentage, low_cutoff, high_cutoff, nyq, order, interval_length, threshold, animal
 
 """
 After the model_prediction.py program splits the data into multiple files, this
