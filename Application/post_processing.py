@@ -35,7 +35,7 @@ def process_file(filenames, filename):
     global interval_length
     min_dist = 1 - max_dist_percentage
     max_double_dist = 2 * min_dist
-    max_dist = 1 + max_dist_percentage / 2
+    max_dist = 1 + max_dist_percentage
     avg_interval_length = interval_length
     first = True  # For the first signal of the file
     soft_exclusion = False
@@ -64,7 +64,7 @@ def process_file(filenames, filename):
                     if dist > max_double_dist * avg_interval_length:  # This indicates that the gap is too large
                         lines += [(date, '')]
                         reset = True
-                        max_dist = 1.2
+                        max_dist = 1.4
                         min_dist = 0.6
                         dist = 0
                         continue
@@ -72,7 +72,7 @@ def process_file(filenames, filename):
                         # next one is also wrong
                         dist = 0
                         continue
-                    elif min_dist * avg_interval_length < dist < min(max_dist * avg_interval_length, 1.35 * interval_length):
+                    elif min_dist * avg_interval_length < dist < max_dist * avg_interval_length:
                         lines += [(date, '' if first else dist / 4)]  # dist/4 because ours is sampled as 4 datapoints per milisecond
                         if not first:
                             avg_interval_length = dist
@@ -80,7 +80,7 @@ def process_file(filenames, filename):
                             reset = False
                             min_dist = 1 - max_dist_percentage
                             max_double_dist = 2 * min_dist
-                            max_dist = 1 + max_dist_percentage / 2
+                            max_dist = 1 + max_dist_percentage
                     else:
                         continue
 
@@ -94,7 +94,7 @@ def process_file(filenames, filename):
                 soft_exclusion = False
                 min_dist = 1 - max_dist_percentage
                 max_double_dist = 2 * min_dist
-                max_dist = 1 + max_dist_percentage / 2
+                max_dist = 1 + max_dist_percentage
     print("{}/{} file has been completed".format(filenames.index(filename) + 1, len(filenames)))
     return lines
 

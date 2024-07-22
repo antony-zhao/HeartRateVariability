@@ -32,7 +32,7 @@ if len(filename) == 0:
 file_size = os.stat(filename).st_size
 root.destroy()
 
-reader_pd = pd.read_csv(filename, header=None, usecols=[1, 2, 3], engine='c', encoding_errors='ignore')
+reader_df = pd.read_csv(filename, header=None, usecols=[1, 2, 3], engine='c', encoding_errors='ignore')
 
 file = open(filename, 'r+')  # Gets an average line size for the progress bar
 fig, axs = plt.subplots()
@@ -41,11 +41,11 @@ temp_line = file.readline()
 file.seek(file_loc)
 line_size = len(temp_line.encode('utf-8'))
 
-ecg = np.array(reader_pd[1])  # Raw ECG signal
+ecg = np.array(reader_df[1])  # Raw ECG signal
 ecg = np.nan_to_num(ecg)
 signals = []  # Indices of peaks in signals
-ensemble = reader_pd[2]  # Raw signal (0 for non-peak and 1 for peak)
-signal = reader_pd[3]
+signal = reader_df[2]
+ensemble = reader_df[3]  # Raw signal (0 for non-peak and 1 for peak)
 # print(np.nonzero(ensemble.to_numpy()))
 
 class Events:

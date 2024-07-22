@@ -27,16 +27,16 @@ from config import *
 import scipy.integrate as integrate
 from scipy.fft import fft, ifft
 
-
 signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f = (None, None, None,
                                                                                           None, None, None)
+
 
 def ensemble_predict(batch):
     signals = []
     argmaxes = []
     for model in ensemble:
-        signal = model(batch, training=False).numpy()
-        signal = np.repeat(scipy.special.expit(signal), 4)
+        signal = model.predict(batch, verbose='0')
+        signal = scipy.special.expit(signal)
         # signal = signal.reshape(-1, window_size + 1)
         # signal = mask_signal(signal)
         signal = np.asarray(signal).flatten()
@@ -104,47 +104,53 @@ def process_signal_c(dataframe, datetime, sig, ecg, argmax):
 
 def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-    global signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f
+    global signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f, interval_final
     curr_ind = None
+    curr_interval = None
+    prev_interval = None
     ecg_len = len(ecg)
-    sig = (sig[0] > 0.2).astype(np.int32)
-    sig[1:][sig[:-1] == sig[1:]] = 0
-    signal_inds = np.flatnonzero(sig)
-    processed_sig_final = np.zeros(ecg_len)
+    sig = sig[0]
+    radius = 100
+    index_range = np.arange(-radius, radius)
+    # sig[1:][sig[:-1] == sig[1:]] = 0
+    signal_inds = np.flatnonzero((sig > 0.2).astype(np.int32))
+    processed_sig_final = [0] * ecg_len
+    area_around_indices = np.clip(signal_inds[:, None] + index_range, 0, ecg_len - 1)
 
-    bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
-    deriv_ecg = np.gradient(bandpass_ecg)
-    squared_ecg = np.power(deriv_ecg, 2)
-    moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
+    # bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
+    # prominences = (scipy.signal.peak_prominences(bandpass_ecg * 10, signal_inds, 10)[0] /
+    #                np.max(np.abs(bandpass_ecg[area_around_indices]), axis=-1))
+    # deriv_ecg = np.gradient(bandpass_ecg)
+    # squared_ecg = np.power(deriv_ecg, 2)
+    # moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
 
-    if signal_level_i is None:
-        first_8 = signal_inds[:8]
-        signal_inds = signal_inds[8:]
-        signal_level_i = np.max(moving_avg_ecg[first_8]) * 0.5
-        noise_level_i = np.mean(moving_avg_ecg[first_8]) * 0.5
-        threshold_i = noise_level_i + 0.25 * (signal_level_i - noise_level_i)
-        signal_level_f = np.max(bandpass_ecg[first_8]) * 0.5
-        noise_level_f = np.mean(bandpass_ecg[first_8]) * 0.5
-        threshold_f = noise_level_f + 0.25 * (signal_level_f - noise_level_f)
+    # processed_sig_final[signal_inds] = prominences / np.max(prominences)
 
-    for ind in signal_inds:
-        peak_i = moving_avg_ecg[ind]
-        peak_f = bandpass_ecg[ind]
-        if peak_i > threshold_i:
-            signal_level_i = 0.125 * peak_i + 0.875 * signal_level_i
-            if peak_f > threshold_f:
-                signal_level_f = 0.125 * peak_f + 0.875 * signal_level_f
-                processed_sig_final[ind] = 1
-            else:
-                noise_level_f = 0.125 * peak_f + 0.875 * noise_level_f
+    for i, ind in enumerate(signal_inds):
+        if curr_ind is None:
+            curr_ind = ind
+            processed_sig_final[ind] = 1
+            continue
+        interval = ind - curr_ind
+        if curr_interval is None:
+            upper_thresh = 1.4
+            lower_thresh = 0.6
         else:
-            noise_level_i = 0.125 * peak_i + 0.875 * noise_level_i
-            if peak_f < threshold_f:
-                noise_level_f = 0.125 * peak_f + 0.875 * noise_level_f
+            upper_thresh = 1.2
+            lower_thresh = 0.8
+        if upper_thresh * interval_length > interval:
+            curr_ind = None
+            curr_interval = None
+            # prev_interval = None
+        if interval > lower_thresh * interval_length:
+            curr_interval = interval
+            curr_ind = ind
+            processed_sig_final[ind] = 1
+
 
     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
-                            "signal": np.array(sig, dtype=np.int32),
-                            "ensemble": np.array(sig, dtype=np.int32)})
+                            "signal": np.array(processed_sig_final, dtype=np.int32),
+                            "ensemble": np.array(sig, dtype=np.float32)})
 
     dataframe.vstack(temp_df, in_place=True)
     return ecg_len
@@ -215,7 +221,7 @@ if __name__ == "__main__":
 
     file_num = 1
     update_freq = 1
-    loading_size = 128
+    loading_size = 512
     batch_size = 256
     num_offsets = 6
     offset_size = 256
@@ -252,7 +258,7 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_val_auc', compile=False)
+    model1 = load_model(f'{animal}_model_val_recall', compile=False)
     K.clear_session()
     model2 = load_model(f'{animal}_model_val_top_k', compile=False)
     K.clear_session()
@@ -291,7 +297,7 @@ if __name__ == "__main__":
     # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
     datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
     processed_segment = process_segment(ecg_segment)
-    segments = [processed_segment, datetime_segment]  # Last element will always be
+    segments = [ecg_segment, processed_segment, datetime_segment]  # Last element will always be
     # datetime and first element the ecg data, other elements are data to pass into the model.
 
     # offsets = [np.pad(ecg_segment, (256 * i, 0), constant_values=(0, 0)) for i in range(num_offsets)]
@@ -310,10 +316,10 @@ if __name__ == "__main__":
             # curr = time.time()
             num_lines = 0
 
-            temp = process_sample(*batch[:-1])
+            temp = process_sample(batch[1])
             batches.append(temp)
             datetimes.append(batch[-1])
-            ecg_segments.append(batch[0][:, 0])
+            ecg_segments.append(batch[0])
             if len(batches) >= batch_size:
                 batch = np.array(batches).astype(np.float32)[:, :]
                 signals, argmaxes = ensemble_predict(batch)
@@ -338,14 +344,14 @@ if __name__ == "__main__":
                 temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
                 # temp_datetime, temp_ecg, EOF = read_ecg(file, window_size * loading_size)
                 datetime_segment = np.append(segments[-1], temp_datetime)
-                ecg_segment = np.append(segments[0][:, 0], temp_ecg)
+                ecg_segment = np.append(segments[0], temp_ecg)
                 if EOF:
                     break
                 if iter % update_freq == 0:
                     pbar.update(line_size * len(datetime_segment) * update_freq)
 
                 processed_segment = process_segment(ecg_segment)
-                segments = [processed_segment, datetime_segment]
+                segments = [ecg_segment, processed_segment, datetime_segment]
 
                 batch = step_through_data(segments)
             else:

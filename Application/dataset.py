@@ -45,6 +45,7 @@ def random_sampling(ecg, filtered_ecg, cleaned_ecg, signal, samples):
 def process_sample(ecg):
     """Sets the baseline to be 0, and also averages every 'scale_down' datapoints to reduce the total amount of data
     per sample """
+    # inverted = np.sign(max(np.min(ecg[:, 1]), np.max(ecg[:, 1]), key=np.abs))
     if mean_std_normalize:
         ecg = (ecg - np.mean(ecg, axis=0)) / (np.std(ecg, axis=0) + 1e-5)
     else:
@@ -60,7 +61,7 @@ def process_segment(ecg):
     deriv_ecg = np.gradient(bandpass_ecg)
     squared_ecg = np.power(deriv_ecg, 2)
     moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
-    return np.array([ecg, cleaned_ecg, bandpass_ecg, deriv_ecg, squared_ecg, moving_avg_ecg]).T
+    return np.array([cleaned_ecg, bandpass_ecg, deriv_ecg, squared_ecg, moving_avg_ecg]).T
 
 
 def bandpass_filter(ecg, order, lowcut, highcut, nyq):

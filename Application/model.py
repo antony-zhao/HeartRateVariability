@@ -26,7 +26,7 @@ def weighted_crossentropy(weight):
 
 
 embedding_dim = 256
-num_heads = 8
+num_heads = 16
 dropout = 0.5
 
 
@@ -44,7 +44,7 @@ def attention_layer(x):
 
 
 # positions = Input((stack,))
-x = inputs = Input((stack * window_size, 6))
+x = inputs = Input((stack * window_size, 5))
 x = Conv1D(filters=16, kernel_size=31, padding='same', strides=5, activation='relu')(x)
 x = BatchNormalization()(x)
 x = Conv1D(filters=32, kernel_size=25, padding='same', strides=5, activation='relu')(x)
@@ -59,7 +59,7 @@ x = Conv1D(filters=embedding_dim, kernel_size=5, padding='same', strides=1)(x)
 for _ in range(8):
     x = attention_layer(x)
 x = LayerNormalization()(x)
-x = TimeDistributed(Dense(window_size // 4))(x)
+x = TimeDistributed(Dense(window_size))(x)
 out = Flatten()(x)
 # out = Reshape((stack, datapoints))(x)
 model = Model(inputs, out)
@@ -92,7 +92,8 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=[keras.metrics.BinaryAccuracy(),
                            keras.metrics.AUC(curve='PR', from_logits=True, multi_label=True),
-                           keras.metrics.AUC(from_logits=True, multi_label=True)])
+                           keras.metrics.AUC(from_logits=True, multi_label=True),
+                           ])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
                          save_best_only=True, initial_value_threshold=0.15)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max',
@@ -104,10 +105,10 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          save_best_only=True, initial_value_threshold=0.2)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
-    reducelr = ReduceLROnPlateau(patience=10)
-    eary_stop = EarlyStopping(monitor='val_auc', patience=30)
+    reducelr = ReduceLROnPlateau(monitor='val_auc', patience=10)
+    eary_stop = EarlyStopping(monitor='val_auc', patience=20)
     history = model.fit(x_train, y_train, batch_size=None, epochs=epochs, verbose=2, sample_weight=sample_weight,
-                        validation_data=(x_test, y_test), callbacks=[va, reducelr], shuffle=True)
+                        validation_data=(x_test, y_test), callbacks=[va, reducelr, eary_stop], shuffle=True)
 
     def plot(i):
         plt.plot(x_test[i, :, 0])
@@ -150,34 +151,37 @@ def train_generator(model_file, epochs, batch_size, learning_rate, train_data, v
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=[keras.metrics.BinaryAccuracy(),
                            keras.metrics.AUC(curve='PR', from_logits=True, multi_label=True),
-                           keras.metrics.AUC(from_logits=True, multi_label=True)])
+                           keras.metrics.AUC(from_logits=True, multi_label=True),
+                           keras.metrics.Precision(thresholds=0),
+                           keras.metrics.Recall(thresholds=0),
+                           ])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.15)
+                         save_best_only=True, initial_value_threshold=0.95)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max',
                          verbose=1,
                          save_best_only=True, initial_value_threshold=0.9)
     vc = ModelCheckpoint(model_file + '_val_bin', monitor='val_binary_accuracy', mode='max', verbose=1,
                          save_best_only=True, initial_value_threshold=0.2)
-    vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_sparse_categorical_accuracy', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.2)
-    # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
-    #                      save_best_only=True)
+    vp = ModelCheckpoint(model_file + '_val_precision', monitor='val_precision', mode='max', verbose=1,
+                         save_best_only=True)
+    vr = ModelCheckpoint(model_file + '_val_recall', monitor='val_recall', mode='max', verbose=1,
+                         save_best_only=True)
     reducelr = ReduceLROnPlateau(patience=10)
-    eary_stop = EarlyStopping(monitor='val_auc', patience=30)
+    early_stop = EarlyStopping(monitor='val_auc', patience=30)
     history = model.fit(train_data, batch_size=None, epochs=epochs, verbose=2, sample_weight=sample_weight,
-                        validation_data=val_data, callbacks=[va, reducelr], shuffle=True,
+                        validation_data=val_data, callbacks=[va, reducelr, vp, vr, early_stop], shuffle=True,
                         steps_per_epoch=steps_per_epoch, validation_steps=val_steps)
 
-    def plot(i):
-        plt.plot(x_test[i, :, 0])
+    def plot(sample):
+        plt.plot(sample[:, 0])
         plt.show()
 
     for _ in range(20):
-        i = np.random.randint(x_test.shape[0])
-        y_pred = model.predict(x_test[i][np.newaxis, :, :])[0]
-        y_pred = np.repeat(scipy.special.expit(y_pred), 4)
+        x_sample, y_sample = next(val_data)
+        y_pred = model.predict(x_sample[0][np.newaxis, :, :])[0]
+        y_pred = scipy.special.expit(y_pred)
         plt.plot(y_pred.flatten())
-        plot(i)
+        plot(x_sample[0])
 
     model.save(model_file)
     del model
@@ -193,9 +197,11 @@ if __name__ == '__main__':
 
     # model = load_model(model_file + '_val_auc')
 
-    def data_generator(X, y, batch_size=128, steps_per_epoch=500):
+    def data_generator(X, y, batch_size=128, steps_per_epoch=500, invert=True):
         shuffle = True
-        X = process_segment(X)
+        X_normal = process_segment(X)
+        if invert:
+            X_inverted = process_segment(-X)
         while True:
             if shuffle:
                 shuffle = False  # This loop is used to run the generator indefinitely.
@@ -208,13 +214,17 @@ if __name__ == '__main__':
                     for ind in inds:
                         y_i = y[ind:ind + int(stack * window_size)]
                         count = np.count_nonzero(y_i)
-                        if count < 4:
+                        if count < 6:
                             continue
-                        y_i = np.array(y_i).reshape((stack * window_size // 4, 4))
-                        y_i = np.max(y_i, axis=-1)
+                        # y_i = np.array(y_i).reshape((stack * window_size // 4, 4))
+                        # y_i = np.max(y_i, axis=-1)
 
-                        x_i = X[ind:ind + int(stack * window_size)]
-                        x_i = process_sample(x_i)
+                        if np.random.random() < 0.5 or not invert:
+                            x_i = X_normal[ind:ind + int(stack * window_size)]
+                            x_i = process_sample(x_i)
+                        else:
+                            x_i = X_inverted[ind:ind + int(stack * window_size)]
+                            x_i = process_sample(x_i)
 
                         data.append(x_i)
                         labels.append(y_i)
@@ -230,10 +240,10 @@ if __name__ == '__main__':
                 shuffle = True
 
 
-    epochs = 150
+    epochs = 80
     batch_size = 128
     learning_rate = 1e-4
-    steps_per_epoch = 2000
+    steps_per_epoch = 4000
 
     # x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
     # y_train = np.load(
@@ -248,9 +258,11 @@ if __name__ == '__main__':
     df = pd.read_csv(os.path.join('..', 'Training', f'{animal}_val.txt'), header=None, sep=' ')
     x_test = df[0].to_numpy()
     y_test = df[1].to_numpy()
-    x_test = x_test[:len(x_test) // 2]
-    y_test = y_test[:len(y_test) // 2]
+    # x_test = x_test[:len(x_test) // 2]
+    # y_test = y_test[:len(y_test) // 2]
 
     # train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
-    train_generator(model_file, epochs, batch_size, learning_rate, data_generator(x_train, y_train),
-                    data_generator(x_test, y_test), steps_per_epoch=steps_per_epoch, val_steps=steps_per_epoch // 10)
+    train_generator(model_file, epochs, batch_size, learning_rate,
+                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=False),
+                    data_generator(x_test, y_test, batch_size, steps_per_epoch, invert=False),
+                    steps_per_epoch=steps_per_epoch, val_steps=steps_per_epoch // 10)
