@@ -109,7 +109,7 @@ def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
     curr_interval = None
     prev_interval = None
     ecg_len = len(ecg)
-    sig = sig[0]
+    sig = np.max(sig, axis=0)
     radius = 100
     index_range = np.arange(-radius, radius)
     # sig[1:][sig[:-1] == sig[1:]] = 0
@@ -138,11 +138,12 @@ def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
         else:
             upper_thresh = 1.2
             lower_thresh = 0.8
-        if upper_thresh * interval_length > interval:
+        if interval > upper_thresh * interval_length:
             curr_ind = None
             curr_interval = None
+            processed_sig_final[ind] = 1
             # prev_interval = None
-        if interval > lower_thresh * interval_length:
+        elif interval > lower_thresh * interval_length:
             curr_interval = interval
             curr_ind = ind
             processed_sig_final[ind] = 1
@@ -212,6 +213,16 @@ def step_through_data(segments, step=window_size):
     return batch
 
 
+def read_ecg_pandas(reader, count):
+    try:
+        batches = next(reader)
+    except StopIteration:
+        return None, None, True
+
+    batches = batches.to_numpy()
+    return batches[:, 0], batches[:, 1].astype(np.float32), False
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('--filename', '-f', type=str, help='Filename to load', default=None)
@@ -258,9 +269,9 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_val_recall', compile=False)
+    model1 = load_model(f'{animal}_model_1', compile=False)
     K.clear_session()
-    model2 = load_model(f'{animal}_model_val_top_k', compile=False)
+    model2 = load_model(f'{animal}_model_2', compile=False)
     K.clear_session()
     ensemble = [model1]
     model1.summary()
@@ -295,7 +306,8 @@ if __name__ == "__main__":
     # to track approximately where we are within the file.
 
     # Reads a long segment of data for the filters, and slowly 'scrolls' through, removing the data that
-    datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
+    # datetime_segment, ecg_segment, EOF = read_ecg_polars(reader, window_size * loading_size)
+    datetime_segment, ecg_segment, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
     processed_segment = process_segment(ecg_segment)
     segments = [ecg_segment, processed_segment, datetime_segment]  # Last element will always be
     # datetime and first element the ecg data, other elements are data to pass into the model.
@@ -340,8 +352,8 @@ if __name__ == "__main__":
                 batch = step_through_data(segments)
             elif not EOF:
                 iter += 1
-                # temp_datetime, temp_ecg, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
-                temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
+                temp_datetime, temp_ecg, EOF = read_ecg_pandas(reader_pd, window_size * loading_size)
+                # temp_datetime, temp_ecg, EOF = read_ecg_polars(reader, window_size * loading_size)
                 # temp_datetime, temp_ecg, EOF = read_ecg(file, window_size * loading_size)
                 datetime_segment = np.append(segments[-1], temp_datetime)
                 ecg_segment = np.append(segments[0], temp_ecg)

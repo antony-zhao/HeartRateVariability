@@ -263,6 +263,6 @@ if __name__ == '__main__':
 
     # train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
     train_generator(model_file, epochs, batch_size, learning_rate,
-                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=False),
+                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=True),
                     data_generator(x_test, y_test, batch_size, steps_per_epoch, invert=False),
                     steps_per_epoch=steps_per_epoch, val_steps=steps_per_epoch // 10)
