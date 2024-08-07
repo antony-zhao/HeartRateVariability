@@ -56,7 +56,7 @@ x = BatchNormalization()(x)
 x = Conv1D(filters=embedding_dim, kernel_size=5, padding='same', strides=1)(x)
 # pos = Embedding(stack, embedding_dim // 2)(positions)
 # x = Concatenate()([x, pos])
-for _ in range(8):
+for _ in range(4):
     x = attention_layer(x)
 x = LayerNormalization()(x)
 x = TimeDistributed(Dense(window_size))(x)

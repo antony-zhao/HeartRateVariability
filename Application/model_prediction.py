@@ -27,9 +27,6 @@ from config import *
 import scipy.integrate as integrate
 from scipy.fft import fft, ifft
 
-signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f = (None, None, None,
-                                                                                          None, None, None)
-
 
 def ensemble_predict(batch):
     signals = []
@@ -50,24 +47,6 @@ def ensemble_predict(batch):
     return signals, argmaxes
 
 
-def fft_filter(ecg, axis=1):
-    fft_signal = fft(ecg, axis=axis)
-
-    # Identify noise frequencies and mask them out
-    # For example, setting frequencies with too high amplitude to zero
-    n_samples = ecg.shape[0]
-    amplitudes = 2 / n_samples * np.abs(fft_signal)
-    frequencies = np.fft.fftfreq(n_samples) * n_samples
-
-    ecg = ifft(fft_signal)
-    return ecg, amplitudes, frequencies
-
-
-def pad_to_match(array, width):
-    return (np.append(array, np.zeros(width - len(array) % width))
-            .reshape(-1, width))
-
-
 def read_ecg_polars(reader, count):
     batches = reader.next_batches(1)
     if batches is None:
@@ -75,6 +54,16 @@ def read_ecg_polars(reader, count):
 
     batches = batches[0].to_numpy()
     return batches[:, 0], batches[:, 1].astype(np.double), False
+
+
+def read_ecg_pandas(reader, count):
+    try:
+        batches = next(reader)
+    except StopIteration:
+        return None, None, True
+
+    batches = batches.to_numpy()
+    return batches[:, 0], batches[:, 1].astype(np.float32), False
 
 
 def process_signal_c(dataframe, datetime, sig, ecg, argmax):
@@ -102,29 +91,15 @@ def process_signal_c(dataframe, datetime, sig, ecg, argmax):
     return len(datetime)
 
 
-def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
+def process_signal_v2(dataframe, datetime, sig, ecg):
     """Writes the output signals (the peak detection) into a file as either a 1 or 0."""
-    global signal_level_i, noise_level_i, threshold_i, signal_level_f, noise_level_f, threshold_f, interval_final
     curr_ind = None
     curr_interval = None
-    prev_interval = None
     ecg_len = len(ecg)
-    sig = np.max(sig, axis=0)
+    sig = np.mean(sig, axis=0)
     radius = 100
-    index_range = np.arange(-radius, radius)
-    # sig[1:][sig[:-1] == sig[1:]] = 0
-    signal_inds = np.flatnonzero((sig > 0.2).astype(np.int32))
+    signal_inds = np.flatnonzero((sig > threshold).astype(np.int32))
     processed_sig_final = [0] * ecg_len
-    area_around_indices = np.clip(signal_inds[:, None] + index_range, 0, ecg_len - 1)
-
-    # bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
-    # prominences = (scipy.signal.peak_prominences(bandpass_ecg * 10, signal_inds, 10)[0] /
-    #                np.max(np.abs(bandpass_ecg[area_around_indices]), axis=-1))
-    # deriv_ecg = np.gradient(bandpass_ecg)
-    # squared_ecg = np.power(deriv_ecg, 2)
-    # moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
-
-    # processed_sig_final[signal_inds] = prominences / np.max(prominences)
 
     for i, ind in enumerate(signal_inds):
         if curr_ind is None:
@@ -135,15 +110,16 @@ def process_signal_v2(dataframe, datetime, sig, ecg, argmax, radius=200):
         if curr_interval is None:
             upper_thresh = 1.4
             lower_thresh = 0.6
+            curr_interval = interval_length
         else:
             upper_thresh = 1.2
             lower_thresh = 0.8
-        if interval > upper_thresh * interval_length:
+        if interval > upper_thresh * curr_interval:
             curr_ind = None
             curr_interval = None
             processed_sig_final[ind] = 1
             # prev_interval = None
-        elif interval > lower_thresh * interval_length:
+        elif interval > lower_thresh * curr_interval:
             curr_interval = interval
             curr_ind = ind
             processed_sig_final[ind] = 1
@@ -187,23 +163,6 @@ def find_candidates(argmaxes, signals, candidate_index, support_dist=5):
     return candidates
 
 
-def cascaded_mean(signals, ecg, datetime, step=window_size // 2):
-    signals_len = signals.shape[0]
-    output_array = np.zeros(stack * window_size + step * (signals_len - 1))
-    mean = np.zeros(stack * window_size + step * (signals_len - 1))
-
-    for i in range(signals_len):
-        output_array[i * step: i * step + stack * window_size] += signals[i]
-        mean[i * step: i * step + stack * window_size] += np.ones(stack * window_size)
-
-    return output_array / mean
-
-
-def mask_signal(signals):
-    return np.where(np.repeat(np.argmax(signals, axis=-1), window_size).reshape(-1, window_size) == window_size,
-                    0, signals[:, :-1])
-
-
 def step_through_data(segments, step=window_size):
     batch = []
     for i in range(len(segments)):
@@ -211,16 +170,6 @@ def step_through_data(segments, step=window_size):
         segments[i] = segments[i][window_size * stack:]
 
     return batch
-
-
-def read_ecg_pandas(reader, count):
-    try:
-        batches = next(reader)
-    except StopIteration:
-        return None, None, True
-
-    batches = batches.to_numpy()
-    return batches[:, 0], batches[:, 1].astype(np.float32), False
 
 
 if __name__ == "__main__":
@@ -232,7 +181,7 @@ if __name__ == "__main__":
 
     file_num = 1
     update_freq = 1
-    loading_size = 512
+    loading_size = 32
     batch_size = 256
     num_offsets = 6
     offset_size = 256
@@ -269,9 +218,9 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_1', compile=False)
+    model1 = load_model(f'{animal}_model_1', compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
     K.clear_session()
-    model2 = load_model(f'{animal}_model_2', compile=False)
+    model2 = load_model(f'{animal}_model_1', compile=False)
     K.clear_session()
     ensemble = [model1]
     model1.summary()
@@ -340,7 +289,7 @@ if __name__ == "__main__":
                 segment = np.asarray(ecg_segments).flatten()
 
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-                num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes, None)
+                num_lines = process_signal_v2(writer, datetime_iter, signals, segment)
                 # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
                 lines += num_lines
                 batches = []
@@ -360,7 +309,7 @@ if __name__ == "__main__":
                 if EOF:
                     break
                 if iter % update_freq == 0:
-                    pbar.update(line_size * len(datetime_segment) * update_freq)
+                    pbar.update(line_size * loading_size * window_size * update_freq)
 
                 processed_segment = process_segment(ecg_segment)
                 segments = [ecg_segment, processed_segment, datetime_segment]
@@ -386,7 +335,7 @@ if __name__ == "__main__":
     segment = np.asarray(ecg_segments).flatten()
 
     # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
-    num_lines = process_signal_v2(writer, datetime_iter, signals, segment, argmaxes)
+    num_lines = process_signal_v2(writer, datetime_iter, signals, segment)
     # num_lines = process_signal_c(writer, datetime_iter, signal, segment, argmax)
     writer.write_csv(f, include_header=False)
     # lines += num_lines
