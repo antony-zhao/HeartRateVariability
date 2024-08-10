@@ -218,7 +218,7 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_1', compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
+    model1 = load_model(f'{animal}_model_3', compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
     K.clear_session()
     model2 = load_model(f'{animal}_model_1', compile=False)
     K.clear_session()
