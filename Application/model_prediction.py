@@ -124,10 +124,9 @@ def process_signal_v2(dataframe, datetime, sig, ecg):
             curr_ind = ind
             processed_sig_final[ind] = 1
 
-
     temp_df = pl.DataFrame({"date": datetime, "ecg": ecg.astype(np.float32),
                             "signal": np.array(processed_sig_final, dtype=np.int32),
-                            "ensemble": np.array(sig, dtype=np.float32)})
+                            })
 
     dataframe.vstack(temp_df, in_place=True)
     return ecg_len
@@ -209,7 +208,7 @@ if __name__ == "__main__":
 
     filename = filename[:filename.index('.')]  # Removes the type of file (i.e. ascii suffix)
     # without the full path
-    f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt')  # Opens the first of the
+    f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.csv')  # Opens the first of the
     # files of which the data will be saved into. Whenever the number of lines reaches a certain point, file_num gets
     # incremented and a new file with the new number is created.
     writer = pl.DataFrame()
@@ -218,7 +217,8 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model(f'{animal}_model_3', compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
+    model1 = load_model('rat_model_val_recall',#f'{animal}_model_3',
+                        compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
     K.clear_session()
     model2 = load_model(f'{animal}_model_1', compile=False)
     K.clear_session()
@@ -325,7 +325,7 @@ if __name__ == "__main__":
                 lines = 0
                 file_num += 1
 
-                f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.txt')
+                f = os.path.join('..', folder_selected, filename + '{:03}'.format(file_num) + '.csv')
 
     # # Writes the final few datapoints into the file, and closes it
     batch = np.array(batches).astype(np.float32)[:, :]

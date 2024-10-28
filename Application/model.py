@@ -6,7 +6,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Conv1D, Dense, Dropout, Flatten, \
     MaxPooling1D, BatchNormalization, TimeDistributed, Reshape, \
     Activation, LayerNormalization, Input, GRU, Bidirectional, Concatenate, \
-    MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D, Embedding
+    MultiHeadAttention, LSTM, Permute, GlobalAveragePooling1D, Embedding, Add, Layer
 import tensorflow as tf
 import numpy as np
 from matplotlib import pyplot as plt
@@ -17,6 +17,7 @@ import pandas as pd
 from dataset import bandpass_filter, process_sample, highpass_filter, process_segment
 from config import *
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 def weighted_crossentropy(weight):
     def loss(labels, logits):
@@ -43,23 +44,39 @@ def attention_layer(x):
     return x
 
 
+class PositionalEmbedding(Layer):
+    def __init__(self, sequence_length, embedding_dim):
+        super(PositionalEmbedding, self).__init__()
+        # Create a learnable embedding matrix of shape (sequence_length, embedding_dim)
+        self.position_embeddings = Embedding(input_dim=sequence_length, output_dim=embedding_dim)
+
+    def call(self, inputs):
+        # `tf.range` generates the sequence of position indices for embeddings (0, 1, ..., sequence_length - 1)
+        positions = tf.range(start=0, limit=tf.shape(inputs)[1], delta=1)
+        pos_embeddings = self.position_embeddings(positions)  # Shape: (sequence_length, embedding_dim)
+        return inputs + pos_embeddings  # Broadcast addition to add position embeddings to inputs
+
+
 # positions = Input((stack,))
 x = inputs = Input((stack * window_size, 5))
 x = Conv1D(filters=16, kernel_size=31, padding='same', strides=5, activation='relu')(x)
 x = BatchNormalization()(x)
-x = Conv1D(filters=32, kernel_size=25, padding='same', strides=5, activation='relu')(x)
+x = Conv1D(filters=32, kernel_size=25, padding='same', strides=1, activation='relu')(x)
+x = MaxPooling1D(strides=5)(x)
 x = BatchNormalization()(x)
-x = Conv1D(filters=64, kernel_size=13, padding='same', strides=5, activation='relu')(x)
+# x = Conv1D(filters=64, kernel_size=17, padding='same', strides=2, activation='relu')(x)
+# x = BatchNormalization()(x)
+x = Conv1D(filters=64, kernel_size=17, padding='same', strides=1, activation='relu')(x)
+x = MaxPooling1D(strides=4)(x)
 x = BatchNormalization()(x)
-x = Conv1D(filters=128, kernel_size=7, padding='same', strides=4, activation='relu')(x)
-x = BatchNormalization()(x)
-x = Conv1D(filters=embedding_dim, kernel_size=5, padding='same', strides=1)(x)
-# pos = Embedding(stack, embedding_dim // 2)(positions)
-# x = Concatenate()([x, pos])
-for _ in range(4):
+x = Conv1D(filters=embedding_dim, kernel_size=11, padding='same', strides=1, activation='relu')(x)
+pos = PositionalEmbedding(stack, embedding_dim)(x)
+embedding = Dropout(dropout)(Dense(embedding_dim)(x))
+x = Add()([embedding, pos])
+for _ in range(2):
     x = attention_layer(x)
 x = LayerNormalization()(x)
-x = TimeDistributed(Dense(window_size))(x)
+x = TimeDistributed(Dense(100))(x)
 out = Flatten()(x)
 # out = Reshape((stack, datapoints))(x)
 model = Model(inputs, out)
@@ -100,9 +117,9 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
                          verbose=1,
                          save_best_only=True, initial_value_threshold=0.9)
     vc = ModelCheckpoint(model_file + '_val_bin', monitor='val_binary_accuracy', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.2)
+                         save_best_only=True, initial_value_threshold=0.9)
     vp = ModelCheckpoint(model_file + '_val_cat', monitor='val_sparse_categorical_accuracy', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.2)
+                         save_best_only=True, initial_value_threshold=0.9)
     # vm = ModelCheckpoint(model_file + '_val_bce', monitor='val_binary_crossentropy', mode='max', verbose=1,
     #                      save_best_only=True)
     reducelr = ReduceLROnPlateau(monitor='val_auc', patience=10)
@@ -126,8 +143,9 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
     keras.backend.clear_session()
 
 
-def train_generator(model_file, epochs, batch_size, learning_rate, train_data, val_data, steps_per_epoch, val_steps, plot=False,
-          sample_weight=None):
+def train_generator(model_file, epochs, batch_size, learning_rate, train_data, val_data, steps_per_epoch, val_steps,
+                    plot=False,
+                    sample_weight=None):
     """
     Trains the model on the train set and evaluates its performance on the test set, then saves the model
      to the specified file, as well as some checkpoints that save the best performance version of the model.
@@ -161,11 +179,11 @@ def train_generator(model_file, epochs, batch_size, learning_rate, train_data, v
                          verbose=1,
                          save_best_only=True, initial_value_threshold=0.9)
     vc = ModelCheckpoint(model_file + '_val_bin', monitor='val_binary_accuracy', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.2)
+                         save_best_only=True, initial_value_threshold=0.9)
     vp = ModelCheckpoint(model_file + '_val_precision', monitor='val_precision', mode='max', verbose=1,
-                         save_best_only=True)
+                         save_best_only=True, initial_value_threshold=0.9)
     vr = ModelCheckpoint(model_file + '_val_recall', monitor='val_recall', mode='max', verbose=1,
-                         save_best_only=True)
+                         save_best_only=True, initial_value_threshold=0.9)
     reducelr = ReduceLROnPlateau(patience=10)
     early_stop = EarlyStopping(monitor='val_auc', patience=30)
     history = model.fit(train_data, batch_size=None, epochs=epochs, verbose=2, sample_weight=sample_weight,
@@ -240,7 +258,7 @@ if __name__ == '__main__':
                 shuffle = True
 
 
-    epochs = 80
+    epochs = 120
     batch_size = 128
     learning_rate = 1e-4
     steps_per_epoch = 4000
@@ -263,6 +281,6 @@ if __name__ == '__main__':
 
     # train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
     train_generator(model_file, epochs, batch_size, learning_rate,
-                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=True),
+                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=False),
                     data_generator(x_test, y_test, batch_size, steps_per_epoch, invert=False),
                     steps_per_epoch=steps_per_epoch, val_steps=steps_per_epoch // 10)

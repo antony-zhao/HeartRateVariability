@@ -162,7 +162,7 @@ def main():
         root = tk.Tk()
         currdir = os.getcwd()
         root.filename = filedialog.askopenfilenames(initialdir=currdir + "/../ECG_Data", title="Select file",
-                                                    filetypes=(("txt files", "*.txt"),
+                                                    filetypes=(("csv files", "*.csv"),
                                                                ("all files", "*.*")))
         filenames = list(root.filename)
         filenames.sort()
@@ -182,15 +182,15 @@ def main():
         total_size = 0
         if type == '.ascii':
             i = 1
-            while os.path.exists(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt')):
-                filenames.append(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.txt'))
+            while os.path.exists(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.csv')):
+                filenames.append(os.path.join('..', 'ECG_Data', filename + '{:03}'.format(i) + '.csv'))
                 i += 1
 
             filenames.sort()
             for file_name in filenames:
                 total_size += os.stat(file_name).st_size
         else:
-            filenames.append(os.path.join('..', 'ECG_Data', filename + '.txt'))
+            filenames.append(os.path.join('..', 'ECG_Data', filename + '.csv'))
             total_size = os.stat(filenames[0]).st_size
     saveas = filename + ".xlsx"
     if saveas == '':

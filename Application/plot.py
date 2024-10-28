@@ -24,7 +24,7 @@ currdir = os.getcwd()
 par = Path(currdir).parent
 signal_dir = str(par) + r"\ECG_Data"
 root.filename = filedialog.askopenfilename(initialdir=signal_dir, title="Select file",
-                                           filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+                                           filetypes=(("csv files", "*.csv"), ("all files", "*.*")))
 matplotlib.use('Qt5Agg')
 filename = root.filename
 if len(filename) == 0:
@@ -32,7 +32,7 @@ if len(filename) == 0:
 file_size = os.stat(filename).st_size
 root.destroy()
 
-reader_df = pd.read_csv(filename, header=None, usecols=[1, 2, 3], engine='c', encoding_errors='ignore')
+reader_df = pd.read_csv(filename, header=None, usecols=[1, 2], engine='c', encoding_errors='ignore')
 
 file = open(filename, 'r+')  # Gets an average line size for the progress bar
 fig, axs = plt.subplots()
@@ -45,8 +45,11 @@ ecg = np.array(reader_df[1])  # Raw ECG signal
 ecg = np.nan_to_num(ecg)
 signals = []  # Indices of peaks in signals
 signal = reader_df[2]
-ensemble = reader_df[3]  # Raw signal (0 for non-peak and 1 for peak)
+# ensemble = reader_df[3]  # Raw signal (0 for non-peak and 1 for peak)
+
+
 # print(np.nonzero(ensemble.to_numpy()))
+
 
 class Events:
     """Class for an interactive pyplot to handle click, scroll, etc. events."""
@@ -252,6 +255,7 @@ def toggle_clean_selector(event):
     else:
         toggle_clean_selector.RS.set_active(False)
 
+
 dist = 0
 num = 0
 events = Events()
@@ -284,12 +288,12 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
                 dist = 0
                 total_marks -= 1
             else:
-                if dist > (2 - 2 * max_dist_percentage) * interval_length:  # This indicates that the gap is too
-                    # large
-                    unmarked_regions += 1
-                    events.unmarked.append((prev + interval_length, interval_length))
-                    axs.annotate("*", (prev + interval_length, -0.2))
-                elif (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):  # For
+                # if dist > 2 * interval_length:  # This indicates that the gap is too
+                #     # large
+                #     unmarked_regions += 1
+                #     events.unmarked.append((prev + interval_length, interval_length))
+                #     axs.annotate("*", (prev + interval_length, -0.2))
+                if (1 + max_dist_percentage) * interval_length < dist < (2 - 2 * max_dist_percentage):  # For
                     # when one beat is missed and the next one is also wrong
                     if i - prev > 1:
                         events.mismarked.append((i, interval_length))
@@ -298,14 +302,9 @@ with tqdm.tqdm(total=file_size) as pbar:  # Progress bar
                     prev = i
                     continue
                 signals.append(i)  # Indices of signals
-
-        else:
-            events.mismarked.append((i, dist))  # These are the mismarked signals
-            axs.annotate("#", (i, -0.2))
-            mismarked += 1
         if (1 + max_dist_percentage) * interval_length > dist > (1 - max_dist_percentage) * interval_length:
             last_few.append(dist)  # Add the distance to the running average
-        dist = 0  # Reset distance between last and current signal
+            dist = 0  # Reset distance between last and current signal
         if first:
             first = False  # handling first signal
         if len(last_few) > 0:
@@ -322,12 +321,13 @@ filtered_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
 ecg_line, = axs.plot(range(len(ecg)), ecg, zorder=101)
 filtered_line, = axs.plot(range(len(filtered_ecg)), filtered_ecg, zorder=101)
 line, = axs.plot(range(len(signal)), signal)
-ensemble_line, = axs.plot(range(len(ensemble)), ensemble)
+# ensemble_line, = axs.plot(range(len(ensemble)), ensemble)
+# ensemble_line.set_visible(False)
 
-leg = axs.legend(['ECG', 'Filtered_ECG', 'Signal', 'ensemble'], loc='upper left')
+leg = axs.legend(['ECG', 'Filtered_ECG', 'Signal'], loc='upper left')
 axs.axis([0, 6000, -0.5, 1])
 
-lines = [ecg_line, filtered_line, line, ensemble_line]
+lines = [ecg_line, filtered_line, line]
 map_legend_to_ax = {}  # Will map legend lines to original lines.
 
 pickradius = 5  # Points (Pt). How close the click needs to be to trigger an event.
@@ -335,6 +335,7 @@ pickradius = 5  # Points (Pt). How close the click needs to be to trigger an eve
 for legend_line, ax_line in zip(leg.get_lines(), lines):
     legend_line.set_picker(pickradius)  # Enable picking on the legend line.
     map_legend_to_ax[legend_line] = ax_line
+
 
 def on_pick(event):
     # On the pick event, find the original line corresponding to the legend
@@ -352,6 +353,7 @@ def on_pick(event):
     # have been toggled.
     legend_line.set_alpha(1.0 if visible else 0.2)
     fig.canvas.draw()
+
 
 if len(events.unmarked) > 0:  # Only display unmarked and mismarked buttons if there are unmarked/mismarked signals
     button1 = plt.axes([0.6, 0.01, 0.1, 0.075])
