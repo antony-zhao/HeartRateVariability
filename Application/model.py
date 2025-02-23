@@ -15,6 +15,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Early
 from config import window_size, stack, scale_down, datapoints, animal
 import pandas as pd
 from dataset import bandpass_filter, process_sample, highpass_filter, process_segment
+from tensorflow.keras.models import load_model
 from config import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -47,7 +48,7 @@ def attention_layer(x):
 class PositionalEmbedding(Layer):
     def __init__(self, sequence_length, embedding_dim):
         super(PositionalEmbedding, self).__init__()
-        # Create a learnable embedding matrix of shape (sequence_length, embedding_dim)
+        # Create a learnable embedding matrix of shape (se quence_length, embedding_dim)
         self.position_embeddings = Embedding(input_dim=sequence_length, output_dim=embedding_dim)
 
     def call(self, inputs):
@@ -58,7 +59,7 @@ class PositionalEmbedding(Layer):
 
 
 # positions = Input((stack,))
-x = inputs = Input((stack * window_size, 5))
+x = inputs = Input((stack * window_size, 12))
 x = Conv1D(filters=16, kernel_size=31, padding='same', strides=5, activation='relu')(x)
 x = BatchNormalization()(x)
 x = Conv1D(filters=32, kernel_size=25, padding='same', strides=1, activation='relu')(x)
@@ -73,7 +74,7 @@ x = Conv1D(filters=embedding_dim, kernel_size=11, padding='same', strides=1, act
 pos = PositionalEmbedding(stack, embedding_dim)(x)
 embedding = Dropout(dropout)(Dense(embedding_dim)(x))
 x = Add()([embedding, pos])
-for _ in range(2):
+for _ in range(4):
     x = attention_layer(x)
 x = LayerNormalization()(x)
 x = TimeDistributed(Dense(100))(x)
@@ -145,7 +146,7 @@ def train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_tes
 
 def train_generator(model_file, epochs, batch_size, learning_rate, train_data, val_data, steps_per_epoch, val_steps,
                     plot=False,
-                    sample_weight=None):
+                    sample_weight=None, loaded_model=None):
     """
     Trains the model on the train set and evaluates its performance on the test set, then saves the model
      to the specified file, as well as some checkpoints that save the best performance version of the model.
@@ -164,6 +165,8 @@ def train_generator(model_file, epochs, batch_size, learning_rate, train_data, v
             (default is False)
     """
     global model
+    if loaded_model is not None:
+        model = load_model(loaded_model)
     optim = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(optimizer=optim,
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
@@ -174,7 +177,7 @@ def train_generator(model_file, epochs, batch_size, learning_rate, train_data, v
                            keras.metrics.Recall(thresholds=0),
                            ])
     va = ModelCheckpoint(model_file + '_val_auc', monitor='val_auc', mode='max', verbose=1,
-                         save_best_only=True, initial_value_threshold=0.95)
+                         save_best_only=True, initial_value_threshold=0.4)
     vk = ModelCheckpoint(model_file + '_val_top_k', monitor='val_top_k_categorical_accuracy', mode='max',
                          verbose=1,
                          save_best_only=True, initial_value_threshold=0.9)
@@ -213,35 +216,46 @@ if __name__ == '__main__':
     model_file = f'{animal}_model'
 
 
-    # model = load_model(model_file + '_val_auc')
+    def augment_data(X):
+        normal_noise = np.random.normal(0, 0.01, X.shape)
+        wavelengths = [np.random.uniform(800, 2000) for _ in range(4)]
+        sinusoidal_noise = np.zeros(X.shape)
+        for wavelength in wavelengths:
+            sinusoidal_noise += np.sin(
+                np.arange(X.size) * (2 * np.pi / wavelength) + np.random.randint(0, 1000)) * np.random.uniform(0, 0.01)
+        X_aug = X + normal_noise + sinusoidal_noise
+        return X_aug
 
-    def data_generator(X, y, batch_size=128, steps_per_epoch=500, invert=True):
+    def data_generator(X, y, batch_size=128, steps_per_epoch=500, augment=True):
         shuffle = True
+        if augment:
+            X_augmented = augment_data(X)
+            X_normal_aug = process_segment(X_augmented)
         X_normal = process_segment(X)
-        if invert:
-            X_inverted = process_segment(-X)
         while True:
             if shuffle:
                 shuffle = False  # This loop is used to run the generator indefinitely.
                 random_inds = np.random.randint(0, len(X) - stack * window_size, batch_size * steps_per_epoch * 2)
                 random_inds = random_inds.reshape(steps_per_epoch, batch_size * 2)
+                if augment:
+                    X_augmented = augment_data(X)
+                    X_normal_aug = process_segment(X_augmented)
+                X_normal = process_segment(X)
             else:
                 for inds in random_inds:
                     data = []
                     labels = []
                     for ind in inds:
                         y_i = y[ind:ind + int(stack * window_size)]
-                        count = np.count_nonzero(y_i)
-                        if count < 6:
+                        count = np.count_nonzero(y_i[:800])
+                        if count < 2:
                             continue
-                        # y_i = np.array(y_i).reshape((stack * window_size // 4, 4))
-                        # y_i = np.max(y_i, axis=-1)
 
-                        if np.random.random() < 0.5 or not invert:
-                            x_i = X_normal[ind:ind + int(stack * window_size)]
+                        if np.random.rand() < 0.5 or not augment:
+                            x_i = X_normal[ind:ind + int(stack * window_size)] * np.random.uniform(0.5, 1.2)
                             x_i = process_sample(x_i)
                         else:
-                            x_i = X_inverted[ind:ind + int(stack * window_size)]
+                            x_i = X_normal_aug[ind:ind + int(stack * window_size)] * np.random.uniform(0.5, 1.2)
                             x_i = process_sample(x_i)
 
                         data.append(x_i)
@@ -249,38 +263,23 @@ if __name__ == '__main__':
 
                     data = np.stack(data)
                     labels = np.stack(labels)
-                    # labels = np.concatenate((labels, 1 - np.max(labels, axis=-1)[:, :, np.newaxis]), axis=-1)
-                    # labels = np.argmax(labels, axis=-1)
-
-                    # diff = np.max(data, axis=1) - np.min(data, axis=1)
-                    # data = data / diff[:, np.newaxis, :]
                     yield data, labels
                 shuffle = True
 
 
     epochs = 120
     batch_size = 128
-    learning_rate = 1e-4
+    learning_rate = 1e-3
     steps_per_epoch = 4000
 
-    # x_train = np.load(os.path.join('..', 'Training', f'{animal}_x_train.npy'))
-    # y_train = np.load(
-    #     os.path.join('..', 'Training', f'{animal}_y_train.npy'))
-
-    # x_test = np.load(os.path.join('..', 'Training', f'{animal}_x_test.npy'))
-    # y_test = np.load(os.path.join('..', 'Training', f'{animal}_y_test.npy'))
-
-    df = pd.read_csv(os.path.join('..', 'Training', f'{animal}_train.txt'), header=None, sep=' ')
+    df = pd.read_csv(os.path.join('..', 'Training', f'{animal}_train.csv'), header=None)
     x_train = df[0].to_numpy()
     y_train = df[1].to_numpy()
-    df = pd.read_csv(os.path.join('..', 'Training', f'{animal}_val.txt'), header=None, sep=' ')
+    df = pd.read_csv(os.path.join('..', 'Training', f'{animal}_val.csv'), header=None)
     x_test = df[0].to_numpy()
     y_test = df[1].to_numpy()
-    # x_test = x_test[:len(x_test) // 2]
-    # y_test = y_test[:len(y_test) // 2]
 
-    # train(model_file, epochs, batch_size, learning_rate, x_train, y_train, x_test, y_test, True)
     train_generator(model_file, epochs, batch_size, learning_rate,
-                    data_generator(x_train, y_train, batch_size, steps_per_epoch, invert=False),
-                    data_generator(x_test, y_test, batch_size, steps_per_epoch, invert=False),
+                    data_generator(x_train, y_train, batch_size, steps_per_epoch),
+                    data_generator(x_test, y_test, batch_size, steps_per_epoch, augment=False),
                     steps_per_epoch=steps_per_epoch, val_steps=steps_per_epoch // 10)

@@ -11,7 +11,6 @@ import polars as pl
 import pandas as pd
 from scipy.fft import fft, fftfreq
 import ctypes
-from process_signal_cython import process_signal_cython
 
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -180,8 +179,8 @@ if __name__ == "__main__":
 
     file_num = 1
     update_freq = 1
-    loading_size = 32
-    batch_size = 256
+    loading_size = 128
+    batch_size = 32
     num_offsets = 6
     offset_size = 256
 
@@ -217,11 +216,10 @@ if __name__ == "__main__":
     start = time.time()
     # model = keras.models.load_model(f'{animal}_model', compile=False)
     K.clear_session()
-    model1 = load_model('rat_model_val_recall',#f'{animal}_model_3',
-                        compile=False)  # Currently model 1 is best, model 3 is a bit better for inverted
-    K.clear_session()
-    model2 = load_model(f'{animal}_model_1', compile=False)
-    K.clear_session()
+    # model1 = load_model('rat_model_val_recall',
+    #                     compile=False)
+    model1 = load_model('rat_model_val_precision',
+                        compile=False)
     ensemble = [model1]
     model1.summary()
 

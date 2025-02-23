@@ -156,3 +156,5 @@ cython_debug/
 *.spec
 /Application/mouse_*
 /Application/rat_*
+*.cmd
+*.exe

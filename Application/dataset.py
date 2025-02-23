@@ -47,21 +47,22 @@ def process_sample(ecg):
     per sample """
     # inverted = np.sign(max(np.min(ecg[:, 1]), np.max(ecg[:, 1]), key=np.abs))
     if mean_std_normalize:
-        ecg = (ecg - np.mean(ecg, axis=0)) / (np.std(ecg, axis=0) + 1e-5)
+        processed_ecg = (ecg - np.mean(ecg, axis=0)) / (np.std(ecg, axis=0) + 1e-5)
     else:
         diff = np.max(ecg, axis=0) - np.min(ecg, axis=0)
-        ecg = (ecg - np.mean(ecg, axis=0)) / (diff + 1e-5)
-
+        processed_ecg = (ecg - np.mean(ecg, axis=0)) / (diff + 1e-5)
+    ecg = np.append(ecg, processed_ecg, axis=1)
     return ecg
 
 
 def process_segment(ecg):
+    ### TODO: Feed in original signal
     cleaned_ecg = highpass_filter(ecg, order, low_cutoff, nyq)
     bandpass_ecg = bandpass_filter(ecg, order, low_cutoff, high_cutoff, nyq)
     deriv_ecg = np.gradient(bandpass_ecg)
     squared_ecg = np.power(deriv_ecg, 2)
     moving_avg_ecg = np.convolve(squared_ecg, np.ones(40), mode='same')
-    return np.array([cleaned_ecg, bandpass_ecg, deriv_ecg, squared_ecg, moving_avg_ecg]).T
+    return np.array([ecg, cleaned_ecg, bandpass_ecg, deriv_ecg, squared_ecg, moving_avg_ecg]).T
 
 
 def bandpass_filter(ecg, order, lowcut, highcut, nyq):
